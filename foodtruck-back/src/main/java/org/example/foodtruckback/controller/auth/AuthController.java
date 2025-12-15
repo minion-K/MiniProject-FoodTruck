@@ -6,15 +6,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.auth.AuthApi;
 import org.example.foodtruckback.dto.ResponseDto;
-import org.example.foodtruckback.dto.auth.request.FindIdRequestDto;
-import org.example.foodtruckback.dto.auth.request.LoginRequestDto;
-import org.example.foodtruckback.dto.auth.request.PasswordResetRequest;
-import org.example.foodtruckback.dto.auth.request.SignupRequestDto;
+import org.example.foodtruckback.dto.auth.request.*;
 import org.example.foodtruckback.dto.auth.response.FindIdResponseDto;
 import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
 import org.example.foodtruckback.dto.auth.response.PasswordVerifyResponseDto;
 import org.example.foodtruckback.dto.auth.response.SignupResponseDto;
 import org.example.foodtruckback.service.auth.AuthService;
+import org.example.foodtruckback.service.auth.EmailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final EmailService emailService;
 
     //회원 가입
     @PostMapping(AuthApi.SIGNUP)
@@ -96,5 +95,11 @@ public class AuthController {
         return ResponseEntity.status(result.getStatus()).body(result);
     }
 
+    // 이메일 인증
+    @GetMapping("/email/verify")
+    public ResponseEntity<ResponseDto<Void>> verifyEmail(@RequestParam String token) {
+        ResponseDto<Void> result = authService.verifyEmail(token);
 
+        return ResponseEntity.ok(result);
+    }
 }

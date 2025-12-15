@@ -42,6 +42,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "phone", length = 30, nullable = false)
     private String phone;
 
+    @Column(name = "verified", nullable = false)
+    private boolean verified = false;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> userRoles = new HashSet<>();
 
@@ -97,5 +100,9 @@ public class User extends BaseTimeEntity {
 
     public void changePassword(String password) {
         this.password = password;
+    }
+
+    public void verifyEmail() {
+        this.verified = true;
     }
 }

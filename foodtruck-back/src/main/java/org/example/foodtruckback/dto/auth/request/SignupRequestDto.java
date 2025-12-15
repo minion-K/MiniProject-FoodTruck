@@ -14,7 +14,7 @@ public record SignupRequestDto(
 
     @NotBlank(message = "아이디는 필수입니다.")
     @Size(max = 50)
-    String login,
+    String loginId,
 
     @NotBlank(message = "비밀번호는 필수입니다.")
     @Size(min = 8,max = 16)
@@ -35,7 +35,7 @@ public record SignupRequestDto(
     public User toEntity(String encodedPassword) {
         return User.builder()
                 .name(name)
-                .loginId((login))
+                .loginId((loginId))
                 .password(encodedPassword)
                 .email(email)
                 .phone(phone)

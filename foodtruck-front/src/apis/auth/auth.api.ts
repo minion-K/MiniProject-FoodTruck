@@ -67,5 +67,14 @@ export const authApi = {
     );
     
     return res.data.data;
+  },
+
+  // 이메일 인증
+  verifyEmail: async (token: string): Promise<void> => {
+    const res = await publicApi.get<ApiResponse<void>>(
+      `${AUTH_PATH.VERIFYEMAIL}?token=${token}`
+    );
+
+    return res.data.data;
   }
 };

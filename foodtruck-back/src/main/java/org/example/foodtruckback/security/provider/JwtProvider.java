@@ -76,7 +76,6 @@ public class JwtProvider {
     }
 
     // Token 검증
-
     public boolean isValidToken(String token) {
         try {
             parseClaimsJws(token);

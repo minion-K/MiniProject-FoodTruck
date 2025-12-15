@@ -1,13 +1,11 @@
 package org.example.foodtruckback.service.auth.impl;
 
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
-import org.example.foodtruckback.common.utils.DateTimeUtil;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.auth.request.FindIdRequestDto;
 import org.example.foodtruckback.dto.auth.request.LoginRequestDto;
@@ -32,8 +30,6 @@ import org.example.foodtruckback.service.auth.EmailService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public ResponseDto<SignupResponseDto> sign(SignupRequestDto request) {
 
-        if (userRepository.findByLoginId(request.login()).isPresent()) {
+        if (userRepository.findByLoginId(request.loginId()).isPresent()) {
             throw new BusinessException(ErrorCode.DUPLICATE_USER);
         }
 
@@ -76,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
 
         User newUser = User.builder()
                 .name(request.name())
-                .loginId(request.login())
+                .loginId(request.loginId())
                 .password(passwordEncoder.encode(request.password()))
                 .email(request.email())
                 .phone(request.phone())
@@ -88,8 +84,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(newUser);
 
         String emailToken = jwtProvider.generateEmailJwtToken(request.email(), "VERIFY_EMAIL");
-
-        String verifyUrl = "https://myservice.com/email/verify?token=" + emailToken;
+        String verifyUrl = "http://localhost:5173/email/verify?token=" + emailToken + "&redirect=/login";
 
         emailService.sendHtmlEmail(
                 request.email(),
@@ -107,8 +102,7 @@ public class AuthServiceImpl implements AuthService {
                 """.formatted(verifyUrl)
         );
 
-
-        return ResponseDto.success("회원가입을 성공하였습니다.", SignupResponseDto.from(newUser));
+        return ResponseDto.success("회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.", SignupResponseDto.from(newUser));
     }
 
     // 로그인
@@ -245,12 +239,32 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtProvider.generateEmailJwtToken(email, "RESET_PASSWORD");
 
-        String url = "https://myservice.com/reset-password?token=" + token;
+        String url = "http://localhost:8080/api/v1/auth/reset-password?token=" + token;
         emailService.sendPasswordReset(email, url);
 
         return ResponseDto.success("비밀번호 재설정 이메일 전송 완료");
     }
 
+    // 이메일 인증
+    @Transactional
+    @Override
+    public ResponseDto<Void> verifyEmail(String token) {
+        boolean isValid = jwtProvider.isValidEmailToken(token, "VERIFY_EMAIL");
+        if(!isValid) {
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+
+        String email = jwtProvider.getEmailFromEmailToken(token);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if(!user.isVerified()) {
+            user.verifyEmail();
+        }
+
+        return ResponseDto.success("이메일 인증이 완료되었습니다.", null);
+    }
 
     // 리프레시 토큰
     @Override

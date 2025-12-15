@@ -7,8 +7,10 @@ export interface SignupRequest {
   name: string;
   loginId: string;
   password: string;
+  confirmPassword: string;
   email: string;
   phone: string;
+
 }
 
 // 로그인

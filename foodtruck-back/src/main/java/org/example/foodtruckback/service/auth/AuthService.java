@@ -25,4 +25,6 @@ public interface AuthService {
     ResponseDto<PasswordVerifyResponseDto> verifyPasswordToken(String token);
 
     ResponseDto<Void> sendPasswordResetEmail(String email);
+
+    ResponseDto<Void> verifyEmail(String token);
 }
