@@ -112,7 +112,7 @@ public class WebSecurityConfig {
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                             // users / auth
-                            .requestMatchers("/api/v1/auths/**").permitAll()
+                            .requestMatchers("/api/v1/auth/**").permitAll()
 
 
                             .requestMatchers(
@@ -122,9 +122,9 @@ public class WebSecurityConfig {
                                     "/favicon.ico",
                                     "/error").permitAll()
 
-                            .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll();
 
-                            .anyRequest().authenticated(); // 그 외에는 인증 필요
+//                            .anyRequest().authenticated(); // 그 외에는 인증 필요
                 });
 
 

@@ -1,6 +1,7 @@
 package org.example.foodtruckback.entity.location;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
         indexes = @Index(name = "idx_locations_geo", columnList = "latitude, longitude")
 )
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Location {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,7 +42,6 @@ public class Location {
         this.longitude = longitude;
         this.createdAt = createdAt;
     }
-
 
     public void updatedLocation(String name, String address, BigDecimal latitude, BigDecimal longitude) {
         this.name = name;

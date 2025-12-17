@@ -1,6 +1,7 @@
 package org.example.foodtruckback.entity.order;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.foodtruckback.entity.truck.MenuItem;
@@ -12,7 +13,7 @@ import org.example.foodtruckback.entity.truck.MenuItem;
 
 )
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

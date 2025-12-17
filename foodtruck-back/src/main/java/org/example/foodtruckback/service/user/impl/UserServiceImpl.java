@@ -1,7 +1,5 @@
 package org.example.foodtruckback.service.user.impl;
 
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
@@ -9,7 +7,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
-import org.example.foodtruckback.dto.user.response.UserDetaileResponseDto;
+import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
 import org.example.foodtruckback.entity.user.Role;
 import org.example.foodtruckback.entity.user.User;
@@ -19,14 +17,11 @@ import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.user.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,12 +32,12 @@ public class UserServiceImpl implements UserService {
 
     // 마이 페이지
     @Override
-    public ResponseDto<UserDetaileResponseDto> getMyInfo(UserPrincipal principal) {
+    public ResponseDto<UserDetailResponseDto> getMyInfo(UserPrincipal principal) {
 
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        UserDetaileResponseDto response = UserDetaileResponseDto.from(user);
+        UserDetailResponseDto response = UserDetailResponseDto.from(user);
 
         return ResponseDto.success("조회 성공", response);
     }
@@ -51,7 +46,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @PreAuthorize("@authz.isCommentAuthor(#principal, authentication)")
-    public ResponseDto<UserDetaileResponseDto> updateMyInfo(UserPrincipal principal, UserUpdateRequestDto request) {
+    public ResponseDto<UserDetailResponseDto> updateMyInfo(UserPrincipal principal, UserUpdateRequestDto request) {
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -75,7 +70,7 @@ public class UserServiceImpl implements UserService {
         if (changedEmail) user.setEmail(newEmail);
         if (changedPhone) user.setPhone(newPhone);
 
-        UserDetaileResponseDto response = UserDetaileResponseDto.from(user);
+        UserDetailResponseDto response = UserDetailResponseDto.from(user);
 
         return ResponseDto.success("개인정보가 수정되었습니다.", response);
     }
@@ -95,18 +90,18 @@ public class UserServiceImpl implements UserService {
     //단건
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<UserDetaileResponseDto> getById(UserPrincipal principal) {
+    public ResponseDto<UserDetailResponseDto> getById(UserPrincipal principal) {
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        return ResponseDto.success("SUCCESS", UserDetaileResponseDto.from(user));
+        return ResponseDto.success("SUCCESS", UserDetailResponseDto.from(user));
     }
 
 
     // 회원 수정
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<UserDetaileResponseDto> updateByUserId(UserPrincipal principal, UserUpdateRequestDto request) {
+    public ResponseDto<UserDetailResponseDto> updateByUserId(UserPrincipal principal, UserUpdateRequestDto request) {
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -130,7 +125,7 @@ public class UserServiceImpl implements UserService {
         if (changedEmail) user.setEmail(newEmail);
         if (changedPhone) user.setPhone(newPhone);
 
-        UserDetaileResponseDto response = UserDetaileResponseDto.from(user);
+        UserDetailResponseDto response = UserDetailResponseDto.from(user);
 
         return ResponseDto.success("개인정보가 수정되었습니다.", response);
     }

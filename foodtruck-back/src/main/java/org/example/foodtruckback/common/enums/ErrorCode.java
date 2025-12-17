@@ -38,7 +38,12 @@ public enum ErrorCode {
     // location (Lxxx)
     // ===========================
     DUPLICATE_LOCATION(HttpStatus.CONFLICT, "L001", "이미 존재하는 스팟입니다.", "Duplicate location"),
-    LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "L002", "스팟을 찾을 수 없습니다.", "LocationApi not found");
+    LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "L002", "스팟을 찾을 수 없습니다.", "LocationApi not found"),
+
+    // ===========================
+    // email (Exxx)
+    // ===========================
+    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "E001", "이메일 인증이 필요합니다.", "Email not verified");
 
     private final HttpStatus status;
     private final String code;

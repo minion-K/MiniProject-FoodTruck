@@ -11,6 +11,7 @@ import org.example.foodtruckback.dto.auth.response.FindIdResponseDto;
 import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
 import org.example.foodtruckback.dto.auth.response.PasswordVerifyResponseDto;
 import org.example.foodtruckback.dto.auth.response.SignupResponseDto;
+import org.example.foodtruckback.dto.mail.request.SendEmailRequestDto;
 import org.example.foodtruckback.service.auth.AuthService;
 import org.example.foodtruckback.service.auth.EmailService;
 import org.springframework.http.ResponseEntity;
@@ -95,11 +96,21 @@ public class AuthController {
         return ResponseEntity.status(result.getStatus()).body(result);
     }
 
+    // 이메일 전송
+    @PostMapping("/send-email")
+    public ResponseEntity<ResponseDto<Void>> sendEmail(
+            @Valid @RequestBody SendEmailRequestDto request
+    ) {
+        ResponseDto<Void> result = emailService.sendEmail(request);
+
+        return ResponseEntity.status(result.getStatus()).body(result);
+    }
+
     // 이메일 인증
     @GetMapping("/email/verify")
     public ResponseEntity<ResponseDto<Void>> verifyEmail(@RequestParam String token) {
         ResponseDto<Void> result = authService.verifyEmail(token);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.status(result.getStatus()).body(result);
     }
 }

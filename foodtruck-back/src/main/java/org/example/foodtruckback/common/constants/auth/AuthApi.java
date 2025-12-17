@@ -5,7 +5,7 @@ import org.example.foodtruckback.common.constants.ApiBase;
 public class AuthApi {
     private AuthApi() {}
 
-    public static final String ROOT = ApiBase.BASE + "/auths";
+    public static final String ROOT = ApiBase.BASE + "/auth";
 
     public static final String SIGNUP = "/signup";
     public static final String LOGIN = "/login";

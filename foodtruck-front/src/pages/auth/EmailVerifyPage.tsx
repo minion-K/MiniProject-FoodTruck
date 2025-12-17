@@ -14,7 +14,6 @@ function EmailVerifyPage() {
 
     if (!token) {
       setErrorMsg("유효하지 않은 요청입니다.");
-      setMsg("");
 
       return;
     }
@@ -22,17 +21,15 @@ function EmailVerifyPage() {
     authApi
       .verifyEmail(token)
       .then(() => {
-        setMsg("이메일 인증이 완료되었습니다. 로그인 페이지로 이동합니다.");
-        setTimeout(() => {
-          navigate("/login");
-        }, 3000);
+        setMsg("이메일 인증이 완료되었습니다. 회원가입을 완료해주세요.");
+        navigate("/register?verified=true");
       })
       .catch((err) => {
         setErrorMsg(
           "이메일 인증에 실패했습니다. 링크가 만료되었거나 잘못되었습니다."
         );
       });
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
   return (
     <Container>

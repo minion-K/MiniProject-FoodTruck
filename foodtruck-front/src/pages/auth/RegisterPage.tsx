@@ -30,9 +30,13 @@ function RegisterPage() {
     e.preventDefault();
     setErrorMsg(null);
 
+    if(!isVerified) {
+      setErrorMsg("이메일 인증을 먼저 완료해주세요");
+      return;
+    }
+
     if (form.password != form.confirmPassword) {
       setErrorMsg("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
-
       return;
     }
 
@@ -40,11 +44,22 @@ function RegisterPage() {
   };
 
   //% Mutation
+  const emailMutation = useMutation({
+    mutationFn: () => authApi.sendEmail({ email: form.email}),
+
+    onSuccess: () => {
+      alert("이메일 인증 메일이 발송되었습니다.");
+    },
+    onError: (err) => {
+      setErrorMsg(getErrorMsg(err))
+    }
+  });
+
   const signupMutation = useMutation({
     mutationFn: () => authApi.signup(form),
 
     onSuccess: () => {
-      alert("이메일 인증 후 로그인 해주세요");
+      alert("회원가입을 완료했습니다. 로그인 해주세요.");
       navigate("/login");
     },
 
@@ -120,8 +135,21 @@ function RegisterPage() {
             value={form.email}
             onChange={handleChange}
             required
+            style={{flex: 1}}
           />
-          {isVerified && "이메일 인증 완료"}
+          <Button
+            type="button"
+            onClick={() => emailMutation.mutate()}
+            disabled={!form.email || emailMutation.isPending || isVerified}
+            style={{ flexShrink: 0, padding: "8px 12px", fontSize: "0.9rem"}}
+          >
+            {emailMutation.isPending
+            ? "전송 중..."
+            : isVerified
+            ? "인증 완료"
+            : "인증하기"}
+          </Button>
+          {isVerified && (<span style={{color: "green", marginTop: "4px"}}>이메일 인증 완료</span>)}
         </InputContainer>
 
         <InputContainer>

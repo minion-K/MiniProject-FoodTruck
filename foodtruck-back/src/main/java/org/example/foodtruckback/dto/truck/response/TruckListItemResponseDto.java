@@ -1,6 +1,6 @@
 package org.example.foodtruckback.dto.truck.response;
 
-import org.example.foodtruckback.common.enums.TurckStatus;
+import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
 
@@ -10,7 +10,7 @@ public record TruckListItemResponseDto(
         Long id,
         String name,
         String cuisine,
-        TurckStatus status,
+        TruckStatus status,
         String locationSummary
 ) {
 

@@ -1,11 +1,9 @@
 package org.example.foodtruckback.entity.user;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.foodtruckback.common.enums.RoleType;
+import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 
 import java.util.HashSet;
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
                 @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
         }
 )
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,45 +37,38 @@ public class User extends BaseTimeEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "phone", length = 30, nullable = false)
+    @Column(name = "phone", length = 30)
     private String phone;
 
     @Column(name = "verified", nullable = false)
     private boolean verified = false;
 
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.TEMP;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> userRoles = new HashSet<>();
 
-    // phone (포함)
-    @Builder
-    public User(String name, String loginId, String password, String email, String phone) {
+    public static User createTempUser(String email) {
+        User user = new User();
+        String suffix = "_" + System.currentTimeMillis();
 
+        user.email = email;
+        user.status = UserStatus.TEMP;
+
+        user.name = "TEMP" + suffix;
+        user.loginId = "TEMP" + suffix;
+        user.password = "TEMP" + suffix;
+
+        return user;
+    }
+
+    public void completeSignup(String name, String loginId, String password, String phone) {
         this.name = name;
         this.loginId = loginId;
         this.password = password;
-        this.email = email;
         this.phone = phone;
-    }
-
-    // phone (미포함)
-    public User(String name, String loginId, String password, String email) {
-
-        this.name = name;
-        this.loginId = loginId;
-        this.password = password;
-        this.email = email;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
+        this.status = UserStatus.ACTIVE;
     }
 
     public void addRole(Role role) {
@@ -105,4 +96,5 @@ public class User extends BaseTimeEntity {
     public void verifyEmail() {
         this.verified = true;
     }
+
 }

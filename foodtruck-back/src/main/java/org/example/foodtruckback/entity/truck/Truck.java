@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.example.foodtruckback.common.enums.TurckStatus;
+import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 
@@ -38,7 +38,7 @@ public class Truck extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private TurckStatus status = TurckStatus.ACTIVE;
+    private TruckStatus status = TruckStatus.ACTIVE;
 
     @OneToMany(mappedBy = "truck", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MenuItem> menus = new ArrayList<>();
@@ -46,14 +46,14 @@ public class Truck extends BaseTimeEntity {
     @OneToMany(mappedBy = "truck", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Schedule> schedules = new ArrayList<>();
 
-    public Truck(User owner, String name, String cuisine, TurckStatus status) {
+    public Truck(User owner, String name, String cuisine, TruckStatus status) {
         this.owner = owner;
         this.name = name;
         this.cuisine = cuisine;
-        this.status = status != null ? status : TurckStatus.ACTIVE;
+        this.status = status != null ? status : TruckStatus.ACTIVE;
     }
 
-    public void update(String name, String cuisine, TurckStatus status) {
+    public void update(String name, String cuisine, TruckStatus status) {
         if (name != null && !name.isBlank()) this.name = name;
         if (cuisine != null && !cuisine.isBlank()) this.cuisine = cuisine;
         if (status != null) this.status = status;

@@ -1,6 +1,6 @@
 package org.example.foodtruckback.dto.truck.response;
 
-import org.example.foodtruckback.common.enums.TurckStatus;
+import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.entity.truck.Schedule;
@@ -15,7 +15,7 @@ public record TruckDetailResponseDto(
         Long ownerId,
         String name,
         String cuisine,
-        TurckStatus status,
+        TruckStatus status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         List<ScheduleItemResponseDto> schedules,

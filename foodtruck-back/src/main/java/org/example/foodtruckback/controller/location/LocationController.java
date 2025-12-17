@@ -30,7 +30,7 @@ public class LocationController {
             ) {
         ResponseDto<LocationDetailResponseDto> response = locationService.createLocation(principal,request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // get location (all)
@@ -38,7 +38,7 @@ public class LocationController {
     public ResponseEntity<ResponseDto<List<LocationListItemResponseDto>>> getAllLocation() {
         ResponseDto<List<LocationListItemResponseDto>> response = locationService.getAllLocation();
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // get location (byId)
@@ -48,7 +48,7 @@ public class LocationController {
     ) {
         ResponseDto<LocationDetailResponseDto> response = locationService.getLocationById(locationId);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // update location
@@ -60,7 +60,7 @@ public class LocationController {
             ) {
         ResponseDto<LocationDetailResponseDto> response = locationService.updateLocation(principal,locationId, request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // delete location
@@ -71,6 +71,6 @@ public class LocationController {
     ) {
         ResponseDto<Void> response = locationService.deleteLocation(principal,locationId);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 }

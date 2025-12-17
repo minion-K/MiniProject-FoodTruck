@@ -1,6 +1,6 @@
 import { BASE } from "../common/base.path";
 
-const AUTH_PREFIX = `${BASE}/auths`;
+const AUTH_PREFIX = `${BASE}/auth`;
 
 export const AUTH_PATH = {
   ROOT: AUTH_PREFIX,
@@ -11,5 +11,6 @@ export const AUTH_PATH = {
   REFRESH: `${AUTH_PREFIX}/refresh`,
   FINDID: `${AUTH_PREFIX}/find-id`,
   RESETPW: `${AUTH_PREFIX}/reset-pw`,
+  SENDEMAIL: `${AUTH_PREFIX}/send-email`,
   VERIFYEMAIL: `${AUTH_PREFIX}/email/verify`,
 };

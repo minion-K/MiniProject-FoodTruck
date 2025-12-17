@@ -10,10 +10,10 @@ import { ORDER_PATH } from "./order.path";
 
 export const orderApi = {
   // 주문 생성
-  createOrder: async (request: OrderCreateRequest): Promise<OrderDetailResponse> => {
+  createOrder: async (req: OrderCreateRequest): Promise<OrderDetailResponse> => {
     const res = await privateApi.post<ApiResponse<OrderDetailResponse>>(
       ORDER_PATH.CREATE,
-      request
+      req
     );
 
     return res.data.data;

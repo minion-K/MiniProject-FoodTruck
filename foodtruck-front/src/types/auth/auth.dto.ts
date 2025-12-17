@@ -41,6 +41,10 @@ export interface RefreshRequest {
   refreshToken: string
 }
 
+export interface SendEmailRequest {
+  email: string;
+}
+
 // -------------------------------------------
 // Response // 
 

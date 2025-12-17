@@ -3,9 +3,13 @@ package org.example.foodtruckback.service.auth.impl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
+import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.auth.request.FindIdRequestDto;
 import org.example.foodtruckback.dto.auth.request.LoginRequestDto;
@@ -41,6 +45,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -49,60 +54,43 @@ public class AuthServiceImpl implements AuthService {
     private final UserPrincipalMapper userPrincipalMapper;
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
+    private final EmailService emailService;
 
     private static final String REFRESH_TOKEN = "refreshToken";
-    private final EmailService emailService;
 
     // 회원 가입
     @Override
     @Transactional
     public ResponseDto<SignupResponseDto> sign(SignupRequestDto request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        if(user.getStatus() == UserStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+        if(!user.isVerified()) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
         if (userRepository.findByLoginId(request.loginId()).isPresent()) {
             throw new BusinessException(ErrorCode.DUPLICATE_USER);
         }
-
         if (!request.password().equals(request.confirmPassword())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
 
-        if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
-        }
-
-        User newUser = User.builder()
-                .name(request.name())
-                .loginId(request.loginId())
-                .password(passwordEncoder.encode(request.password()))
-                .email(request.email())
-                .phone(request.phone())
-                .build();
-
-        Role defaultRole = roleRepository.getReferenceById(RoleType.USER);
-        newUser.addRole(defaultRole);
-
-        userRepository.save(newUser);
-
-        String emailToken = jwtProvider.generateEmailJwtToken(request.email(), "VERIFY_EMAIL");
-        String verifyUrl = "http://localhost:5173/email/verify?token=" + emailToken + "&redirect=/login";
-
-        emailService.sendHtmlEmail(
-                request.email(),
-                "회원가입 이메일 인증",
-                """
-                <div style="padding:20px; font-size:16px;">
-                    <p>회원가입을 환영합니다!</p>
-                    <p>아래 버튼을 눌러 이메일 인증을 완료해주세요.</p>
-                    <a href="%s"
-                        style="display:inline-block; padding:10px 20px; background:#2a5dff;
-                               color:white; text-decoration:none; border-radius:8px; margin-top:10px;">
-                        이메일 인증하기
-                    </a>
-                </div>
-                """.formatted(verifyUrl)
+        user.completeSignup(
+                request.name(),
+                request.loginId(),
+                passwordEncoder.encode(request.password()),
+                request.phone()
         );
 
-        return ResponseDto.success("회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.", SignupResponseDto.from(newUser));
+        Role defaultRole = roleRepository.getReferenceById(RoleType.USER);
+        user.addRole(defaultRole);
+
+        userRepository.save(user);
+
+        return ResponseDto.success("회원가입이 완료되었습니다.", SignupResponseDto.from(user));
     }
 
     // 로그인
@@ -243,6 +231,15 @@ public class AuthServiceImpl implements AuthService {
         emailService.sendPasswordReset(email, url);
 
         return ResponseDto.success("비밀번호 재설정 이메일 전송 완료");
+    }
+
+    // 인증 상태 확인
+    public boolean isVerified(String email) {
+        boolean isVerified = userRepository.findByEmail(email)
+                .map(User::isVerified)
+                .orElse(false);
+
+        return isVerified;
     }
 
     // 이메일 인증

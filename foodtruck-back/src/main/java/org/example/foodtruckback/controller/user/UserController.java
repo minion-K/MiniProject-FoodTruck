@@ -2,14 +2,13 @@ package org.example.foodtruckback.controller.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.foodtruckback.common.constants.schedule.ScheduleApi;
 import org.example.foodtruckback.common.constants.user.UserApi;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
-import org.example.foodtruckback.dto.user.response.UserDetaileResponseDto;
+import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.user.UserService;
@@ -27,21 +26,21 @@ public class UserController {
 
     // 내 프로필 조회
     @GetMapping(UserApi.ME)
-    public ResponseEntity<ResponseDto<UserDetaileResponseDto>> getMyInfo(
+    public ResponseEntity<ResponseDto<UserDetailResponseDto>> getMyInfo(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<UserDetaileResponseDto> result = userService.getMyInfo(principal);
+        ResponseDto<UserDetailResponseDto> result = userService.getMyInfo(principal);
 
         return ResponseEntity.ok().body(result);
     }
 
     // 내 프로필 수정
     @PutMapping(UserApi.ME)
-    public ResponseEntity<ResponseDto<UserDetaileResponseDto>> updateMyInfo(
+    public ResponseEntity<ResponseDto<UserDetailResponseDto>> updateMyInfo(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody UserUpdateRequestDto request
     ) {
-        ResponseDto<UserDetaileResponseDto> response = userService.updateMyInfo(principal, request);
+        ResponseDto<UserDetailResponseDto> response = userService.updateMyInfo(principal, request);
 
         return ResponseEntity.ok().body(response);
     }
@@ -56,21 +55,21 @@ public class UserController {
 
     // 사용자 상세
     @GetMapping(UserApi.BY_ID)
-    public ResponseEntity<ResponseDto<UserDetaileResponseDto>> getById(
+    public ResponseEntity<ResponseDto<UserDetailResponseDto>> getById(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<UserDetaileResponseDto> response = userService.getById(principal);
+        ResponseDto<UserDetailResponseDto> response = userService.getById(principal);
 
         return ResponseEntity.ok().body(response);
     }
 
     // 사용자 수정
     @PutMapping(UserApi.BY_ID)
-    public ResponseEntity<ResponseDto<UserDetaileResponseDto>> updateByUserId(
+    public ResponseEntity<ResponseDto<UserDetailResponseDto>> updateByUserId(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody UserUpdateRequestDto request
     ) {
-        ResponseDto<UserDetaileResponseDto> response = userService.updateByUserId(principal, request);
+        ResponseDto<UserDetailResponseDto> response = userService.updateByUserId(principal, request);
 
         return ResponseEntity.ok().body(response);
     }
