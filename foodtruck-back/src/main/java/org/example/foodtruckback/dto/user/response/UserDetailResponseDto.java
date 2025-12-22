@@ -1,15 +1,17 @@
 package org.example.foodtruckback.dto.user.response;
 
+import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.user.UserRole;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public record UserDetailResponseDto(
         String name,
         String loginId,
         String email,
         String phone,
-        Set<UserRole> roles
+        Set<RoleType> roles
 ) {
     public static UserDetailResponseDto from(User user) {
         return new UserDetailResponseDto(
@@ -17,7 +19,9 @@ public record UserDetailResponseDto(
                 user.getLoginId(),
                 user.getEmail(),
                 user.getPhone(),
-                user.getUserRoles()
+                user.getUserRoles().stream()
+                        .map(role -> role.getRole().getName())
+                        .collect(Collectors.toSet())
         );
     }
 }

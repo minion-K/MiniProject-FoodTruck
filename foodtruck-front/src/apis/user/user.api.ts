@@ -1,4 +1,5 @@
 import type {
+  MeReponse,
   UserDetailResponse,
   UserListResponse,
   UserUpdateRequest,
@@ -11,8 +12,8 @@ import type { RoleCreateRequest, RoleCreateResponse } from "@/types/role/role.dt
 
 export const userApi = {
   // 마이 프로필
-  me: async (): Promise<UserDetailResponse> => {
-    const res = await privateApi.get<ApiResponse<UserDetailResponse>>(
+  me: async (): Promise<MeReponse> => {
+    const res = await privateApi.get<ApiResponse<MeReponse>>(
       USER_PATH.ME
     );
     

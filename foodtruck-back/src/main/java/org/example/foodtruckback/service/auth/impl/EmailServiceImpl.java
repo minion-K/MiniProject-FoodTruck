@@ -82,7 +82,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         String emailToken = jwtProvider.generateEmailJwtToken(request.email(), "VERIFY_EMAIL");
-        String verifyUrl = "http://localhost:5173/email/verify?token=" + emailToken;
+        String verifyUrl = "http://localhost:5173/register?token=" + emailToken;
 
         sendHtmlEmail(
                 email,

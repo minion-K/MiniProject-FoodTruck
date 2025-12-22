@@ -26,3 +26,12 @@ export interface UserUpdateResponse {
   email: string;
   phone: string;
 }
+
+export interface MeReponse {
+  id: number;
+  name: string
+  loginId: string;
+  email: string;
+  phone: string;
+  roles: string[];
+}

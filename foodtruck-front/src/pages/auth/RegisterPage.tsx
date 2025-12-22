@@ -1,29 +1,24 @@
 import { authApi } from "@/apis/auth/auth.api";
+import { useRegisterStore } from "@/stores/register.store";
 import type { SignupRequest } from "@/types/auth/auth.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import { useMutation } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function RegisterPage() {
   //% Hooks
   const navigate = useNavigate();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isVerified, setIsVerified] = useState(false);
-  const [form, setForm] = useState<SignupRequest>({
-    name: "",
-    loginId: "",
-    password: "",
-    confirmPassword: "",
-    email: "",
-    phone: "",
-  });
+  const {form, step, setField, setStep, reset} = useRegisterStore();
+
+  const isVerified = step === "VERIFIED";
 
   //% Handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setField(name as keyof SignupRequest, value);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -48,10 +43,11 @@ function RegisterPage() {
     mutationFn: () => authApi.sendEmail({ email: form.email}),
 
     onSuccess: () => {
-      alert("이메일 인증 메일이 발송되었습니다.");
+      setStep("EMAIL_SENT");
+      navigate("/register/pending", {replace: true})
     },
     onError: (err) => {
-      setErrorMsg(getErrorMsg(err))
+      setErrorMsg(getErrorMsg(err));
     }
   });
 
@@ -60,6 +56,7 @@ function RegisterPage() {
 
     onSuccess: () => {
       alert("회원가입을 완료했습니다. 로그인 해주세요.");
+      reset();
       navigate("/login");
     },
 
@@ -70,14 +67,26 @@ function RegisterPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-    if (params.get("verified") === "true") {
-      setIsVerified(true);
+    if(!token) return ;
+
+    const handleToken = `email-verified: ${token}`;
+
+    if(sessionStorage.getItem(handleToken)) return;
+    sessionStorage.setItem(handleToken, "true");
+
+    authApi.verifyEmail(token)
+    .then(() => {
+      setStep("VERIFIED");
       alert("이메일 인증이 완료되었습니다.");
-
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
+      
+      window.history.replaceState({}, document.title, "/register");
+    })
+    .catch((err) => {
+      alert(getErrorMsg(err));
+    });
+  }, [setStep]);
 
   return (
     <Container>
@@ -149,7 +158,7 @@ function RegisterPage() {
             ? "인증 완료"
             : "인증하기"}
           </Button>
-          {isVerified && (<span style={{color: "green", marginTop: "4px"}}>이메일 인증 완료</span>)}
+          {step === "VERIFIED" && (<span style={{color: "green", marginTop: "4px"}}>이메일 인증 완료</span>)}
         </InputContainer>
 
         <InputContainer>

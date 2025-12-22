@@ -1,20 +1,94 @@
+import { authApi } from "@/apis/auth/auth.api";
+import { userApi } from "@/apis/user/user.api";
+import { useAuthStore } from "@/stores/auth.store";
+import type { LoginRequest } from "@/types/auth/auth.dto";
+import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React from "react";
-import { Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function LoginPage() {
+  const navigate = useNavigate();
+
+  const setAccessToken = useAuthStore(s => s.setAccessToken);
+  const setUser = useAuthStore(s => s.setUser);
+
+  const [form, setForm] = useState<LoginRequest>({
+    loginId: "",
+    password: ""
+  });
+
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({...prev, [e.target.name]: e.target.value}));
+  }
+
+  // 로그인 fetch
+  const loginMutation = useMutation({
+    mutationFn: async () => {
+      const res = await authApi.login(form);
+
+      if(!res) {
+        throw new Error("로그인 정보가 올바르지 않습니다.");
+      }
+
+      setAccessToken(res.accessToken);
+
+      const me = await userApi.me();
+      if(!me) {
+        throw new Error("유저 정보 조회 실패: 데이터가 없습니다");
+      }
+
+      setUser(me);
+    },
+    onSuccess: () => {
+      navigate("/")
+    },
+    onError: (err: any) => {
+      setErrorMsg(getErrorMsg(err, "로그인에 실패하였습니다."))
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if(!form.loginId || !form.password) {
+      setErrorMsg("아이디와 비밀번호를 입력해주세요");
+      
+      return;
+    }
+    
+    loginMutation.mutate();
+  }
+
   return (
     <Container>
       <Title>로그인</Title>
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <InputContainer>
           <Label>아이디</Label>
-          <Input type="text" name="username" value="" required></Input>
+          <Input 
+            type="text"
+            name="loginId"
+            value={form.loginId}
+            onChange={handleChange}
+            required />
         </InputContainer>
         <InputContainer>
           <Label>비밀번호</Label>
-          <Input type="password" name="password" value="" required></Input>
+          <Input 
+            type="password" 
+            name="password" 
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
         </InputContainer>
+
+        {errorMsg && <ErrorText>{errorMsg}</ErrorText>}
 
         <LoginButton type="submit">로그인</LoginButton>
       </Form>
@@ -57,6 +131,12 @@ const Input = styled.input`
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #bbb;
+`;
+
+const ErrorText = styled.p`
+  color: eb2222;
+  font-size: 0.9rem;
+  margin-top: -8px;
 `;
 
 const LoginButton = styled.button`

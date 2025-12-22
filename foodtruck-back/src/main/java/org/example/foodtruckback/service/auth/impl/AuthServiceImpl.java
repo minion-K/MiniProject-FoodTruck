@@ -27,6 +27,7 @@ import org.example.foodtruckback.repository.auth.RefreshTokenRepository;
 import org.example.foodtruckback.repository.user.RoleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.provider.JwtProvider;
+import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.security.user.UserPrincipalMapper;
 import org.example.foodtruckback.security.util.CookieUtils;
 import org.example.foodtruckback.service.auth.AuthService;
@@ -34,6 +35,8 @@ import org.example.foodtruckback.service.auth.EmailService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,24 +100,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public ResponseDto<LoginResponseDto> login(LoginRequestDto request, HttpServletResponse response) {
-
-        User login = userRepository.findByLoginId(request.loginId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
         try {
-            var authToken = new UsernamePasswordAuthenticationToken(
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     request.loginId(), request.password()
             );
 
-            var authentication = authenticationManager.authenticate(authToken);
+            Authentication authentication = authenticationManager.authenticate(authToken);
+
+            Set<String> roles = authentication.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(java.util.stream.Collectors.toSet());
 
             String loginId = authentication.getName();
 
-            var principal = userPrincipalMapper.toPrincipal(loginId);
-            Set<String> roles = principal.getAuthorities()
-                    .stream()
-                    .map(a -> a.getAuthority())
-                    .collect(java.util.stream.Collectors.toSet());
+            User user = userRepository.findByLoginId(loginId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
             // Access/Refresh Token 생성
             String accessToken = jwtProvider.generateAccessToken(loginId, roles);
@@ -123,10 +124,11 @@ public class AuthServiceImpl implements AuthService {
             long accessExpiresIn = jwtProvider.getRemainingMillis(accessToken);
             long refreshRemaining = jwtProvider.getRemainingMillis(refreshToken);
 
-            Instant refreshExpiry = Instant.now().plusMillis(refreshRemaining);
+            if(refreshRemaining <= 0) {
+                throw new BusinessException(ErrorCode.TOKEN_INVALID);
+            }
 
-            User user = userRepository.findByLoginId(loginId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            Instant refreshExpiry = Instant.now().plusMillis(refreshRemaining);
 
             refreshTokenRepository.findByUser(user)
                     .ifPresentOrElse(
