@@ -28,8 +28,13 @@ CREATE TABLE users (
   email VARCHAR(255) NOT NULL,
   phone VARCHAR(30) NULL,
   verified BOOLEAN NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'TEMP',
+  provider VARCHAR(20) NOT NULL,
+  provider_id VARCHAR(100),
   created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  CONSTRAINT `chk_users_provider` CHECK (provider IN ('LOCAL', 'GOOGLE', 'KAKAO', 'NAVER')),
+  CONSTRAINT `chk_users_status` CHECK (status IN ('TEMP', 'ACTIVE')),
   CONSTRAINT `uk_users_login_id` UNIQUE(login_id),
   CONSTRAINT `uk_users_email` UNIQUE(email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -39,7 +44,7 @@ CREATE TABLE roles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO roles values ('USER');
-INSERT INTO roles values ('MANAGER');
+INSERT INTO roles values ('OWNER');
 INSERT INTO roles values ('ADMIN');
 
 CREATE TABLE user_roles (

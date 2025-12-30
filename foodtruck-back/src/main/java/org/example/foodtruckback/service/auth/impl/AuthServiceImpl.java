@@ -294,7 +294,7 @@ public class AuthServiceImpl implements AuthService {
 
         var principal = userPrincipalMapper.map(user);
         Set<String> roles = principal.getAuthorities()
-                .stream().map(a -> a.getAuthority()).collect(Collectors.toSet());
+                .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
 
         String newAccess = jwtProvider.generateAccessToken(loginId, roles);
         String newRefresh = jwtProvider.generateRefreshToken(loginId, roles);

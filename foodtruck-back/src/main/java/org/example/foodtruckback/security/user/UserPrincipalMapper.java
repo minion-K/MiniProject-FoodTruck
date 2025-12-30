@@ -2,7 +2,9 @@ package org.example.foodtruckback.security.user;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.entity.user.User;
+import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -18,7 +20,7 @@ public class UserPrincipalMapper {
     public UserPrincipal toPrincipal(@NonNull String loginId) {
 
         User user = userRepository.findWithRoleByLoginId(loginId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + loginId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return map(user);
     }

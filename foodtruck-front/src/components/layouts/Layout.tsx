@@ -4,10 +4,16 @@ import Navibar from "./Navibar";
 import Sidebar from "./Sidebar";
 import styled from "@emotion/styled";
 
-function Layout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  showSidebar?: boolean;
+}
+
+function Layout({ children, showSidebar =false}: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   const handleToggleSidebar = () => {
+    if(!showSidebar) return;
     setSidebarOpen((prev) => !prev);
   };
 
@@ -18,7 +24,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <Container>
       <Header onToggleSidebar={handleToggleSidebar} />
-      <Navibar />
+      {/* <Navibar /> */}
       <MainContainer>
         <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />
         <Main>{children}</Main>
@@ -49,6 +55,6 @@ const Main = styled.div`
   padding: 20px 50px;
 
   flex-direction: column;
-  overflow-y: hidden;
+  overflow-y: auto;
   gap: 16px;
 `;

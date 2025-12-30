@@ -4,6 +4,7 @@ import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 
 public record TruckListItemResponseDto(
@@ -11,23 +12,38 @@ public record TruckListItemResponseDto(
         String name,
         String cuisine,
         TruckStatus status,
-        String locationSummary
+        String locationSummary,
+        BigDecimal latitude,
+        BigDecimal longitude
 ) {
 
    public static TruckListItemResponseDto from(Truck truck) {
 
-       String locationSummary = truck.getSchedules().stream()
+       Schedule activeSchedule = truck.getSchedules().stream()
                .filter(Schedule::isNowActive)
                .max(Comparator.comparing(Schedule::getStartTime))
-               .map(Schedule::getLocationName)
-               .orElse("현재 운영하지 않습니다.");
+               .orElse(null);
+
+       if(activeSchedule == null || activeSchedule.getLocation() == null) {
+           return new TruckListItemResponseDto(
+                   truck.getId(),
+                   truck.getName(),
+                   truck.getCuisine(),
+                   truck.getStatus(),
+                   "현재 운영하지 않습니다.",
+                   null,
+                   null
+           );
+       }
 
        return new TruckListItemResponseDto(
                truck.getId(),
                truck.getName(),
                truck.getCuisine(),
                truck.getStatus(),
-               locationSummary
+               activeSchedule.getLocation().getName(),
+               activeSchedule.getLocation().getLatitude(),
+               activeSchedule.getLocation().getLongitude()
        );
    }
 }

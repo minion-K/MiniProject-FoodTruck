@@ -41,8 +41,8 @@ public class AuthorizationChecker {
         User currentUser = getCurrentUser();
         String role = currentUser.getRoleTypes().toString();
 
-        if (!(role.equals("ADMIN") || role.equals("MANAGER"))) {
-            throw new AccessDeniedException("관리자 또는 매니저 권한이 필요합니다.");
+        if (!(role.equals("ADMIN") || role.equals("OWNER"))) {
+            throw new AccessDeniedException("관리자 또는 트럭오너 권한이 필요합니다.");
         }
 
     }

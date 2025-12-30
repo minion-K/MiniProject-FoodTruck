@@ -1,0 +1,1 @@
+export type ScheduleStatus = "PLANNED" | "OPEN" | "CLOSE" | "CANCELED"

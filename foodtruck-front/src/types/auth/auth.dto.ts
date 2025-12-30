@@ -10,7 +10,7 @@ export interface SignupRequest {
   confirmPassword: string;
   email: string;
   phone: string;
-
+  provider: string;
 }
 
 // 로그인

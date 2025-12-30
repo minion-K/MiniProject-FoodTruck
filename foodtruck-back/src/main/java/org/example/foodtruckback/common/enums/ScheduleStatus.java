@@ -4,5 +4,5 @@ public enum ScheduleStatus {
     PLANNED,
     OPEN,
     CLOSED,
-    CANCELLED
+    CANCELED
 }

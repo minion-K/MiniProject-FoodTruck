@@ -1,3 +1,2 @@
 export type TruckStatus =
-  | "ACTIVE" 
-  | "INACTIVE";
+  "ACTIVE" | "INACTIVE";

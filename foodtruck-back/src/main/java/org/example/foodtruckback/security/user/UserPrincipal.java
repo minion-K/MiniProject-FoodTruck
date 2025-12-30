@@ -6,16 +6,20 @@ import lombok.Getter;
 import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
 @Getter
 @ToString(exclude = "password")
-public class UserPrincipal implements UserDetails {
+public class UserPrincipal implements UserDetails, OAuth2User, Serializable {
     private final Long id;
     private final String loginId;
     @JsonIgnore
     private  final String password;
+    @JsonIgnore
     private final Collection<? extends GrantedAuthority> authorities;
 
     private final boolean accountNonExpired;
@@ -43,6 +47,19 @@ public class UserPrincipal implements UserDetails {
         this.credentialsNonExpired = credentialsNonExpired;
         this.enabled = enabled;
     }
+
+    private Map<String, Object> attributes;
+    private String name;
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+    @Override
+    public String getName() {
+        return name;
+    }
+
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
     @Override public String getPassword() { return password; }
     @Override public String getUsername() { return loginId; }

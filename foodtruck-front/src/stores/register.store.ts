@@ -19,7 +19,8 @@ const initialForm: SignupRequest = {
   password: "",
   confirmPassword: "",
   email: "",
-  phone: ""
+  phone: "",
+  provider: "",
 }
 
 export const useRegisterStore = create(

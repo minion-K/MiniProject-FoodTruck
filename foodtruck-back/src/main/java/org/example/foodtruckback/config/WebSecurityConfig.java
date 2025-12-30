@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.security.filter.JwtAuthenticationFilter;
 import org.example.foodtruckback.security.handler.JsonAccessDeniedHandler;
 import org.example.foodtruckback.security.handler.JsonAuthenticationEntryPoint;
+import org.example.foodtruckback.security.oauth2.handler.OAuth2AuthenticationSuccessHandler;
+import org.example.foodtruckback.security.oauth2.service.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -84,7 +86,7 @@ public class WebSecurityConfig {
         ));
     }
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler, CustomOAuth2UserService customOAuth2UserService) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -111,23 +113,32 @@ public class WebSecurityConfig {
                             // .permitAll(): 인증/인가 없이 모두 가능
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                            // users / auth
-                            .requestMatchers("/api/v1/auth/**").permitAll()
-
-
                             .requestMatchers(
                                     "/api/v1/auth/**",
+                                    "/api/v1/users/me",
                                     "/oauth2/**",
                                     "/login/**",
-                                    "/favicon.ico",
+                                    "/login/oauth2/code/**",
                                     "/error").permitAll()
 
                             .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll();
 
 //                            .anyRequest().authenticated(); // 그 외에는 인증 필요
-                });
+                })
 
-
+        // OAuth2
+        .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo ->
+                        userInfo.userService(customOAuth2UserService)
+                )
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler((request, response, exception) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json; charset=UTF-8");
+                    response.getWriter().write(
+                            "{\"sucess\":false, \"message\":\"OAuth2 로그인 실패\", \"code\":\"OAUTH2_FAILURE\"}"
+                    );
+                }));
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

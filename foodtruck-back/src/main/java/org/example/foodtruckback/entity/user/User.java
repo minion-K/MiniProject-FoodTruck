@@ -2,12 +2,15 @@ package org.example.foodtruckback.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.foodtruckback.common.enums.AuthProvider;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 
+import java.security.Provider;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
@@ -44,10 +47,18 @@ public class User extends BaseTimeEntity {
     private boolean verified = false;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
     private UserStatus status = UserStatus.TEMP;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> userRoles = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", length = 20, nullable = false)
+    private AuthProvider provider;
+
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
 
     public static User createTempUser(String email) {
         User user = new User();
@@ -59,8 +70,39 @@ public class User extends BaseTimeEntity {
         user.name = "TEMP" + suffix;
         user.loginId = "TEMP" + suffix;
         user.password = "TEMP" + suffix;
+        user.provider = AuthProvider.LOCAL;
 
         return user;
+    }
+
+    public static User createOauthUser (
+            AuthProvider provider,
+            String providerId,
+            String email,
+            String name
+    ) {
+        User user = new User();
+
+        user.loginId = provider.name() + "_" + providerId;
+        user.password = UUID.randomUUID().toString();
+        user.email = email;
+        user.name = name;
+        user.provider = provider;
+        user.providerId = providerId;
+        user.verified = true;
+        user.status = UserStatus.ACTIVE;
+
+        return user;
+    }
+
+    public void connectProvider(AuthProvider provider, String providerId) {
+        this.provider = provider;
+        this.providerId = providerId;
+    }
+
+    public void updateOauthProfile(String name, String email) {
+        this.name = name;
+        this.email = email;
     }
 
     public void completeSignup(String name, String loginId, String password, String phone) {
@@ -69,6 +111,15 @@ public class User extends BaseTimeEntity {
         this.password = password;
         this.phone = phone;
         this.status = UserStatus.ACTIVE;
+    }
+
+    public void grantRole(Role role) {
+        boolean exists = userRoles.stream()
+                .anyMatch(userRole -> userRole.getRole().equals(role));
+
+        if(!exists) {
+            userRoles.add(new UserRole(this, role));
+        }
     }
 
     public void addRole(Role role) {

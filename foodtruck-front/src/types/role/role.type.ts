@@ -1,4 +1,4 @@
 export type RoleType =
   | "ADMIN" 
-  | "MANAGER"
+  | "OWNER"
   | "USER";

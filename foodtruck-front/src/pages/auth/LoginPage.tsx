@@ -1,5 +1,6 @@
 import { authApi } from "@/apis/auth/auth.api";
 import { userApi } from "@/apis/user/user.api";
+import SocialLoginButton from "@/components/SocialLoginButton";
 import { useAuthStore } from "@/stores/auth.store";
 import type { LoginRequest } from "@/types/auth/auth.dto";
 import { getErrorMsg } from "@/utils/error";
@@ -35,7 +36,7 @@ function LoginPage() {
       }
 
       setAccessToken(res.accessToken);
-
+        
       const me = await userApi.me();
       if(!me) {
         throw new Error("유저 정보 조회 실패: 데이터가 없습니다");
@@ -92,6 +93,9 @@ function LoginPage() {
 
         <LoginButton type="submit">로그인</LoginButton>
       </Form>
+
+      <SocialLoginButton />
+
       <LinkContainer>
         <Link to="/register">회원가입</Link>
         <Link to="/forgot-password">비밀번호 찾기</Link>

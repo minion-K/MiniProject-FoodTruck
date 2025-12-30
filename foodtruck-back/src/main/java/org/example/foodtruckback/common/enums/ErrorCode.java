@@ -33,6 +33,7 @@ public enum ErrorCode {
     ACCESS_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "권한을 찾을 수 없습니다.", "UserApi not found"),
     DUPLICATE_USER(HttpStatus.CONFLICT, "U002", "이미 존재하는 사용자입니다.", "Duplicate user"),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 존재하는 이메일입니다.", "Duplicate email"),
+    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U004", "존재하지 않는 ROLE입니다." ,"Role not found" ),
 
     // ===========================
     // location (Lxxx)
