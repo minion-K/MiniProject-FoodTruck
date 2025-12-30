@@ -49,7 +49,6 @@ public class TruckServiceImpl implements TruckService {
         truckRepository.save(truck);
 
         List<ScheduleItemResponseDto> schedules = List.of();
-
         List<MenuItemDetailResponseDto> menuItems = List.of();
 
         return ResponseDto.success(

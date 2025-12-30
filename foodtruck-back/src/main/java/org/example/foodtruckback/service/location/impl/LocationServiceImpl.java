@@ -28,7 +28,7 @@ public class LocationServiceImpl implements LocationService {
 
     // create location
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     @Transactional
     public ResponseDto<LocationDetailResponseDto> createLocation(
             UserPrincipal principal, LocationCreateRequestDto request
@@ -76,7 +76,7 @@ public class LocationServiceImpl implements LocationService {
 
     // update location
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     @Transactional
     public ResponseDto<LocationDetailResponseDto> updateLocation(
             UserPrincipal principal, Long locationId, LocationUpdateRequestDto request
@@ -105,7 +105,7 @@ public class LocationServiceImpl implements LocationService {
 
     // delete location
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     @Transactional
     public ResponseDto<Void> deleteLocation(UserPrincipal principal, Long locationId) {
         Location location = locationRepository.findById(locationId)

@@ -1,19 +1,22 @@
 package org.example.foodtruckback.service.reservation;
 
 import jakarta.validation.Valid;
+import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
+import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
 import org.example.foodtruckback.entity.user.User;
+import org.example.foodtruckback.security.user.UserPrincipal;
 
 import java.util.List;
 
 public interface ReservationService {
-    ReservationResponseDto createReservation(User user, @Valid ReservationCreateRequestDto request);
+    ResponseDto<ReservationResponseDto> createReservation(UserPrincipal principal, @Valid ReservationCreateRequestDto request);
 
-    ReservationResponseDto getReservation(User user, Long reservationId);
+    ResponseDto<ReservationResponseDto> getReservation(UserPrincipal principal, Long reservationId);
 
-    List<ReservationListResponseDto> getReservationList(User user);
+    ResponseDto<List<ReservationListResponseDto>> getReservationList(UserPrincipal principal);
 
-    ReservationResponseDto updateStatus(User user, Long reservationId, String status, String note);
+    ResponseDto<ReservationResponseDto> updateStatus(UserPrincipal principal, Long reservationId, ReservationStatusUpdateRequestDto request);
 }

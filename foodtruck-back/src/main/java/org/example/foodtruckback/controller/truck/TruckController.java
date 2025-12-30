@@ -39,7 +39,6 @@ public class TruckController {
 
     @GetMapping
     public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getAllTrucks() {
-
         ResponseDto<List<TruckListItemResponseDto>> data =
                 truckService.getAllTrucks();
 

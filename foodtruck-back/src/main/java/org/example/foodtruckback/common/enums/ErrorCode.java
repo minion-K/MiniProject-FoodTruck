@@ -44,7 +44,14 @@ public enum ErrorCode {
     // ===========================
     // email (Exxx)
     // ===========================
-    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "E001", "이메일 인증이 필요합니다.", "Email not verified");
+    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "E001", "이메일 인증이 필요합니다.", "Email not verified"),
+
+    // ===========================
+    // schedule (Sxxx)
+    // ===========================
+    SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "해당 스케줄을 찾을 수 없습니다.", "Schedule not found"),
+    INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "S002", "예약할 수 없는 스케줄입니다.", "Invalid schedule"),
+    DUPLICATE_SCHEDULE(HttpStatus.CONFLICT, "S002", "이미 예약한 스케줄입니다..", "Duplicate schedule");
 
     private final HttpStatus status;
     private final String code;

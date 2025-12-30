@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.entity.location.Location;
+import org.example.foodtruckback.exception.BusinessException;
 
 import java.time.LocalDateTime;
 
@@ -55,5 +57,16 @@ public class Schedule extends BaseTimeEntity {
 
     public String getLocationName() {
         return location != null ? location.getName() : "위치 미정";
+    }
+
+    public boolean isReservation() {
+        return status == ScheduleStatus.OPEN
+                && LocalDateTime.now().isBefore(endTime);
+    }
+
+    public void validate(LocalDateTime pickupTime) {
+        if(pickupTime.isBefore(startTime) || pickupTime.isAfter(endTime)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
     }
 }
