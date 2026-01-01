@@ -1,13 +1,44 @@
 import { truckApi } from '@/apis/truck/truck.api';
 import KakaoMap from '@/components/map/KakaoMap';
+import ReservationModal from '@/components/reservation/ReservationModal';
+import { useAuthStore } from '@/stores/auth.store';
+import type { ScheduleDetailResponse, TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
 import { type TruckDetailResponse } from '@/types/truck/truck.dto';
 import styled from '@emotion/styled'
 import React, { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 function TruckDetail() {
   const {truckId} = useParams();
   const[truck, setTruck] = useState<TruckDetailResponse | null>(null);
+  const {accessToken, isInitialized} = useAuthStore();
+  const [selectedSchedule, setSelectedSchedule] = useState<TruckScheduleItemResponse | null>(null);
+
+  const navigate = useNavigate();
+
+  const handleReservationClick = (schedule: TruckScheduleItemResponse) => {
+    const isLoggedIn = isInitialized === true && accessToken !== null;
+
+    if(!isInitialized) return ;
+
+    if(!isLoggedIn) {
+      alert("예약은 로그인 후에 가능합니다.")
+
+      return navigate("/login");
+    };
+
+    setSelectedSchedule(schedule);
+  }
+  
+  const isReservation = (schedule: TruckScheduleItemResponse) => {
+    const now = new Date();
+
+    return (
+      schedule.status === "OPEN" &&
+      new Date(schedule.startTime) <= now &&
+      new Date(schedule.endTime) >= now
+    );
+  };
 
   useEffect(() => {
     if(!truckId) return;
@@ -36,7 +67,7 @@ function TruckDetail() {
   if(!truck) return null;
 
   const center = activeSchedule 
-    ? {lat: Number(activeSchedule.latitude), lng: Number(activeSchedule.longitude)} 
+    ? {lat: activeSchedule.latitude, lng: activeSchedule.longitude} 
     : {lat: 35.15776, lng: 129.05657};
 
   const markers = activeSchedule
@@ -77,7 +108,16 @@ function TruckDetail() {
                 </ScheduleTime>
               </div>
 
-              <Badge data-status={schedule.status}>{schedule.status}</Badge>
+              <ScheduleRight>
+                <Badge data-status={schedule.status}>{schedule.status}</Badge>
+
+                <ReservationButton
+                  disabled={!isReservation(schedule)}
+                  onClick={() => handleReservationClick(schedule)}
+                >
+                  예약하기
+                </ReservationButton>
+              </ScheduleRight>
             </ScheduleItem>
           ))}
         </ScheduleList>
@@ -99,6 +139,14 @@ function TruckDetail() {
           </MenuList>
         )}
       </Section>
+
+      {selectedSchedule && (
+        <ReservationModal 
+          schedule={selectedSchedule}
+          menus={truck.menu}
+          onClose={() => setSelectedSchedule(null)}
+        />
+      )}
     </Container>
   )
 }
@@ -184,6 +232,12 @@ const ScheduleTime = styled.div`
   color: #777;
 `;
 
+const ScheduleRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
 const Badge = styled.span`
   font-size: 12px;
   padding: 4px 8px;
@@ -197,6 +251,29 @@ const Badge = styled.span`
   &[data-status="PLANNED"] {
     background-color: #e0f2fe;
     color: #0369a1;
+  }
+`;
+
+const ReservationButton = styled.button<{disabled?: boolean}>`
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+
+  cursor: ${({disabled}) => (disabled ? "not-allowed" : "pointer")};
+
+  background-color: ${({disabled}) => 
+    disabled ? "#e5e7eb": "#ff6b00"};
+  
+  color: ${({disabled}) => 
+    disabled ? "#9ca3af" : "#ffffff"};
+
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${({disabled}) => 
+      disabled ? "#e5e7eb" : "#e55f00"};
   }
 `;
 

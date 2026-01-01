@@ -51,8 +51,24 @@ public enum ErrorCode {
     // ===========================
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "해당 스케줄을 찾을 수 없습니다.", "Schedule not found"),
     INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "S002", "예약할 수 없는 스케줄입니다.", "Invalid schedule"),
-    DUPLICATE_SCHEDULE(HttpStatus.CONFLICT, "S002", "이미 예약한 스케줄입니다..", "Duplicate schedule");
 
+    // ===========================
+    // reservation (Rxxx)
+    // ===========================
+    DUPLICATE_RESERVATION(HttpStatus.CONFLICT, "R001", "이미 예약된 픽업시간입니다.", "Duplicate reservation"),
+    RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "R002", "해당 예약을 찾을 수 없습니다.", "Reservation not found"),
+    
+    // ===========================
+    // menu (Mxxx)
+    // ===========================
+    MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴를 찾을 수 없습니다.", "Menu not found"),
+    INVALID_MENU(HttpStatus.BAD_REQUEST, "M002", "해당 트럭의 메뉴가 아닙니다.", "Invalid menu this truck"),
+    MENU_SOLD_OUT(HttpStatus.CONFLICT, "M003", "해당 메뉴는 품절 상태입니다.", "Menu is Sold out"),
+
+    // ===========================
+    // truck (Txxx)
+    // ===========================
+    TRUCK_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "해당 트럭을 찾을 수 없습니다.", "Truck not found");
     private final HttpStatus status;
     private final String code;
     private final String message;     // client-friendly

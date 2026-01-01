@@ -31,11 +31,12 @@ export interface ScheduleDetailResponse {
 }
 
 export interface TruckScheduleItemResponse {
+  scheduleId: number;
   startTime: string;
   endTime: string;
   locationId: number; 
   locationName?: string;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   status: ScheduleStatus;
 }

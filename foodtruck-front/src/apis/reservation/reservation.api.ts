@@ -1,4 +1,4 @@
-import { publicApi } from "../common/axiosInstance";
+import { privateApi, publicApi } from "../common/axiosInstance";
 import { RESERVATION_PATH } from "./reservation.path";
 import type {
   ReservationCreateRequest,
@@ -9,7 +9,7 @@ import type { ApiResponse } from "@/types/common/ApiResponse";
 
 export const reservationApi = {
   createReservation: async (body: ReservationCreateRequest): Promise<ReservationDetailResponse> => {
-    const res = await publicApi.post<ApiResponse<ReservationDetailResponse>>(
+    const res = await privateApi.post<ApiResponse<ReservationDetailResponse>>(
       RESERVATION_PATH.ROOT,
       body
     );
@@ -34,27 +34,11 @@ export const reservationApi = {
     return res.data.data;
   },
 
-  cancelReservation: async (reservationId: number): Promise<ReservationDetailResponse> => {
+  updateStatus: async (reservationId: number): Promise<ReservationDetailResponse> => {
     const res = await publicApi.patch<ApiResponse<ReservationDetailResponse>>(
-      RESERVATION_PATH.CANCEL(reservationId)
+      RESERVATION_PATH.STATUS(reservationId)
     );
 
     return res.data.data;
-  },
-
-  confirmReservation: async (reservationId: number): Promise<ReservationDetailResponse> => {
-    const res = await publicApi.patch<ApiResponse<ReservationDetailResponse>>(
-      RESERVATION_PATH.CONFIRM(reservationId)
-    );
-
-    return res.data.data;
-  },
-
-  noShowReservation: async (reservationId: number): Promise<ReservationDetailResponse> => {
-    const res = await publicApi.patch<ApiResponse<ReservationDetailResponse>>(
-      RESERVATION_PATH.NO_SHOW(reservationId)
-    );
-    
-    return res.data.data;
-  },
-};
+  },  
+}

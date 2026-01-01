@@ -1,9 +1,14 @@
 import type { ReservationStatus } from "./reservation.type";
 
+export interface ReservationMenuItemRequest {
+  menuItemId: number;
+  quantity: number;
+}
+
 export interface ReservationCreateRequest {
   scheduleId: number; // 방문할 스케줄 ID
   pickupTime: string; // ISO 문자열(YYYY-MM-DDTHH:mm:ss)
-  totalAmount: number;
+  menuItems: ReservationMenuItemRequest[];
   note?: string;
 }
 

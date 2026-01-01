@@ -1,13 +1,24 @@
 package org.example.foodtruckback.repository.reservation;
 
+import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.validation.constraints.NotNull;
 import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     List<Reservation> findByUserId(Long id);
+    boolean existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusIn(
+            Long userId,
+            Long ScheduleId,
+            @NotNull(message = "픽업 예정 시간을 정해주세요.") LocalDateTime localDateTime,
+            List<ReservationStatus> status
+    );
 
-    boolean existsByUser_IdAndSchedule_IdAndStatusIn(Long userId, Long scheduleId, List<ReservationStatus> statues);
+    @Query("SELECT r FROM Reservation r WHERE r.schedule.truck.owner.id = :ownerId")
+    List<Reservation> findByTruckOwnerId(@Param("ownerId") Long ownerId);
 }

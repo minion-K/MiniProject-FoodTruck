@@ -37,7 +37,7 @@ public class TruckServiceImpl implements TruckService {
 
         User owner = authorizationChecker.getCurrentUser();
 
-        authorizationChecker.checkManagerOrAdmin();
+        authorizationChecker.checkOwnerOrAdmin();
 
         Truck truck = new Truck(
                 owner,

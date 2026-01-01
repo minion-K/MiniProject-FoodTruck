@@ -25,10 +25,10 @@ public class Location {
     @Column(name = "address", length = 255)
     private String address;
 
-    @Column(name = "latitude", nullable = false)
+    @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
     private BigDecimal latitude;
 
-    @Column(name = "longitude", nullable = false)
+    @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     private BigDecimal longitude;
 
     @Column(name = "created_at", nullable = false , columnDefinition = "DATETIME(6)")

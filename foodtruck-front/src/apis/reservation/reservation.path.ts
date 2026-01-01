@@ -9,7 +9,5 @@ export const RESERVATION_PATH = {
   CREATE: RESERVATION_FREFIX,
 
   BY_ID: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}`,
-  CANCEL: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/cancel`,
-  CONFIRM: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/confirm`,
-  NO_SHOW: (reservationId: number) =>`${RESERVATION_FREFIX}/${reservationId}/no-show`,
+  STATUS: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/status`,
 }

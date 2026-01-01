@@ -121,9 +121,9 @@ public class WebSecurityConfig {
                                     "/login/oauth2/code/**",
                                     "/error").permitAll()
 
-                            .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll();
+                            .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
 
-//                            .anyRequest().authenticated(); // 그 외에는 인증 필요
+                            .anyRequest().authenticated(); // 그 외에는 인증 필요
                 })
 
         // OAuth2

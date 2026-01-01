@@ -38,7 +38,7 @@ public class Reservation extends BaseTimeEntity {
         @Column(nullable = false)
         private LocalDateTime pickupTime;
 
-        @Column(nullable = false, precision = 10, scale = 2)
+        @Column(nullable = false)
         private int totalAmount;
 
         @Enumerated(EnumType.STRING)
