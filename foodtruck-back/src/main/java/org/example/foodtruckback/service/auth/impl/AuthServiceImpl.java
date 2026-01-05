@@ -118,8 +118,8 @@ public class AuthServiceImpl implements AuthService {
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
             // Access/Refresh Token 생성
-            String accessToken = jwtProvider.generateAccessToken(loginId, roles);
-            String refreshToken = jwtProvider.generateRefreshToken(loginId, roles);
+            String accessToken = jwtProvider.generateAccessToken(user.getId(), loginId, roles);
+            String refreshToken = jwtProvider.generateRefreshToken(user.getId(), loginId, roles);
 
             long accessExpiresIn = jwtProvider.getRemainingMillis(accessToken);
             long refreshRemaining = jwtProvider.getRemainingMillis(refreshToken);
@@ -296,8 +296,8 @@ public class AuthServiceImpl implements AuthService {
         Set<String> roles = principal.getAuthorities()
                 .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
 
-        String newAccess = jwtProvider.generateAccessToken(loginId, roles);
-        String newRefresh = jwtProvider.generateRefreshToken(loginId, roles);
+        String newAccess = jwtProvider.generateAccessToken(user.getId(), loginId, roles);
+        String newRefresh = jwtProvider.generateRefreshToken(user.getId(), loginId, roles);
 
         long accessExpiresIn = jwtProvider.getRemainingMillis(newAccess);
         long refreshRemaining = jwtProvider.getRemainingMillis(newRefresh);

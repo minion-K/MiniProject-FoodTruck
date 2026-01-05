@@ -54,8 +54,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
 
-        String accessToken = jwtProvider.generateAccessToken(loginId, roles);
-        String refreshToken = jwtProvider.generateRefreshToken(loginId, roles);
+        String accessToken = jwtProvider.generateAccessToken(user.getId(), loginId, roles);
+        String refreshToken = jwtProvider.generateRefreshToken(user.getId(), loginId, roles);
 
         long refreshMillis = jwtProvider.getRemainingMillis(refreshToken);
         Instant refreshExpiry = Instant.now().plusMillis(refreshMillis);

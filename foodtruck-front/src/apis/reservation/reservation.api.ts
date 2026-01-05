@@ -18,7 +18,7 @@ export const reservationApi = {
   },
 
   getReservationList: async (): Promise<ReservationListResponse> => {
-    const res = await publicApi.get<ApiResponse<ReservationListResponse>>(
+    const res = await privateApi.get<ApiResponse<ReservationListResponse>>(
       RESERVATION_PATH.ROOT
     );
 
@@ -27,7 +27,7 @@ export const reservationApi = {
 
   getReservationById: async (
     reservationId: number): Promise<ReservationDetailResponse> => {
-    const res = await publicApi.get<ApiResponse<ReservationDetailResponse>>(
+    const res = await privateApi.get<ApiResponse<ReservationDetailResponse>>(
       RESERVATION_PATH.BY_ID(reservationId)
     );
 
@@ -35,7 +35,7 @@ export const reservationApi = {
   },
 
   updateStatus: async (reservationId: number): Promise<ReservationDetailResponse> => {
-    const res = await publicApi.patch<ApiResponse<ReservationDetailResponse>>(
+    const res = await privateApi.patch<ApiResponse<ReservationDetailResponse>>(
       RESERVATION_PATH.STATUS(reservationId)
     );
 

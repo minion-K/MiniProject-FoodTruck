@@ -14,12 +14,12 @@ export interface ReservationCreateRequest {
 
 export interface ReservationListItemResponse {
   id: number;
-  scheduleId: number;
-  userId: number;
   pickupTime: string;
   totalAmount: number;
   status: ReservationStatus;
-  note?: string;
+  truckId: number;
+  truckName: string;
+  locationName: string;
 }
 
 export type ReservationListResponse = ReservationListItemResponse[];

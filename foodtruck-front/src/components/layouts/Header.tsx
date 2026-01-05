@@ -11,19 +11,34 @@ function Header({ onToggleSidebar }: HeaderProps) {
   const {accessToken, user, clearAuth} = useAuthStore();
 
   const isLogged = accessToken ? true : false;
+  const roles = user?.roles ?? [];
+
+  const isOwnerOrAdmin = 
+    isLogged && (roles.includes("OWNER") || roles.includes("ADMIN"));
+  const isUser = 
+    isLogged && roles.includes("USER") && !isOwnerOrAdmin;
+
   return (
     <HeaderContainer>
-      <div className="sidebar-btn" onClick={onToggleSidebar}>
-        <div className="hamburger"></div>
-        <div className="hamburger hamburger2"></div>
-        <div className="hamburger"></div>
-      </div>
-      <HeaderText>Food Truck</HeaderText>
+      {isOwnerOrAdmin ? (
+        <HamburgerBtn onClick={onToggleSidebar}>
+          <span />
+          <span className="hamburger2"/>
+          <span />
+        </HamburgerBtn>
+      ) : (
+        <LeftSpace />
+      )}
+
+      <HeaderText><Link to="/">Food Truck</Link></HeaderText>
       <HeaderRight>
         {isLogged ? (
           <>
             <UserName>{user?.name} 님, 환영합니다.</UserName>
-            <Logout onClick={clearAuth}>로그아웃</Logout>
+            {isUser && (
+              <OutlineBtn><Link to="/mypage">마이페이지</Link></OutlineBtn>
+            )}
+            <OutlineBtn onClick={clearAuth}>로그아웃</OutlineBtn>
           </>
         ) : (
           <>
@@ -47,55 +62,71 @@ const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: #f1f1f1;
-  border-bottom: 1px solid #ccc;
+  padding: 0 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+`;
 
-  .hamburger {
-    width: 25px;
-    border: 1.9px solid black;
-    transition: width 0.2s ease;
+const LeftSpace = styled.div`
+  width: 32px;
+`;
+
+const HamburgerBtn = styled.button`
+  width: 32px;
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  span {
+    height: 3px;
+    width: 100%;
+    background-color: #555;
+    border-radius: 2px;
   }
 
-  .sidebar-btn {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
+  &:hover span {
+    background-color: #4f46e5;
   }
 
-  .sidebar-btn:hover > .hamburger2 {
-    width: 15px;
+  &:hover .hamburger2 {
+    width: 70%;
   }
 `;
 
 const HeaderText = styled.h1`
+margin: 0;
   text-align: center;
-  color: var(--primary);
+  font-size: 28px;
+  color: #4f46e5;
+  cursor: pointer;
 `;
 
 const HeaderRight = styled.div`
   display: flex;
-  flex-direction: row;
-  gap: 5px;
+  align-items: center;
+  gap: 10px;
 `;
 
 const LoginBtn = styled.div`
   cursor: pointer;
-  background-color: var(--primary);
-  color: white;
-  padding: 6px 8px;
-  border-radius: 8px;
+  font-size: 14px;
+  color: #4b5563;
+  text-decoration: none;
 
   &:hover {
-    background-color: #5b54ff;
+    color: #111827;
   }
 `;
 
-const UserName = styled.div`
+const UserName = styled.span`
+  font-size: 13px;
   font-weight: 600;
-  margin-top: 8px;
-  margin-right: 16px;
+  color: #374151;
 `;
 
 const Logout = styled.button`
@@ -108,5 +139,21 @@ const Logout = styled.button`
 
   &:hover {
     background-color: #5b54ff;
+  }
+`;
+
+const OutlineBtn = styled.button`
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #4f46e5;
+    color: #4f46e5;
   }
 `;

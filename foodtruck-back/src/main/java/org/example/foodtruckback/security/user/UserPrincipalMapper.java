@@ -17,9 +17,9 @@ public class UserPrincipalMapper {
 
     private final UserRepository userRepository;
 
-    public UserPrincipal toPrincipal(@NonNull String loginId) {
+    public UserPrincipal toPrincipal(@NonNull Long userId) {
 
-        User user = userRepository.findWithRoleByLoginId(loginId)
+        User user = userRepository.findByIdWithRoles(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return map(user);

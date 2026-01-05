@@ -21,6 +21,7 @@ import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.reservation.ReservationService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +44,8 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ResponseDto<ReservationResponseDto> createReservation(
-            UserPrincipal principal, ReservationCreateRequestDto request
+            @AuthenticationPrincipal UserPrincipal principal,
+            ReservationCreateRequestDto request
     ) {
 
         Schedule schedule = scheduleRepository.findById(request.scheduleId())
@@ -105,7 +107,10 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
-    public ResponseDto<ReservationResponseDto> getReservation(UserPrincipal principal, Long reservationId) {
+    public ResponseDto<ReservationResponseDto> getReservation(
+            @AuthenticationPrincipal UserPrincipal principal,
+            Long reservationId
+    ) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
@@ -116,18 +121,20 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasAnyRole('ADMIN','OWNER','USER')")
-    public ResponseDto<List<ReservationListResponseDto>> getReservationList(UserPrincipal principal) {
+    public ResponseDto<List<ReservationListResponseDto>> getReservationList(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
         User user = userRepository.getReferenceById(principal.getId());
 
         List<Reservation> reservations;
 
         if(user.getRoleTypes().contains("ADMIN")) {
-            reservations = reservationRepository.findAll();
+            reservations = reservationRepository.findForAdminReservationList();
 
         } else if(user.getRoleTypes().contains("OWNER")) {
-            reservations = reservationRepository.findByTruckOwnerId(user.getId());
+            reservations = reservationRepository.findForOwnerReservationList(user.getId());
         } else {
-            reservations = reservationRepository.findByUserId(user.getId());
+            reservations = reservationRepository.findForUserReservationList(user.getId());
         }
 
         List<ReservationListResponseDto> response = reservations.stream()
@@ -141,7 +148,9 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> updateStatus(
-            UserPrincipal principal, Long reservationId, ReservationStatusUpdateRequestDto request
+            @AuthenticationPrincipal UserPrincipal principal,
+            Long reservationId,
+            ReservationStatusUpdateRequestDto request
     ) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));

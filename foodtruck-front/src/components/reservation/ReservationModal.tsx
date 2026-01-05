@@ -1,12 +1,12 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
-import type { ReservationDetailResponse } from '@/types/reservation/reservation.dto';
 import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto'
 import type { TruckMenuItemResponse } from '@/types/truck/truck.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled'
-import type { Axios, AxiosError } from 'axios';
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast';
+import ReservationCompleteModal from './ReservationCompleteModal';
+import { formatTime } from '@/utils/date';
 
 interface ReservationModalProps {
   schedule: TruckScheduleItemResponse;
@@ -14,13 +14,18 @@ interface ReservationModalProps {
   onClose: () => void;
 }
 
-const ONE_HOUR = 1000 * 60 * 60;
-
-function formatTime(date: Date) {
-  const hour = String(date.getHours()).padStart(2, "0");
-  
-  return `${hour}:00`;
+interface ReservationSummary {
+  reservationId: number;
+  pickupTime: string;
+  menus: {
+    name: string;
+    quantity: number;
+    price: number;
+  }[],
+  totalAmount: number;
 }
+
+const ONE_HOUR = 1000 * 60 * 60;
 
 function toKstString(date: Date) {
   const year = date.getFullYear();
@@ -41,6 +46,9 @@ function ReservationModal({schedule, menus, onClose}: ReservationModalProps) {
   const [selectedTime, setSelectedTime] = useState<Date | null>(null);
   const [menuQty, setMenuQty] = useState<Record<number, number>>({});
   const [note, setNote] = useState("");
+
+  const [step, setStep] = useState<"FORM" | "COMPLETE">("FORM");
+  const [summary, setSummary] = useState<ReservationSummary | null>(null);
 
   const timeSlots: TimeSlot[] = useMemo(() => {
     const slots: TimeSlot[] =[];
@@ -91,21 +99,48 @@ function ReservationModal({schedule, menus, onClose}: ReservationModalProps) {
       if(menuItems.length === 0) return ;
 
       try {
-        await reservationApi.createReservation({
+        const response = await reservationApi.createReservation({
           scheduleId: schedule.scheduleId,
           pickupTime,
           menuItems,
-          note: "",
+          note,
         });
 
-        toast.success("예약이 완료되었습니다.")
-        onClose();
+        const summaryMenus = menus
+          .filter(menu => (menuQty[menu.id] ?? 0) > 0)
+          .map(menu => ({
+            name: menu.name,
+            quantity: menuQty[menu.id],
+            price: menu.price
+          }));
+
+        setSummary({
+          reservationId: response.id,
+          pickupTime,
+          menus: summaryMenus,
+          totalAmount
+        })
+
+        toast.success("예약이 완료되었습니다.");
+        setStep("COMPLETE");
+      
       } catch (err) {
         const msg = getErrorMsg(err, "예약에 실패했습니다. 다시 시도해주세요");
 
         alert(msg)
       }
   };
+
+  if(step === "COMPLETE" && summary) {
+    return (
+      <Overlay>
+        <ReservationCompleteModal 
+          summary={summary}
+          onClose={onClose}
+        />
+      </Overlay>
+    )
+  }
 
   return (
     <Overlay>

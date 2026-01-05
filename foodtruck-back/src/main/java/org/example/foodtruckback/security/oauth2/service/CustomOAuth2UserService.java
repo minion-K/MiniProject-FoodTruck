@@ -44,7 +44,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         User user = upsertUser(provider, userInfo);
 
-        return userPrincipalMapper.toPrincipal(user.getLoginId());
+        return userPrincipalMapper.toPrincipal(user.getId());
 
     }
 

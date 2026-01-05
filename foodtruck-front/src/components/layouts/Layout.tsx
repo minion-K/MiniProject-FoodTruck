@@ -52,7 +52,7 @@ const MainContainer = styled.div`
 const Main = styled.div`
   display: flex;
   flex: 1;
-  padding: 20px 50px;
+  /* padding: 20px 50px; */
 
   flex-direction: column;
   overflow-y: auto;

@@ -8,13 +8,19 @@ import java.time.LocalDateTime;
 public record ReservationListResponseDto(
         Long id,
         LocalDateTime pickupTime,
-        ReservationStatus status
+        ReservationStatus status,
+        int totalAmount,
+        String truckName,
+        String locationName
 ) {
     public static ReservationListResponseDto from(Reservation reservation) {
         return new ReservationListResponseDto(
                 reservation.getId(),
                 reservation.getPickupTime(),
-                reservation.getStatus()
+                reservation.getStatus(),
+                reservation.getTotalAmount(),
+                reservation.getSchedule().getTruck().getName(),
+                reservation.getSchedule().getLocationName()
         );
     }
 }

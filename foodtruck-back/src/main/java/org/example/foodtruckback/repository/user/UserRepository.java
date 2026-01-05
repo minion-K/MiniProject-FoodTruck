@@ -17,9 +17,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
         from User u
         left join fetch u.userRoles ur
         left join fetch ur.role r
-        where u.loginId = :loginId
+        where u.id = :id
     """)
-    Optional<User> findWithRoleByLoginId(@Param("loginId") String loginId);
+    Optional<User> findByIdWithRoles(@Param("id") Long id);
 
     Optional<User> findByEmail(@NotBlank(message = "이메일은 필수입니다.") @Size(max = 255) String email);
 

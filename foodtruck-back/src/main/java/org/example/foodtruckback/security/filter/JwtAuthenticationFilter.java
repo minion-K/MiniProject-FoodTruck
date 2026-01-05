@@ -38,8 +38,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (token != null && jwtProvider.isValidToken(token)) {
 
-                String username = jwtProvider.getUsernameFromJwt(token);
-                UserPrincipal principal = userPrincipalMapper.toPrincipal(username);
+                Long userId = jwtProvider.getUserIdFromJwt(token);
+                UserPrincipal principal = userPrincipalMapper.toPrincipal(userId);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(

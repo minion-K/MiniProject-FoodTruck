@@ -2,7 +2,7 @@ import { truckApi } from '@/apis/truck/truck.api';
 import KakaoMap from '@/components/map/KakaoMap';
 import ReservationModal from '@/components/reservation/ReservationModal';
 import { useAuthStore } from '@/stores/auth.store';
-import type { ScheduleDetailResponse, TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
+import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
 import { type TruckDetailResponse } from '@/types/truck/truck.dto';
 import styled from '@emotion/styled'
 import React, { useEffect, useMemo, useState } from 'react'

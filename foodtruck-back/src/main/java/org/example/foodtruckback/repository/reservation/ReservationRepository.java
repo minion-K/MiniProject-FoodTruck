@@ -19,6 +19,29 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
             List<ReservationStatus> status
     );
 
-    @Query("SELECT r FROM Reservation r WHERE r.schedule.truck.owner.id = :ownerId")
-    List<Reservation> findByTruckOwnerId(@Param("ownerId") Long ownerId);
+    @Query("SELECT DISTINCT r" +
+           " FROM Reservation r" +
+           " JOIN FETCH r.schedule s" +
+           " JOIN FETCH s.truck t " +
+           "JOIN FETCH s.location l " +
+           "WHERE r.user.id = :userId " +
+           "ORDER BY r.createdAt DESC")
+    List<Reservation> findForUserReservationList(@Param("userId") Long userId);
+
+    @Query("SELECT DISTINCT r" +
+            " FROM Reservation r" +
+            " JOIN FETCH r.schedule s" +
+            " JOIN FETCH s.truck t " +
+            "JOIN FETCH s.location l " +
+            "WHERE t.owner.id = :ownerId " +
+            "ORDER BY r.createdAt DESC")
+    List<Reservation> findForOwnerReservationList(@Param("ownerId") Long ownerId);
+
+    @Query("SELECT DISTINCT r" +
+            " FROM Reservation r" +
+            " JOIN FETCH r.schedule s" +
+            " JOIN FETCH s.truck t " +
+            "JOIN FETCH s.location l " +
+            "ORDER BY r.createdAt DESC")
+    List<Reservation> findForAdminReservationList();
 }

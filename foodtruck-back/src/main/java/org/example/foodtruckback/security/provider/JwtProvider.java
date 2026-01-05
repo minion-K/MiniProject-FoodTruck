@@ -16,6 +16,7 @@ public class JwtProvider {
     public static final String CLAIM_ROLES = "roles";
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_TYPE = "type";
+    public static final String CLAIM_USER_ID = "userId";
 
     private final SecretKey key;
     private final long accessExpMs;
@@ -50,13 +51,13 @@ public class JwtProvider {
     }
 
     // Access 토큰 생성
-    public String generateAccessToken(String username, Set<String> roles) {
-        return buildToken(username, roles, accessExpMs);
+    public String generateAccessToken(Long userId, String username, Set<String> roles) {
+        return buildToken(userId, username, roles, accessExpMs);
     }
 
     // Refresh 토큰 생성
-    public String generateRefreshToken(String username, Set<String> roles) {
-        return buildToken(username, roles, refreshExpMs);
+    public String generateRefreshToken(Long userId, String username, Set<String> roles) {
+        return buildToken(userId, username, roles, refreshExpMs);
     }
 
     // Email 토큰 생성
@@ -111,6 +112,10 @@ public class JwtProvider {
         return getSubject(token);
     }
 
+    public Long getUserIdFromJwt(String token) {
+        return getClaims(token).get(CLAIM_USER_ID, Long.class);
+    }
+
     // Email 추출
     public String getEmailFromEmailToken(String token) {
         Claims c = getClaims(token);
@@ -160,7 +165,7 @@ public class JwtProvider {
         return jws.getBody();
     }
 
-    private String buildToken(String username, Set<String> roles, long expMs) {
+    private String buildToken(Long userId, String username, Set<String> roles, long expMs) {
         long now = System.currentTimeMillis();
         Date iat = new Date(now);
         Date exp = new Date(now + expMs);
@@ -169,6 +174,7 @@ public class JwtProvider {
 
         return Jwts.builder()
                 .setSubject(username)
+                .claim(CLAIM_USER_ID, userId)
                 .claim(CLAIM_ROLES, roleList)
                 .setIssuedAt(iat)
                 .setExpiration(exp)
