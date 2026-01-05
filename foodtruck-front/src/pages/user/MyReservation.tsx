@@ -39,7 +39,7 @@ function MyReservation() {
       {reservations.map(reservation => (
         <Card
           key={reservation.id}
-          onClick={() => navigate(`/reservations/${reservation.id}`)}
+          onClick={() => navigate(`/mypage/reservation/${reservation.id}`)}
         >
           <Row>
             <Title>{reservation.truckName}</Title>

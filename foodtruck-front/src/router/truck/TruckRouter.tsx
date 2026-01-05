@@ -25,7 +25,7 @@ function TruckRouter() {
         </Route>
 
         <Route 
-          path="/reservation/:reservationId"
+          path="/mypage/reservation/:reservationId"
           element={<ReservationDetailPage />}
         />
       </Routes>

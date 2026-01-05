@@ -1,30 +1,33 @@
 import styled from '@emotion/styled';
-import React, { act } from 'react'
+import React from 'react'
 
-interface Props {
-  active: "reservations" | "profile";
-  onChange: (tab: "reservations" | "profile") => void;
+interface Tab {
+  key: string;
+  label: string;
+  content?: React.ReactNode;
 }
 
-function MyPageSide({active, onChange}: Props) {
+interface Props {
+  tabs: Tab[];
+  active: string;
+  onChange: (key: string) => void
+}
+
+function MyPageSide({tabs, active, onChange}: Props) {
   return (
     <Sidebar>
       <Title>마이페이지</Title>
 
       <Menu>
-        <MenuItem
-          active={active === "profile"}
-          onClick={() => onChange("profile")}
-        >
-        회원 정보
-        </MenuItem>
-
-        <MenuItem
-          active={active === "reservations"}
-          onClick={() => onChange("reservations")}
-        >
-          예약 내역
-        </MenuItem>
+        {tabs.map(tab => (
+          <MenuItem
+            key={tab.key}
+            active={active === tab.key}
+            onClick={() => {onChange(tab.key);}}
+          >
+            {tab.label}
+          </MenuItem>
+        ))}
       </Menu>
     </Sidebar>
   )

@@ -1,24 +1,54 @@
 import styled from '@emotion/styled'
-import React, { useState } from 'react'
+import React, { useEffect, useState, type ReactNode } from 'react'
 import Profile from './Profile';
 import MyReservation from './MyReservation';
 import MyPageSide from './MyPageSide';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-type MyPageTab = "reservations" | "profile";
+interface MyPageTab {
+  key: string;
+  label: string;
+  content?: React.ReactNode;
+}
 
-function MyPage() {
-  const [activeTab, setActiveTab] = useState<MyPageTab>("profile");
+interface Props {
+  tabs?: MyPageTab[]
+  activeTab?: string;
+  children?: React.ReactNode;
+}
+
+function MyPage({tabs, activeTab, children}: Props) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const defaultTabs: MyPageTab[] = [
+    {key: "profile", label: "회원 정보", content: <Profile />},
+    {key: "reservations", label: "예약 내역", content: <MyReservation />}
+  ]
+
+  const tab = tabs ?? defaultTabs;
+  const state = (location.state as {activeTab?: string} | undefined) ?? {};
+  const [active, setActive] = useState<string>(activeTab ?? state.activeTab ?? tab[0].key);
+  const currentTab = tab.find(t => t.key === active);
+
+  const handleChangeTab = (key: string) => {
+    setActive(key);
+
+    if(children) {
+      navigate("/mypage", {replace: true, state: {activeTab: key}});
+    }
+  };
 
   return (
     <Container>
       <MyPageSide 
-        active={activeTab}
-        onChange={setActiveTab}
+        tabs={tab}
+        active={active}
+        onChange={handleChangeTab}
       />
-
+      
       <Content>
-        {activeTab === "profile" && <Profile />}
-        {activeTab === "reservations" && <MyReservation />}
+        {active === "reservations" && children ? children : currentTab?.content}
       </Content>
     </Container>
   )

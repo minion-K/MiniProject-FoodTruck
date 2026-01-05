@@ -1,10 +1,14 @@
 import React from 'react'
 
-function ReservationDetail() {
+interface Props {
+  reservationId: string;
+}
+
+function ReservationDetail({reservationId}: Props) {
   return (
-    <div>
-      
-    </div>
+    <h1>
+      예약 상세 페이지
+    </h1>
   )
 }
 
