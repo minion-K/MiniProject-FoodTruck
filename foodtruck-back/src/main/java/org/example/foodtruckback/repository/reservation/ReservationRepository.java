@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     List<Reservation> findByUserId(Long id);
@@ -44,4 +45,16 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
             "JOIN FETCH s.location l " +
             "ORDER BY r.createdAt DESC")
     List<Reservation> findForAdminReservationList();
+
+
+    @Query("""
+        SELECT r
+        FROM Reservation r
+        JOIN FETCH r.schedule s
+        JOIN FETCH s.truck t
+        JOIN FETCH s.location l
+        LEFT JOIN FETCH r.menuItems m
+        WHERE r.id = :reservationId          
+    """)
+    Optional<Reservation> findDetail(@Param("reservationId") Long reservationId);
 }

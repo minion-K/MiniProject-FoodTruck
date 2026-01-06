@@ -8,5 +8,4 @@ public record ReservationMenuItemRequestDto(
 
         @NotNull
         int quantity
-) {
-}
+) {}

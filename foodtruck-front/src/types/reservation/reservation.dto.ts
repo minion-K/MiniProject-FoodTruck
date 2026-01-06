@@ -6,8 +6,8 @@ export interface ReservationMenuItemRequest {
 }
 
 export interface ReservationCreateRequest {
-  scheduleId: number; // 방문할 스케줄 ID
-  pickupTime: string; // ISO 문자열(YYYY-MM-DDTHH:mm:ss)
+  scheduleId: number; 
+  pickupTime: string; 
   menuItems: ReservationMenuItemRequest[];
   note?: string;
 }
@@ -17,21 +17,31 @@ export interface ReservationListItemResponse {
   pickupTime: string;
   totalAmount: number;
   status: ReservationStatus;
-  truckId: number;
   truckName: string;
   locationName: string;
 }
 
 export type ReservationListResponse = ReservationListItemResponse[];
 
+export interface ReservationMenuItemResponse {
+  menuItemId: number;
+  quantity: number;
+  name: string;
+  price: number;
+}
+
 export interface ReservationDetailResponse {
   id: number;
-  scheduleId: number;
-  userId: number;
+  username: string;
   pickupTime: string;
   totalAmount: number;
   status: ReservationStatus;
   note?: string;
   createdAt: string;
   updatedAt: string;
+  truckName: string;
+  locationName: string;
+  latitude: number;
+  longitude: number;
+  menuItems: ReservationMenuItemResponse[];
 }

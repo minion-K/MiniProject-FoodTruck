@@ -143,6 +143,20 @@ CREATE TABLE reservations (
   INDEX `idx_resv_schedule` (schedule_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE reservation_items (
+	id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    reservation_id BIGINT NOT NULL,
+    menu_item_id BIGINT NOT NULL,
+    menu_name VARCHAR(100) NOT NULL,
+    price INT NOT NULL,
+    qty INT NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    
+    CONSTRAINT `fk_reservation_item_reservation` FOREIGN KEY(reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
+    CONSTRAINT `fk_reservation_item_menu_item` FOREIGN KEY(menu_item_id) REFERENCES menu_items(id),
+    INDEX `idx_reservation_item_menu` (reservation_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 4) 주문(현장/사전 공용) + 품목
 CREATE TABLE orders (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,

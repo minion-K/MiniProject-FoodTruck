@@ -8,13 +8,16 @@ import org.example.foodtruckback.dto.reservation.request.ReservationCreateReques
 import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
+import org.example.foodtruckback.dto.reservation.response.ReservationMenuItemResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
 import org.example.foodtruckback.entity.reservation.Reservation;
+import org.example.foodtruckback.entity.reservation.ReservationItem;
 import org.example.foodtruckback.entity.truck.MenuItem;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
+import org.example.foodtruckback.repository.reservation.ReservationItemRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
@@ -40,6 +43,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final MenuItemRepository menuItemRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ReservationItemRepository reservationItemRepository;
 
     @Override
     @Transactional
@@ -100,7 +104,23 @@ public class ReservationServiceImpl implements ReservationService {
                 request.note()
         );
 
-        ReservationResponseDto response = ReservationResponseDto.from(reservationRepository.save(reservation));
+        for(ReservationMenuItemRequestDto menuRequest: request.menuItems()) {
+            MenuItem menu = menuItemRepository.findById((menuRequest.menuItemId()))
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+
+            reservation.addMenuItem(
+                    ReservationItem.create(
+                            reservation,
+                            menu.getId(),
+                            menu.getName(),
+                            menu.getPrice(),
+                            menuRequest.quantity()
+                    )
+            );
+        }
+
+        Reservation saved = reservationRepository.save(reservation);
+        ReservationResponseDto response = ReservationResponseDto.from(saved);
 
         return ResponseDto.success("예약 완료", response);
     }
@@ -111,7 +131,7 @@ public class ReservationServiceImpl implements ReservationService {
             @AuthenticationPrincipal UserPrincipal principal,
             Long reservationId
     ) {
-        Reservation reservation = reservationRepository.findById(reservationId)
+        Reservation reservation = reservationRepository.findDetail(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
         ReservationResponseDto response = ReservationResponseDto.from(reservation);

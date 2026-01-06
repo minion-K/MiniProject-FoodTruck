@@ -10,6 +10,8 @@ import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.truck.Schedule;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(
@@ -48,6 +50,9 @@ public class Reservation extends BaseTimeEntity {
         @Column(length = 255)
         private String note;
 
+        @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<ReservationItem> menuItems = new ArrayList<>();
+
         public static Reservation createReservation(
                 User user, Schedule schedule, LocalDateTime pickupTime, int totalAmount, String note
         ) {
@@ -66,5 +71,9 @@ public class Reservation extends BaseTimeEntity {
                 if (note != null) {
                         this.note = note;
                 }
+        }
+
+        public void addMenuItem(ReservationItem item) {
+                this.menuItems.add(item);
         }
 }

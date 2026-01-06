@@ -37,6 +37,9 @@ export default MyPageSide
 
 const Sidebar = styled.aside`
   width: 220px;
+  min-height: 100vh;
+  position: sticky;
+  top: 60px;
   background-color: #fff;
   border-right: 1px solid #eee;
   padding: 24px 16px;
