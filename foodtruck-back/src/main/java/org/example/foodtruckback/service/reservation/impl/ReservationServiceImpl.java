@@ -7,6 +7,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
+import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationMenuItemResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
@@ -17,7 +18,6 @@ import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
-import org.example.foodtruckback.repository.reservation.ReservationItemRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.example.foodtruckback.common.enums.ReservationStatus.CONFIRMED;
@@ -43,7 +44,6 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final MenuItemRepository menuItemRepository;
     private final ScheduleRepository scheduleRepository;
-    private final ReservationItemRepository reservationItemRepository;
 
     @Override
     @Transactional
@@ -179,5 +179,104 @@ public class ReservationServiceImpl implements ReservationService {
         ReservationResponseDto response = ReservationResponseDto.from(reservation);
 
         return ResponseDto.success("예약상태 수정 완료", response);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("@authz.isReservationOwner(#reservationId)")
+    public ResponseDto<Void> cancelReservation(
+            @AuthenticationPrincipal UserPrincipal principal,
+            Long reservationId
+    ) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        reservation.cancelByUser();
+
+        return ResponseDto.success("예약이 취소되었습니다.");
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
+    public ResponseDto<ReservationResponseDto> updateReservation(
+            UserPrincipal principal,
+            Long reservationId,
+            ReservationUpdateRequestDto request
+    ) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if(reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+        }
+
+        Schedule schedule = reservation.getSchedule();
+
+        LocalDateTime pickupTime = request.pickupTime()
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+
+        if(pickupTime.isBefore(schedule.getStartTime())
+                || pickupTime.isAfter(schedule.getEndTime())
+        ) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+
+        boolean exists = reservationRepository.existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusInAndIdNot(
+                reservation.getUser().getId(),
+                schedule.getId(),
+                pickupTime,
+                List.of(ReservationStatus.PENDING, ReservationStatus.CONFIRMED),
+                reservationId
+        );
+
+        if(exists) {
+            throw new BusinessException(ErrorCode.DUPLICATE_RESERVATION);
+        }
+
+        int totalAmount = 0;
+
+        List<ReservationItem> newItems = new ArrayList<>();
+
+        for(ReservationMenuItemRequestDto menuRequest: request.menuItems()) {
+            MenuItem menu = menuItemRepository.findById(menuRequest.menuItemId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+
+            if(!menu.getTruck().getId().equals(schedule.getTruck().getId())) {
+                throw new BusinessException(ErrorCode.INVALID_MENU);
+            }
+
+            if(menu.isSoldOut()) {
+                throw new BusinessException(ErrorCode.MENU_SOLD_OUT);
+            }
+
+            totalAmount += menu.getPrice() * menuRequest.quantity();
+
+            newItems.add(
+                    ReservationItem.create(
+                            reservation,
+                            menu.getId(),
+                            menu.getName(),
+                            menu.getPrice(),
+                            menuRequest.quantity()
+                    )
+            );
+        }
+
+        reservation.updateContent(
+                pickupTime,
+                request.note(),
+                totalAmount,
+                newItems
+        );
+
+        List<ReservationMenuItemResponseDto> menuDtos = newItems.stream()
+                .map(ReservationMenuItemResponseDto::from)
+                .toList();
+        ReservationResponseDto updatedReservation = ReservationResponseDto.from(reservation, menuDtos);
+
+        return ResponseDto.success("예약 수정 성공적으로 변경되었습니다.", updatedReservation);
     }
 }

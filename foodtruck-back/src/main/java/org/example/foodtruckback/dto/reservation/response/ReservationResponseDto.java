@@ -4,7 +4,9 @@ import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.common.utils.DateTimeUtil;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
+import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.entity.reservation.Reservation;
+import org.example.foodtruckback.entity.truck.Schedule;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +14,8 @@ import java.util.List;
 
 public record ReservationResponseDto(
         Long id,
+        Long scheduleId,
+        ScheduleItemResponseDto schedule,
         String username,
         LocalDateTime pickupTime,
         int totalAmount,
@@ -31,8 +35,12 @@ public record ReservationResponseDto(
                 .map(ReservationMenuItemResponseDto::from)
                 .toList();
 
+        ScheduleItemResponseDto scheduleDto = ScheduleItemResponseDto.from(reservation.getSchedule());
+
         return new ReservationResponseDto(
                 reservation.getId(),
+                reservation.getSchedule().getId(),
+                scheduleDto,
                 reservation.getUser().getName(),
                 reservation.getPickupTime(),
                 reservation.getTotalAmount(),
@@ -60,8 +68,12 @@ public record ReservationResponseDto(
                         dto.quantity()))
                 .toList();
 
+        ScheduleItemResponseDto scheduleDto = ScheduleItemResponseDto.from(reservation.getSchedule());
+
         return new ReservationResponseDto(
                 reservation.getId(),
+                reservation.getSchedule().getId(),
+                scheduleDto,
                 reservation.getUser().getName(),
                 reservation.getPickupTime(),
                 reservation.getTotalAmount(),

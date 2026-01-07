@@ -1,3 +1,4 @@
+import type { TruckScheduleItemResponse } from "../schedule/schedule.dto";
 import type { ReservationStatus } from "./reservation.type";
 
 export interface ReservationMenuItemRequest {
@@ -32,6 +33,8 @@ export interface ReservationMenuItemResponse {
 
 export interface ReservationDetailResponse {
   id: number;
+  schedule?: TruckScheduleItemResponse;
+  scheduleId: number
   username: string;
   pickupTime: string;
   totalAmount: number;
@@ -44,4 +47,10 @@ export interface ReservationDetailResponse {
   latitude: number;
   longitude: number;
   menuItems: ReservationMenuItemResponse[];
+}
+
+export interface ReservationUpdateRequest {
+  pickupTime: string;
+  menuItems: ReservationMenuItemRequest[];
+  note?: string;
 }

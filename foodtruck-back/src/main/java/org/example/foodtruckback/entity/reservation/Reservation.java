@@ -4,10 +4,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.ReservationStatus;
+import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.truck.Schedule;
+import org.example.foodtruckback.exception.BusinessException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -67,6 +70,28 @@ public class Reservation extends BaseTimeEntity {
         }
 
         public void updateStatus(ReservationStatus newStatus, String note) {
+                if(this.status == ReservationStatus.CANCELED
+                        || this.status == ReservationStatus.REFUNDED
+                ) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                if(this.status == newStatus) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                boolean valid = switch (this.status) {
+                        case PENDING -> newStatus == ReservationStatus.CONFIRMED
+                                || newStatus == ReservationStatus.CANCELED;
+                        case CONFIRMED -> newStatus == ReservationStatus.NO_SHOW;
+                        case NO_SHOW -> newStatus == ReservationStatus.REFUNDED;
+                        default -> false;
+                };
+
+                if(!valid) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
                 this.status = newStatus;
                 if (note != null) {
                         this.note = note;
@@ -75,5 +100,32 @@ public class Reservation extends BaseTimeEntity {
 
         public void addMenuItem(ReservationItem item) {
                 this.menuItems.add(item);
+        }
+
+        public void cancelByUser() {
+                if(this.status != ReservationStatus.PENDING) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                this.status = ReservationStatus.CANCELED;
+                this.note = "사용자 취소";
+        }
+
+        public void updateContent(
+                LocalDateTime pickupTime,
+                String note,
+                int totalAmount,
+                List<ReservationItem> menuItems
+        ) {
+                if(this.status != ReservationStatus.PENDING) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                this.pickupTime = pickupTime;
+                this.note = note;
+                this.totalAmount = totalAmount;
+
+                this.menuItems.clear();
+                this.menuItems.addAll(menuItems);
         }
 }

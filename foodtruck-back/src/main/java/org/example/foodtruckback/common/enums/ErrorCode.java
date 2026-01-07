@@ -57,7 +57,8 @@ public enum ErrorCode {
     // ===========================
     DUPLICATE_RESERVATION(HttpStatus.CONFLICT, "R001", "이미 예약된 픽업시간입니다.", "Duplicate reservation"),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "R002", "해당 예약을 찾을 수 없습니다.", "Reservation not found"),
-    
+    INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "R003", "현재 예약 상태로는 수행할 수 없는 요청입니다.", "Invalid reservation status"),
+
     // ===========================
     // menu (Mxxx)
     // ===========================

@@ -10,4 +10,5 @@ export const RESERVATION_PATH = {
 
   BY_ID: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}`,
   STATUS: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/status`,
+  CANCEL: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/cancel`
 }

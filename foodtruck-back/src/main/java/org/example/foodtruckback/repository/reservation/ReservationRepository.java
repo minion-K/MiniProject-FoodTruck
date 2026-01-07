@@ -16,8 +16,17 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     boolean existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusIn(
             Long userId,
             Long ScheduleId,
-            @NotNull(message = "픽업 예정 시간을 정해주세요.") LocalDateTime localDateTime,
+            @NotNull(message = "픽업 예정 시간을 선택해주세요.") LocalDateTime localDateTime,
             List<ReservationStatus> status
+    );
+
+    boolean existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusInAndIdNot(
+            Long userId,
+            Long ScheduleId,
+            @NotNull(message = "픽업 예정 시간을 선택해주세요.") LocalDateTime localDateTime,
+            List<ReservationStatus> status,
+            Long reservationId
+
     );
 
     @Query("SELECT DISTINCT r" +

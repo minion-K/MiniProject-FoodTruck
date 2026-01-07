@@ -1,10 +1,12 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
 import type { ReservationDetailResponse } from '@/types/reservation/reservation.dto';
-import { formatTime } from '@/utils/date';
+import { formatTime, ONE_HOUR, toKstString } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 import KakaoMap from '../map/KakaoMap';
+import ReservationModal from './ReservationModal';
+import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
 
 interface Props {
   reservationId: string;
@@ -13,6 +15,7 @@ interface Props {
 function ReservationDetail({reservationId}: Props) {
   const [reservation, setReservation] = useState<ReservationDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
     if(!reservationId) return;
@@ -30,11 +33,19 @@ function ReservationDetail({reservationId}: Props) {
     };
 
     fetchReservation();
-
   }, [reservationId]);
+
+  const handleUpdateReservation = (update: ReservationDetailResponse) => {
+    setReservation(update);
+    setIsEdit(false);
+  }
 
   if(loading) return <Container>Loading...</Container>;
   if(!reservation) return <Container>예약 정보를 불러올 수 없습니다.</Container>;
+
+  const isPending = reservation.status === "PENDING";
+
+  
 
   return (
     <Container>
@@ -105,10 +116,49 @@ function ReservationDetail({reservationId}: Props) {
       </Section>
 
       <ButtonWrapper>
-        <ActionButton cancel>예약 취소</ActionButton>
-        <ActionButton>결제하기</ActionButton>
-        <ActionButton>예약 변경</ActionButton>
+        {isPending && reservation.schedule && (
+          <>
+            <ActionButton 
+              cancel
+              disabled={new Date(reservation.schedule.endTime) <= new Date()}
+              title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
+            >예약 취소</ActionButton>
+            <ActionButton
+              disabled={new Date(reservation.schedule.endTime) <= new Date()}
+              title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
+            >결제하기</ActionButton>
+            <ActionButton 
+              onClick={() => setIsEdit(true)}
+              disabled={new Date(reservation.schedule.endTime) <= new Date()}
+              title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
+            >예약 변경</ActionButton>  
+          </>
+        )}
       </ButtonWrapper>
+
+      {isEdit && reservation.schedule && (
+        <ReservationModal 
+          mode="EDIT"
+          reservationId={reservation.id}
+          schedule={reservation.schedule}
+          initialPickupTime={reservation.pickupTime}
+          initialMenuItems={reservation.menuItems
+            .map(item => ({
+              menuItemId: item.menuItemId,
+              quantity: item.quantity
+            }))}
+          initialNote={reservation.note}
+          menus={reservation.menuItems
+            .map(item => ({
+              id: item.menuItemId,
+              name: item.name,
+              price: item.price,
+              soldOut: false,
+            }))}
+          onClose={() => setIsEdit(false)}
+          onUpdate={handleUpdateReservation}
+        />
+      )}
     </Container>
   )
 }
@@ -196,5 +246,15 @@ const ActionButton = styled.button<{cancel?: boolean}>`
 
   &:hover {
     background-color: ${({cancel}) => (cancel ? "#f5c2c7" : "#badbcc")};
+  }
+
+  &:disabled {
+    background-color: #e0e0e0;
+    color: #888888;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: #e0e0e0;
+    }
   }
 `;

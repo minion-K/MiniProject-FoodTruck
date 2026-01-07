@@ -6,6 +6,7 @@ import org.example.foodtruckback.common.constants.reservation.ReservationApi;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
+import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
 import org.example.foodtruckback.entity.user.User;
@@ -63,4 +64,24 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping(ReservationApi.CANCEL)
+    public ResponseEntity<ResponseDto<Void>> cancelReservation(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long reservationId
+    ) {
+        ResponseDto<Void> response = reservationService.cancelReservation(principal, reservationId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(ReservationApi.BY_ID)
+    public ResponseEntity<ResponseDto<ReservationResponseDto>> updateReservation(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long reservationId,
+            @RequestBody ReservationUpdateRequestDto request
+    ) {
+        ResponseDto<ReservationResponseDto> response = reservationService.updateReservation(principal, reservationId, request);
+
+        return ResponseEntity.ok(response);
+    }
 }
