@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react'
 import KakaoMap from '../map/KakaoMap';
 import ReservationModal from './ReservationModal';
 import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
+import toast from 'react-hot-toast';
 
 interface Props {
   reservationId: string;
@@ -40,12 +41,30 @@ function ReservationDetail({reservationId}: Props) {
     setIsEdit(false);
   }
 
+  const handleCancelReservation = async () => {
+    if(!reservation) return ;
+
+    const confirmCancel = window.confirm("예약을 취소하시겠습니까?");
+    if(!confirmCancel) return ;
+
+    try {
+      await reservationApi.cancelReservation(Number(reservationId))
+
+      setReservation(prev => 
+        prev ? {...prev, status: "CANCELED"} : prev);
+
+      toast.success("예약이 취소되었습니다.")
+    } catch (err) {
+      const msg = getErrorMsg(err, "예약 취소에 실패했습니다.");
+
+      alert(msg);
+    }
+  };
+
   if(loading) return <Container>Loading...</Container>;
   if(!reservation) return <Container>예약 정보를 불러올 수 없습니다.</Container>;
 
   const isPending = reservation.status === "PENDING";
-
-  
 
   return (
     <Container>
@@ -122,6 +141,7 @@ function ReservationDetail({reservationId}: Props) {
               cancel
               disabled={new Date(reservation.schedule.endTime) <= new Date()}
               title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
+              onClick={handleCancelReservation}
             >예약 취소</ActionButton>
             <ActionButton
               disabled={new Date(reservation.schedule.endTime) <= new Date()}

@@ -1,14 +1,18 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
+import SearchInput from '@/components/common/SearchInput';
+import ReservationFilter from '@/components/reservation/ReservationFilter';
 import { type ReservationListResponse } from '@/types/reservation/reservation.dto'
 import { formatTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 
 function MyReservation() {
   const [reservations, setReservations] = useState<ReservationListResponse>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +31,16 @@ function MyReservation() {
     fetchReservations();
   }, []);
 
+  const filteredReservations = useMemo(() => {
+    return reservations.filter(res => {
+      if(statusFilter !== "ALL" && res.status !== statusFilter) return false;
+
+      if(search && !res.truckName.toLowerCase().includes(search.toLowerCase())) return false;
+
+      return true;
+    })
+  }, [reservations, statusFilter, search]);
+
   if(loading) return <LoadingMsg>예약 내역 불러오는 중...</LoadingMsg>
 
   if(reservations.length === 0) {
@@ -36,7 +50,13 @@ function MyReservation() {
   return (
     <Container>
       <h1>예약 목록</h1>
-      {reservations.map(reservation => (
+
+      <SearchInput value={search} onChange={setSearch} placeholder="검색어를 입력하세요."/>
+      <ReservationFilter 
+        status={statusFilter}
+        onStatusChange={setStatusFilter}
+      />
+      {filteredReservations.map(reservation => (
         <Card
           key={reservation.id}
           onClick={() => navigate(`/mypage/reservation/${reservation.id}`)}
