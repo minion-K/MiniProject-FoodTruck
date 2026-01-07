@@ -11,8 +11,11 @@ import { useNavigate } from 'react-router-dom';
 function MyReservation() {
   const [reservations, setReservations] = useState<ReservationListResponse>([]);
   const [loading, setLoading] = useState(true);
+
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,15 +50,36 @@ function MyReservation() {
     return <Empty>예약 내역이 없습니다.</Empty>
   }
 
+  const handleSearch = () => {
+    setSearch(searchInput);
+  }
+
+  const handleKeyDown = (e:React.KeyboardEvent<HTMLInputElement>) => {
+    if(e.key === "Enter") handleSearch();
+  }
+
   return (
     <Container>
       <h1>예약 목록</h1>
 
-      <SearchInput value={search} onChange={setSearch} placeholder="검색어를 입력하세요."/>
-      <ReservationFilter 
-        status={statusFilter}
-        onStatusChange={setStatusFilter}
-      />
+      <FilterRow>
+        <SearchWrapper>
+          <ReservationFilter 
+            status={statusFilter}
+            onStatusChange={setStatusFilter}
+          />
+
+          <SearchInput 
+            value={searchInput}
+            onChange={setSearchInput}
+            onKeyDown={handleKeyDown}
+            onSearch={handleSearch}
+            placeholder="검색어를 입력하세요."
+          />
+        </SearchWrapper>
+        
+      </FilterRow>
+
       {filteredReservations.map(reservation => (
         <Card
           key={reservation.id}
@@ -93,6 +117,19 @@ const Container = styled.div`
 `;
 
 const LoadingMsg = styled.div``;
+
+const FilterRow = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+const SearchWrapper = styled.div`
+  display: flex;
+  gap: 4px;
+  flex: 1;
+`;
 
 const Card = styled.div`
   background-color: #fff;

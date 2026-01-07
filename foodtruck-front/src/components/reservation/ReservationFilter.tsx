@@ -13,7 +13,7 @@ function ReservationFilter({status, onStatusChange}: Props) {
         value={status}
         onChange={e => onStatusChange(e.target.value)}
       >
-        <option value="ALL">ALL</option>
+        <option value="ALL">전체</option>
         <option value="PENDING">PENDING</option>
         <option value="CONFIRMED">CONFIRMED</option>
         <option value="CANCELED">CANCELED</option>
@@ -28,10 +28,9 @@ export default ReservationFilter
 const FilterWrapper = styled.div`
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
 
   select {
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: 14px;
