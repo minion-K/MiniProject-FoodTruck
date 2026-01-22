@@ -60,7 +60,7 @@ function MyReservation() {
 
   return (
     <Container>
-      <h1>예약 목록</h1>
+      <Header>예약 목록</Header>
 
       <FilterRow>
         <SearchWrapper>
@@ -114,6 +114,11 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+`;
+
+const Header = styled.h1`
+  font-size: 24px;
+  font-weight: 600;
 `;
 
 const LoadingMsg = styled.div``;

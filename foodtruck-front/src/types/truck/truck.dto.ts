@@ -3,13 +3,19 @@ import type { TruckStatus } from "./truck.type";
 
 export interface TruckCreateRequest {
   name: string;
-  cuisine?: string;
+  cuisine: string;
+}
+
+export interface TruckUpdateRequest {
+  name?: string;
+  cuisine: string;
+  status?: TruckStatus;
 }
 
 export interface TruckListItemResponse {
   id: number;
   name: string;
-  cuisine?: string;
+  cuisine: string;
   status: TruckStatus;
   locationSummary: string;
   latitude: number | null;
@@ -18,11 +24,6 @@ export interface TruckListItemResponse {
 
 export type TruckListResponse = TruckListItemResponse[];
 
-export interface TruckUpdateRequest {
-  name?: string;
-  cuisine?: string;
-  status?: TruckStatus;
-}
 
 export interface TruckMenuItemResponse {
   id: number;
@@ -30,7 +31,7 @@ export interface TruckMenuItemResponse {
   price: number;
   description?: string;
   imageUrl?: string;
-  soldOut: boolean;
+  isSoldOut: boolean;
 }
 
 export type TruckMenuListResponse = TruckMenuItemResponse[];
@@ -39,7 +40,7 @@ export interface TruckDetailResponse {
   id: number;
   ownerId: number;
   name: string;
-  cuisine?: string;
+  cuisine: string;
   status: TruckStatus;
   createdAt: string;
   updatedAt: string;

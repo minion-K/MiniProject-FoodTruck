@@ -87,4 +87,23 @@ export const authApi = {
 
     return res.data.data;
   },
+
+  // 이메일 변경 시 메일 발송
+  sendEmailChange: async (req: SendEmailRequest): Promise<void> => {
+    const res = await privateApi.post<ApiResponse<void>>(
+      `${AUTH_PATH.EMAIL_CHANGE}`,
+      req
+    );
+
+    return res.data.data;
+  },
+
+  // 이메일 변경 확인
+  confirmEmailChange: async (token: string): Promise<void> => {
+    const res = await privateApi.get<ApiResponse<void>>(
+      `${AUTH_PATH.EMAIL_CHANGE_CONFIRM}?token=${token}`
+    );
+
+    return res.data.data;
+  }
 };

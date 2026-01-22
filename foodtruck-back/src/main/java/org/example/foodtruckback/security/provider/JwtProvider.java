@@ -61,13 +61,14 @@ public class JwtProvider {
     }
 
     // Email 토큰 생성
-    public String generateEmailJwtToken(String email, String type) {
+    public String generateEmailJwtToken(Long userId, String email, String type) {
         long now = System.currentTimeMillis();
         Date iat = new Date(now);
         Date exp = new Date(now + emailExpMs);
 
         return Jwts.builder()
-                .setSubject(email) // subject에도 email 저장 (편의성)
+                .setSubject(String.valueOf(userId))
+                .claim(CLAIM_USER_ID, userId)
                 .claim(CLAIM_EMAIL, email)
                 .claim(CLAIM_TYPE, type)
                 .setIssuedAt(iat)
@@ -120,7 +121,14 @@ public class JwtProvider {
     public String getEmailFromEmailToken(String token) {
         Claims c = getClaims(token);
         String email = c.get(CLAIM_EMAIL, String.class);
+
         return (email != null) ? email : c.getSubject();
+    }
+
+    public Long getUserIdFromEmailToken(String token) {
+        Claims c = getClaims(token);
+
+        return c.get(CLAIM_USER_ID, Long.class);
     }
 
     // 토큰의 roles 클레임을 Set<String>으로 반환

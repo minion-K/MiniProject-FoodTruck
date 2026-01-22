@@ -1,9 +1,8 @@
 import type {
-  MeReponse,
+  AdminUserUpdateRequest,
   UserDetailResponse,
   UserListResponse,
-  UserUpdateRequest,
-  UserUpdateResponse,
+  UserUpdateRequest
 } from "@/types/user/user.dto";
 import { privateApi } from "../common/axiosInstance";
 import { USER_PATH } from "./user.path";
@@ -12,8 +11,8 @@ import type { RoleCreateRequest, RoleCreateResponse } from "@/types/role/role.dt
 
 export const userApi = {
   // 마이 프로필
-  me: async (): Promise<MeReponse> => {
-    const res = await privateApi.get<ApiResponse<MeReponse>>(
+  me: async (): Promise<UserDetailResponse> => {
+    const res = await privateApi.get<ApiResponse<UserDetailResponse>>(
       USER_PATH.ME
     );
     
@@ -22,7 +21,7 @@ export const userApi = {
 
   // 내 정보 수정
   updateMe: async (req: UserUpdateRequest) => {
-    const res = await privateApi.put<ApiResponse<UserUpdateResponse>>(
+    const res = await privateApi.put<ApiResponse<UserDetailResponse>>(
       USER_PATH.UPDATE, req
     );
 
@@ -48,8 +47,8 @@ export const userApi = {
   },
 
   // 사용자 수정
-  updateUser: async (req: UserUpdateRequest, userId: number) => {
-    const res = await privateApi.put<ApiResponse<UserUpdateResponse>>(
+  updateUser: async (req: AdminUserUpdateRequest, userId: number) => {
+    const res = await privateApi.put<ApiResponse<UserDetailResponse>>(
       USER_PATH.USERUPDATE(userId), req
     );
 

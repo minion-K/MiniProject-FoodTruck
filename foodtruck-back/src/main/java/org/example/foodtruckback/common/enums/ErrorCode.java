@@ -32,8 +32,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다.", "UserApi not found"),
     ACCESS_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "권한을 찾을 수 없습니다.", "UserApi not found"),
     DUPLICATE_USER(HttpStatus.CONFLICT, "U002", "이미 존재하는 사용자입니다.", "Duplicate user"),
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 존재하는 이메일입니다.", "Duplicate email"),
-    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U004", "존재하지 않는 ROLE입니다." ,"Role not found" ),
+    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U003", "존재하지 않는 ROLE입니다." ,"Role not found" ),
 
     // ===========================
     // location (Lxxx)
@@ -45,6 +44,11 @@ public enum ErrorCode {
     // email (Exxx)
     // ===========================
     EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "E001", "이메일 인증이 필요합니다.", "Email not verified"),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "E002", "이미 존재하는 이메일입니다.", "Duplicate email"),
+    EMAIL_CHANGE_VERIFY_REQUIRED(HttpStatus.FORBIDDEN, "E003", "이메일 변경을 위한 인증이 필요합니다.", "Email change verified required"),
+    INVALID_EMAIL_CHANGE_TOKEN(HttpStatus.BAD_REQUEST, "E004", "이메일 변경 토큰이 유효하지 않습니다.", "Invalid email change token"),
+    EMAIL_CHANGE_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "E005", "이메일 변경 토근이 만료되었습니다.", "Email change token expired"),
+
 
     // ===========================
     // schedule (Sxxx)

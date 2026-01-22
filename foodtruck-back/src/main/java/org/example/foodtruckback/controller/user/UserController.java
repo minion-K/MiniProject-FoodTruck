@@ -7,6 +7,7 @@ import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
+import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
@@ -56,9 +57,9 @@ public class UserController {
     // 사용자 상세
     @GetMapping(UserApi.BY_ID)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> getById(
-            @AuthenticationPrincipal UserPrincipal principal
+            @PathVariable Long userId
     ) {
-        ResponseDto<UserDetailResponseDto> response = userService.getById(principal);
+        ResponseDto<UserDetailResponseDto> response = userService.getById(userId);
 
         return ResponseEntity.ok().body(response);
     }
@@ -66,10 +67,10 @@ public class UserController {
     // 사용자 수정
     @PutMapping(UserApi.BY_ID)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> updateByUserId(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody UserUpdateRequestDto request
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminUserUpdateRequestDto request
     ) {
-        ResponseDto<UserDetailResponseDto> response = userService.updateByUserId(principal, request);
+        ResponseDto<UserDetailResponseDto> response = userService.updateByUserId(userId, request);
 
         return ResponseEntity.ok().body(response);
     }

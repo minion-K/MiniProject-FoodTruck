@@ -12,9 +12,11 @@ import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
 import org.example.foodtruckback.dto.auth.response.PasswordVerifyResponseDto;
 import org.example.foodtruckback.dto.auth.response.SignupResponseDto;
 import org.example.foodtruckback.dto.mail.request.SendEmailRequestDto;
+import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.auth.AuthService;
 import org.example.foodtruckback.service.auth.EmailService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -110,6 +112,26 @@ public class AuthController {
     @GetMapping("/email/verify")
     public ResponseEntity<ResponseDto<Void>> verifyEmail(@RequestParam String token) {
         ResponseDto<Void> result = authService.verifyEmail(token);
+
+        return ResponseEntity.status(result.getStatus()).body(result);
+    }
+
+    // 이메일 변경
+    @PostMapping("email/change")
+    public ResponseEntity<ResponseDto<Void>> sendEmailChangeVerify(
+            @RequestBody @Valid SendEmailRequestDto request,
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        ResponseDto<Void> result = authService.sendEmailChangeVerify(request.email(), principal);
+
+        return ResponseEntity.status(result.getStatus()).body(result);
+    }
+
+    @GetMapping("/email/change/confirm")
+    public ResponseEntity<ResponseDto<Void>> confirmEmailChange(
+            @RequestParam String token
+    ) {
+        ResponseDto<Void> result = authService.confirmEmailChange(token);
 
         return ResponseEntity.status(result.getStatus()).body(result);
     }

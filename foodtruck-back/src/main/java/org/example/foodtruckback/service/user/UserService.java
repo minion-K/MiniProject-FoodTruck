@@ -5,6 +5,7 @@ import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
+import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
@@ -19,9 +20,9 @@ public interface UserService {
 
     ResponseDto<List<UserListResponseDto>> getAllUsers();
 
-    ResponseDto<UserDetailResponseDto> getById(UserPrincipal principal);
+    ResponseDto<UserDetailResponseDto> getById(Long userId);
 
-    ResponseDto<UserDetailResponseDto> updateByUserId(UserPrincipal principal, @Valid UserUpdateRequestDto request);
+    ResponseDto<UserDetailResponseDto> updateByUserId(Long userId, @Valid AdminUserUpdateRequestDto request);
 
     ResponseDto<RoleAddResponseDto> addRoles(UserPrincipal principal, @Valid RoleAddRequestDto request);
 

@@ -20,18 +20,37 @@ interface Props {
 function MyPage({tabs, activeTab, children}: Props) {
   const navigate = useNavigate();
   const location = useLocation();
+  const state = (location.state as {activeTab?: string} | undefined) ?? {};
+
+  const [active, setActive] = useState<string>(activeTab ?? state.activeTab ?? "profile");
+  const [profileKey, setProfileKey] = useState<number>(Date.now());
 
   const defaultTabs: MyPageTab[] = [
-    {key: "profile", label: "회원 정보", content: <Profile />},
+    {key: "profile", label: "회원 정보", content: <Profile key={profileKey} />},
     {key: "reservations", label: "예약 내역", content: <MyReservation />}
   ]
 
   const tab = tabs ?? defaultTabs;
-  const state = (location.state as {activeTab?: string} | undefined) ?? {};
-  const [active, setActive] = useState<string>(activeTab ?? state.activeTab ?? tab[0].key);
   const currentTab = tab.find(t => t.key === active);
 
+  useEffect(() => {
+    if(!state.activeTab) return;
+    setActive(state.activeTab);
+
+    if(state.activeTab === "profile") {
+      sessionStorage.removeItem("profile-edit-draft");
+      sessionStorage.removeItem("emailVerified");
+      setProfileKey(Date.now());
+    }
+  }, [state.activeTab]);
+
   const handleChangeTab = (key: string) => {
+    if(key === "profile") {
+      sessionStorage.removeItem("profile-edit-draft");
+      sessionStorage.removeItem("emailVerified");
+      setProfileKey(Date.now());
+    }
+    
     setActive(key);
 
     if(children) {

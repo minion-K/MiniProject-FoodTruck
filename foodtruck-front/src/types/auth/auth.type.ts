@@ -1,0 +1,1 @@
+export type AuthProvider = "GOOGLE" | "KAKAO" | "NAVER" | "LOCAL"

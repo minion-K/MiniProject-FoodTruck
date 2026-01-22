@@ -8,6 +8,7 @@ import OAuth2CallbackPage from "@/pages/auth/OAuth2CallbackPage";
 import { useAuthStore } from "@/stores/auth.store";
 import OwnerRouter from "./owner/OwnerRouter";
 import AdminRouter from "./admin/AdminRouter";
+import ProfilePendingPage from "@/pages/auth/ProfilePendingPage";
 
 function MainRouter() {
   const {user, isInitialized} = useAuthStore();
@@ -25,6 +26,8 @@ function MainRouter() {
       <Route path="/register/pending" element={<PendingPage />} />
       <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
     
+      <Route path="mypage/pending" element={<ProfilePendingPage />}/>
+
       <Route path="/*" element={<TruckRouter />} />
       {isOwner && <Route path="/owner/*" element={<OwnerRouter />} />}
       {isAdmin && <Route path="/admin/*" element={<AdminRouter />} />}

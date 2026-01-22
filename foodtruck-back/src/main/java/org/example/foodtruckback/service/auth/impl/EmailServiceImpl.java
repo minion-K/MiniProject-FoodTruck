@@ -81,7 +81,7 @@ public class EmailServiceImpl implements EmailService {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        String emailToken = jwtProvider.generateEmailJwtToken(request.email(), "VERIFY_EMAIL");
+        String emailToken = jwtProvider.generateEmailJwtToken(user.getId(), request.email(), "VERIFY_EMAIL");
         String verifyUrl = "http://localhost:5173/register?token=" + emailToken;
 
         sendHtmlEmail(
@@ -101,5 +101,29 @@ public class EmailServiceImpl implements EmailService {
         );
 
         return ResponseDto.success("이메일 인증 메일이 발송되었습니다.",null);
+    }
+
+    @Override
+    public void sendEmailChangeVerify(String email, String url) {
+        userRepository.findByEmail(email)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .ifPresent(user -> {
+                    throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+                });
+
+        sendHtmlEmail(
+                email,
+                "[foodtruck] 이메일 변경 인증",
+                """
+                      <div style="padding: 20px; font-size: 16px;">
+                        <p>이메일 변경을 요청하셨습니다.</p>
+                        <p>아래 버튼을 눌러 이메일 인증을 완료해주세요.</p>
+                        <a href="%s"
+                            style="display:inline-block; padding:10px 20px; background:#2a5dff;
+                                   color:white; text-decoration:none; border-radius:8px; margin-top:10px;">
+                            이메일 인증하기
+                        </a>
+                      """.formatted(url)
+        );
     }
 }

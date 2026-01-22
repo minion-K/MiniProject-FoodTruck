@@ -27,15 +27,15 @@ VALUES
 (2, 2, '부산타코', '멕시칸', 'ACTIVE'),
 (3, 2, '커피한잔', '카페', 'ACTIVE');
 
--- 3) 트럭 스케줄(Truck Schedules)
+-- 3) 트럭 스케줄(Truck Schedules) - 오늘 기준
 INSERT INTO truck_schedules (id, truck_id, location_id, start_time, end_time, status, max_reservations)
 VALUES
-(1, 1, 1, '2026-01-07 11:00:00', '2026-01-07 14:00:00', 'OPEN', 50),
-(2, 1, 2, '2026-01-08 11:00:00', '2026-01-08 14:00:00', 'PLANNED', 50),
-(3, 2, 2, '2026-01-07 12:00:00', '2026-01-07 15:00:00', 'OPEN', 60),
-(4, 2, 3, '2026-01-08 12:00:00', '2026-01-08 15:00:00', 'CLOSED', 60),
-(5, 3, 3, '2026-01-07 09:00:00', '2026-01-07 17:00:00', 'OPEN', 100),
-(6, 3, 1, '2026-01-08 09:00:00', '2026-01-08 17:00:00', 'PLANNED', 100);
+(1, 1, 1, NOW() + INTERVAL 1 HOUR, NOW() + INTERVAL 4 HOUR, 'OPEN', 50),
+(2, 1, 2, NOW() + INTERVAL 5 HOUR, NOW() + INTERVAL 8 HOUR, 'PLANNED', 50),
+(3, 2, 2, NOW() + INTERVAL 2 HOUR, NOW() + INTERVAL 5 HOUR, 'OPEN', 60),
+(4, 2, 3, NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 2 HOUR, 'CLOSED', 60),
+(5, 3, 3, NOW() + INTERVAL 0 HOUR, NOW() + INTERVAL 8 HOUR, 'OPEN', 100),
+(6, 3, 1, NOW() + INTERVAL 9 HOUR, NOW() + INTERVAL 17 HOUR, 'PLANNED', 100);
 
 -- 4) 메뉴(Menu Items)
 INSERT INTO menu_items (id, truck_id, name, price, is_sold_out)
@@ -45,15 +45,15 @@ VALUES
 (3, 2, '타코세트', 8000, FALSE),
 (4, 2, '부리토', 9000, FALSE),
 (5, 3, '아메리카노', 4000, FALSE),
-(6, 3, '카페라떼', 4500, FALSE);
+(6, 3, '카페라떼', 4500, TRUE);
 
--- 5) 예약(Reservations) - 예약자 ID는 무조건 1번
+-- 5) 예약(Reservations)
 INSERT INTO reservations (id, schedule_id, user_id, pickup_time, total_amount, status, note)
 VALUES
-(1, 1, 1, '2026-01-07 11:30:00', 6500, 'CONFIRMED', '참치김밥 1, 계란김밥 1'),
-(2, 1, 1, '2026-01-07 12:00:00', 3500, 'PENDING', NULL),
-(3, 3, 1, '2026-01-07 12:30:00', 8000, 'CANCELED', '부리토 변경 요청'),
-(4, 5, 1, '2026-01-07 10:00:00', 4000, 'CONFIRMED', '아메리카노 1');
+(1, 1, 1, NOW() + INTERVAL 1 HOUR + INTERVAL 30 MINUTE, 6500, 'CONFIRMED', '참치김밥 1, 계란김밥 1'),
+(2, 1, 1, NOW() + INTERVAL 2 HOUR, 3500, 'PENDING', NULL),
+(3, 3, 1, NOW() + INTERVAL 3 HOUR, 8000, 'CANCELED', '부리토 변경 요청'),
+(4, 5, 1, NOW() + INTERVAL 1 HOUR, 4000, 'CONFIRMED', '아메리카노 1');
 
 -- 6) 예약 품목(Reservation Items)
 INSERT INTO reservation_items (id, reservation_id, menu_item_id, menu_name, price, qty)
@@ -64,11 +64,11 @@ VALUES
 (4, 3, 4, '부리토', 9000, 1),
 (5, 4, 5, '아메리카노', 4000, 1);
 
--- 7) 주문(Orders) - 현장/예약 혼합
+-- 7) 주문(Orders)
 INSERT INTO orders (id, schedule_id, user_id, source, reservation_id, amount, currency, status, paid_at)
 VALUES
-(1, 1, 1, 'RESERVATION', 1, 6500, 'KRW', 'PAID', '2026-01-07 11:35:00'),
-(2, 3, 1, 'RESERVATION', 3, 8000, 'KRW', 'REFUNDED', '2026-01-07 12:45:00'),
+(1, 1, 1, 'RESERVATION', 1, 6500, 'KRW', 'PAID', NOW() + INTERVAL 1 HOUR + INTERVAL 35 MINUTE),
+(2, 3, 1, 'RESERVATION', 3, 8000, 'KRW', 'REFUNDED', NOW() + INTERVAL 3 HOUR + INTERVAL 45 MINUTE),
 (3, 5, NULL, 'ONSITE', NULL, 4500, 'KRW', 'PENDING', NULL);
 
 -- 8) 주문 품목(Order Items)

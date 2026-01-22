@@ -11,4 +11,6 @@ public interface EmailService {
     void sendPasswordReset(String email, String url);
 
     ResponseDto<Void> sendEmail(@Valid SendEmailRequestDto request);
+
+    void sendEmailChangeVerify(String email, String url);
 }

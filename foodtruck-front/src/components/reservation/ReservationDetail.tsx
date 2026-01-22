@@ -1,12 +1,11 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
 import type { ReservationDetailResponse } from '@/types/reservation/reservation.dto';
-import { formatTime, ONE_HOUR, toKstString } from '@/utils/date';
+import { formatTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 import KakaoMap from '../map/KakaoMap';
 import ReservationModal from './ReservationModal';
-import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
 import toast from 'react-hot-toast';
 
 interface Props {
@@ -173,7 +172,7 @@ function ReservationDetail({reservationId}: Props) {
               id: item.menuItemId,
               name: item.name,
               price: item.price,
-              soldOut: false,
+              isSoldOut: false,
             }))}
           onClose={() => setIsEdit(false)}
           onUpdate={handleUpdateReservation}

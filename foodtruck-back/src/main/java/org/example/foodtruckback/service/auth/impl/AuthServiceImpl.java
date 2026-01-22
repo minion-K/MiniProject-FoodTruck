@@ -185,7 +185,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseDto<FindIdResponseDto> findId(FindIdRequestDto request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.DUPLICATE_EMAIL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         FindIdResponseDto response = new FindIdResponseDto(
                 user.getLoginId()
@@ -207,9 +207,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
 
-        String email = jwtProvider.getEmailFromEmailToken(token);
+        Long userId = jwtProvider.getUserIdFromEmailToken(token);
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         user.changePassword(passwordEncoder.encode(request.newPassword()));
@@ -227,7 +227,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        String token = jwtProvider.generateEmailJwtToken(email, "RESET_PASSWORD");
+        String token = jwtProvider.generateEmailJwtToken(user.getId(), email, "RESET_PASSWORD");
 
         String url = "http://localhost:8080/api/v1/auth/reset-password?token=" + token;
         emailService.sendPasswordReset(email, url);
@@ -253,9 +253,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
 
-        String email = jwtProvider.getEmailFromEmailToken(token);
+        Long userId = jwtProvider.getUserIdFromEmailToken(token);
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if(!user.isVerified()) {
@@ -263,6 +263,53 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return ResponseDto.success("이메일 인증이 완료되었습니다.", null);
+    }
+
+    // 이메일 변경
+    @Override
+    @Transactional
+    public ResponseDto<Void> sendEmailChangeVerify(String email, UserPrincipal principal) {
+        boolean isValid = userRepository.findByEmail(email).isPresent();
+        if(isValid) {
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        String token = jwtProvider.generateEmailJwtToken(
+                principal.getId(),
+                email,
+                "CHANGE_EMAIL"
+        );
+
+        String url = "http://localhost:5173/mypage?token=" + token;
+
+        emailService.sendEmailChangeVerify(email, url);
+
+        return ResponseDto.success("이메일 인증 메일을 전송했습니다.");
+    }
+
+    // 이메일 변경 확인
+    @Override
+    @Transactional
+    public ResponseDto<Void> confirmEmailChange(String token) {
+        if(!jwtProvider.isValidEmailToken(token, "CHANGE_EMAIL")) {
+            throw new BusinessException(ErrorCode.INVALID_EMAIL_CHANGE_TOKEN);
+        }
+
+        Long userId = jwtProvider.getUserIdFromEmailToken(token);
+        String newEmail = jwtProvider.getEmailFromEmailToken(token);
+
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if(userRepository.findByEmail(newEmail).isPresent()) {
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        user.setEmail(newEmail);
+        user.verifyEmail();
+
+        return ResponseDto.success("이메일이 변경되었습니다.");
     }
 
     // 리프레시 토큰
@@ -323,7 +370,11 @@ public class AuthServiceImpl implements AuthService {
             return ResponseDto.success(PasswordVerifyResponseDto.failure());
         }
 
-        String email = jwtProvider.getEmailFromEmailToken(token);
-        return ResponseDto.success(PasswordVerifyResponseDto.success(email));
+        Long userId = jwtProvider.getUserIdFromEmailToken(token);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return ResponseDto.success(PasswordVerifyResponseDto.success(user.getEmail()));
     }
 }

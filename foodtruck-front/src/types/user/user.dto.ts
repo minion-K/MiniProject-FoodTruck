@@ -1,37 +1,32 @@
+import type { AuthProvider } from "../auth/auth.type";
+import type { RoleType } from "../role/role.type";
+
 export interface UserDetailResponse {
+  id: number;
   name: string;
   loginId: string;
   email: string;
-  phone: string;
+  phone: string | null;
+  roles: RoleType[];
+  provider: AuthProvider;
 }
 
 export interface UserListItemResponse {
-  userId: number;
+  id: number;
   name: string;
+  loginId: string;
   email: string;
 }
 
 export type UserListResponse = UserListItemResponse[];
 
 export interface UserUpdateRequest {
-  name: string;
-  loginId: string;
-  email: string;
-  phone: string;
+  name?: string;
+  phone?: string | null;
 }
 
-export interface UserUpdateResponse {
-  name: string;
-  loginId: string;
-  email: string;
-  phone: string;
-}
-
-export interface MeReponse {
-  id: number;
-  name: string
-  loginId: string;
-  email: string;
-  phone: string;
-  roles: string[];
+export interface AdminUserUpdateRequest {
+  name?: string;
+  email?: string;
+  phone?: string | null;
 }

@@ -115,13 +115,12 @@ public class WebSecurityConfig {
 
                             .requestMatchers(
                                     "/api/v1/auth/**",
-                                    "/api/v1/users/me",
                                     "/oauth2/**",
                                     "/login/**",
                                     "/login/oauth2/code/**",
                                     "/error").permitAll()
 
-                            .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/v1/trucks/**").permitAll()
 
                             .anyRequest().authenticated(); // 그 외에는 인증 필요
                 })

@@ -44,6 +44,7 @@ function TruckDetail() {
     if(!truckId) return;
 
     truckApi.getTruckById(Number(truckId)).then(data =>{
+      console.log(data);
       setTruck(data);
     });
   }, [truckId]);
@@ -132,8 +133,13 @@ function TruckDetail() {
           <MenuList>
             {truck.menu.map(menu => (
               <MenuItem key={menu.id}>
-                <span>{menu.name}</span>
-                <span>{menu.price.toLocaleString()} KRW</span>
+                <MenuName isSoldOut={menu.isSoldOut}>
+                  {menu.name}
+                  {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
+                </MenuName>
+                <MenuPrice>
+                  {menu.price.toLocaleString()} KRW
+                </MenuPrice>
               </MenuItem>
             ))}
           </MenuList>
@@ -286,10 +292,29 @@ const MenuList = styled.div`
 const MenuItem = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 12px;
   border-radius: 10px;
   background-color: white;
   border: 1px solid #eee;
+`;
+
+const MenuName = styled.div<{isSoldOut?: boolean}>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: ${({isSoldOut}) => (isSoldOut ? "rgba(0,0,0,0.5)" : "#000")};
+`;
+
+const MenuPrice = styled.div`
+  font-weight: 500;
+`;
+const SoldOutBadge = styled.div`
+  color: red;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 6px;
 `;
 
 const EmptyText = styled.div`

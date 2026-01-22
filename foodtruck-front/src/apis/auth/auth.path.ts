@@ -13,4 +13,6 @@ export const AUTH_PATH = {
   RESETPW: `${AUTH_PREFIX}/reset-pw`,
   SENDEMAIL: `${AUTH_PREFIX}/send-email`,
   VERIFYEMAIL: `${AUTH_PREFIX}/email/verify`,
+  EMAIL_CHANGE: `${AUTH_PREFIX}/email/change`,
+  EMAIL_CHANGE_CONFIRM: `${AUTH_PREFIX}/email/change/confirm`
 };

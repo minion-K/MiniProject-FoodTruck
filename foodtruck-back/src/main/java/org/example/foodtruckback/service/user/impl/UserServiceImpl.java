@@ -6,6 +6,7 @@ import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
+import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
@@ -45,29 +46,23 @@ public class UserServiceImpl implements UserService {
     // 정보 수정
     @Override
     @Transactional
-    @PreAuthorize("@authz.isCommentAuthor(#principal, authentication)")
+    @PreAuthorize("isAuthenticated()")
     public ResponseDto<UserDetailResponseDto> updateMyInfo(UserPrincipal principal, UserUpdateRequestDto request) {
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if (request.name() == null && request.email() == null && request.phone() == null) {
-            throw new IllegalArgumentException("수정할 정보를 입력해주세요");
-        }
-
         String newName = (request.name() != null && !request.name().isBlank()) ? request.name() : null;
-        String newEmail = (request.email() != null && !request.email().isBlank()) ? request.email() : null;
-        String newPhone = (request.phone() != null && !request.phone().isBlank()) ? request.phone() : null;
-
-        boolean changedNickname = newName != null && !Objects.equals(user.getName(), request.name());
-        boolean changedEmail = newEmail != null && !Objects.equals(user.getEmail(), request.email());
-        boolean changedPhone = newPhone != null && !Objects.equals(user.getPhone(), request.phone());
-
-        if (!changedNickname && !changedEmail && !changedPhone) {
-            throw new IllegalArgumentException("변경된 개인정보가 없습니다.");
+        String newPhone;
+        if(request.phone() == null || request.phone().isBlank()) {
+            newPhone = null;
+        } else {
+            newPhone = request.phone();
         }
 
-        if (changedNickname) user.setName(newName);
-        if (changedEmail) user.setEmail(newEmail);
+        boolean changedName = newName != null && !Objects.equals(user.getName(), newName);
+        boolean changedPhone = !Objects.equals(user.getPhone(), newPhone);
+
+        if (changedName) user.setName(newName);
         if (changedPhone) user.setPhone(newPhone);
 
         UserDetailResponseDto response = UserDetailResponseDto.from(user);
@@ -90,8 +85,8 @@ public class UserServiceImpl implements UserService {
     //단건
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<UserDetailResponseDto> getById(UserPrincipal principal) {
-        User user = userRepository.findByLoginId(principal.getLoginId())
+    public ResponseDto<UserDetailResponseDto> getById(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return ResponseDto.success("SUCCESS", UserDetailResponseDto.from(user));
@@ -101,28 +96,36 @@ public class UserServiceImpl implements UserService {
     // 회원 수정
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<UserDetailResponseDto> updateByUserId(UserPrincipal principal, UserUpdateRequestDto request) {
-        User user = userRepository.findByLoginId(principal.getLoginId())
+    @Transactional
+    public ResponseDto<UserDetailResponseDto> updateByUserId(Long userId, AdminUserUpdateRequestDto request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (request.name() == null && request.email() == null && request.phone() == null) {
-            throw new IllegalArgumentException("수정할 정보를 입력해주세요");
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
 
         String newName = (request.name() != null && !request.name().isBlank()) ? request.name() : null;
         String newEmail = (request.email() != null && !request.email().isBlank()) ? request.email() : null;
         String newPhone = (request.phone() != null && !request.phone().isBlank()) ? request.phone() : null;
 
-        boolean changedNickname = newName != null && !Objects.equals(user.getName(), request.name());
-        boolean changedEmail = newEmail != null && !Objects.equals(user.getEmail(), request.email());
-        boolean changedPhone = newPhone != null && !Objects.equals(user.getPhone(), request.phone());
+        boolean changedName = newName != null && !Objects.equals(user.getName(), newName);
+        boolean changedEmail = newEmail != null && !Objects.equals(user.getEmail(), newEmail);
+        boolean changedPhone = newPhone != null && !Objects.equals(user.getPhone(), newPhone);
 
-        if (!changedNickname && !changedEmail && !changedPhone) {
-            throw new IllegalArgumentException("변경된 개인정보가 없습니다.");
+        if (!changedName && !changedEmail && !changedPhone) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
 
-        if (changedNickname) user.setName(newName);
-        if (changedEmail) user.setEmail(newEmail);
+        if (changedName) user.setName(newName);
+        if (changedEmail) {
+            if(userRepository.findByEmail(newEmail).isPresent()) {
+                throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+            }
+
+            user.setEmail(newEmail);
+            user.verifyEmail();
+        }
         if (changedPhone) user.setPhone(newPhone);
 
         UserDetailResponseDto response = UserDetailResponseDto.from(user);
