@@ -73,7 +73,20 @@ public enum ErrorCode {
     // ===========================
     // truck (Txxx)
     // ===========================
-    TRUCK_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "해당 트럭을 찾을 수 없습니다.", "Truck not found");
+    TRUCK_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "해당 트럭을 찾을 수 없습니다.", "Truck not found"),
+
+    // ===========================
+    // payment (Pxxx)
+    // ===========================
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "결제 내역을 찾을 수 없습니다.", "Payment not found"),
+    PAYMENT_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "P002", "이미 처리된 결제입니다.", "Payment already processed"),
+    PAYMENT_POINT_MISMATCH(HttpStatus.BAD_REQUEST, "P003", "결제 금액이 요청과 일치하지 않습니다.", "Payment amount mismatch"),
+    PAYMENT_REFUND_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "P004", "이미 처리된 환불 요청입니다.", "Refund already processed"),
+    PAYMENT_REFUNDED_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "P005", "해당 결제는 환불할 수 없습니다.", "Payment cannot be refunded"),
+    PAYMENT_REFUNDED_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "P006", "환불 금액이 올바르지 않습니다.", "Invalid refund amount"),
+    PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "P007", "결제 대행사와 통신 중 오류가 발생했습니다.", "Payment gateway error");
+
+
     private final HttpStatus status;
     private final String code;
     private final String message;     // client-friendly

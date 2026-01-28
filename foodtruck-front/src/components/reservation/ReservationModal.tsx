@@ -1,23 +1,28 @@
-import { reservationApi } from '@/apis/reservation/reservation.api';
-import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto'
-import type { TruckMenuItemResponse } from '@/types/truck/truck.dto';
-import { getErrorMsg } from '@/utils/error';
-import styled from '@emotion/styled'
-import React, { useMemo, useState } from 'react'
-import toast from 'react-hot-toast';
-import { formatTime, ONE_HOUR, toKstString } from '@/utils/date';
-import type { ReservationDetailResponse, ReservationMenuItemRequest, ReservationUpdateRequest } from '@/types/reservation/reservation.dto';
+import { reservationApi } from "@/apis/reservation/reservation.api";
+import type { TruckScheduleItemResponse } from "@/types/schedule/schedule.dto";
+import type { TruckMenuItemResponse } from "@/types/truck/truck.dto";
+import { getErrorMsg } from "@/utils/error";
+import styled from "@emotion/styled";
+import React, { useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { formatTime, ONE_HOUR, toKstString } from "@/utils/date";
+import type {
+  ReservationDetailResponse,
+  ReservationMenuItemRequest,
+  ReservationUpdateRequest,
+} from "@/types/reservation/reservation.dto";
+import ReservationCompleteModal from "./ReservationCompleteModal";
 
 interface ReservationModalProps {
   schedule?: TruckScheduleItemResponse;
   menus?: TruckMenuItemResponse[];
-  
-  mode?: "CREATE" | "EDIT"
+
+  mode?: "CREATE" | "EDIT";
   reservationId?: number;
   initialPickupTime?: string;
   initialMenuItems?: ReservationMenuItemRequest[];
   initialNote?: string;
-  
+
   onClose: () => void;
   onUpdate?: (update: ReservationDetailResponse) => void;
 }
@@ -29,34 +34,45 @@ interface TimeSlot {
 }
 
 function ReservationModal({
-  schedule, 
+  schedule,
   menus,
   onClose,
-  mode="CREATE",
+  mode = "CREATE",
   reservationId,
   initialPickupTime,
   initialMenuItems,
   initialNote,
-  onUpdate
+  onUpdate,
 }: ReservationModalProps) {
   const [selectedTime, setSelectedTime] = useState<Date | null>(
-    initialPickupTime ? new Date(initialPickupTime) : null);
-  const [menuQty, setMenuQty] = useState<Record<number, number>>(
-    () => {
-      const initial: Record<number, number> = {};
-      initialMenuItems?.forEach(item => {
-        initial[item.menuItemId] = item.quantity;
-      });
-
-      return initial;
-    }
+    initialPickupTime ? new Date(initialPickupTime) : null,
   );
+  const [menuQty, setMenuQty] = useState<Record<number, number>>(() => {
+    const initial: Record<number, number> = {};
+    initialMenuItems?.forEach((item) => {
+      initial[item.menuItemId] = item.quantity;
+    });
+
+    return initial;
+  });
+
+  const [step, setStep] = useState<"FORM" | "COMPLETE">("FORM");
+  const [summary, setSummary] = useState<{
+    reservationId: number;
+    pickupTime: string;
+    menus: {
+      name: string;
+      quantity: number;
+      price: number;
+    }[];
+    totalAmount: number;
+  } | null>(null);
+
   const [note, setNote] = useState(initialNote);
   const [loading, setLoading] = useState(false);
 
-
   const timeSlots: TimeSlot[] = useMemo(() => {
-    if(!schedule) return [];
+    if (!schedule) return [];
 
     const slots: TimeSlot[] = [];
     const start = new Date(schedule.startTime);
@@ -65,14 +81,14 @@ function ReservationModal({
 
     let current = new Date(start);
 
-    while(current.getTime() + ONE_HOUR <= end.getTime()) {
+    while (current.getTime() + ONE_HOUR <= end.getTime()) {
       const slotStart = new Date(current);
       const slotEnd = new Date(current.getTime() + ONE_HOUR);
 
       slots.push({
         start: slotStart,
         end: slotEnd,
-        disabled: slotEnd <= now
+        disabled: slotEnd <= now,
       });
 
       current = slotEnd;
@@ -81,70 +97,101 @@ function ReservationModal({
     return slots;
   }, [schedule]);
 
-  const totalAmount = menus?.reduce((sum, menu) => {
-    const qty = menuQty[menu.id] ?? 0;
-    const total = sum + qty * menu.price;
-    
-    return total;
-  }, 0) ?? 0;
+  const totalAmount =
+    menus?.reduce((sum, menu) => {
+      const qty = menuQty[menu.id] ?? 0;
+      const total = sum + qty * menu.price;
+
+      return total;
+    }, 0) ?? 0;
 
   const canSubmit = selectedTime !== null && totalAmount > 0;
 
-  const handleSubmit = async() => {
-    if(!selectedTime) return ;
-    if(!menus) return ;
+  const handleSubmit = async () => {
+    if (!selectedTime) return;
+    if (!menus) return;
 
     const pickupTime = toKstString(selectedTime);
 
-    const menuItems:ReservationMenuItemRequest[] = menus
-      .filter(menu => (menuQty[menu.id] ?? 0) > 0)
-      .map(menu => ({
+    const menuItems: ReservationMenuItemRequest[] = menus
+      .filter((menu) => (menuQty[menu.id] ?? 0) > 0)
+      .map((menu) => ({
         menuItemId: menu.id,
-        quantity: menuQty[menu.id]
+        quantity: menuQty[menu.id],
       }));
 
-      if(menuItems.length === 0) return ;
+    if (menuItems.length === 0) return;
 
-      setLoading(true);
+    setLoading(true);
 
-      try {
-        let reservation: ReservationDetailResponse;
+    try {
+      let reservation: ReservationDetailResponse;
 
-        if(mode === "CREATE" && schedule) {
-          reservation = await reservationApi.createReservation({
-            scheduleId: schedule.scheduleId,
-            pickupTime,
-            menuItems,
-            note
-          });
+      if (mode === "CREATE" && schedule) {
+        reservation = await reservationApi.createReservation({
+          scheduleId: schedule.scheduleId,
+          pickupTime,
+          menuItems,
+          note,
+        });
 
-          toast.success("예약이 완료되었습니다.")
-        } else if(mode === "EDIT" && reservationId) {
-          const updateRequest: ReservationUpdateRequest = {
-            pickupTime,
-            menuItems,
-            note
-          };
+        const summaryMenus = menus
+          .filter((menu) => (menuQty[menu.id] ?? 0) > 0)
+          .map((menu) => ({
+            name: menu.name,
+            quantity: menuQty[menu.id],
+            price: menu.price,
+          }));
 
-          reservation = await reservationApi.updateReservation(reservationId, updateRequest);
+        setSummary({
+          reservationId: reservation.id,
+          pickupTime,
+          menus: summaryMenus,
+          totalAmount,
+        });
 
-          toast.success("예약이 수정되었습니다.");
-          onUpdate?.(reservation);
-        }
-      
-        onClose();
-      } catch (err) {
-        const msg = getErrorMsg(
-          err, mode === "CREATE" 
-            ? "예약에 실패했습니다. 다시 시도해주세요."
-            : "예약 수정에 실패했습니다. 다시 시도해주세요."
+        toast.success("예약이 완료되었습니다.");
+        setStep("COMPLETE");
+        
+      } else if (mode === "EDIT" && reservationId) {
+        const updateRequest: ReservationUpdateRequest = {
+          pickupTime,
+          menuItems,
+          note,
+        };
+
+        reservation = await reservationApi.updateReservation(
+          reservationId,
+          updateRequest,
         );
 
-        alert(msg)
-      } finally {
-        setLoading(false);
+        toast.success("예약이 수정되었습니다.");
+        onUpdate?.(reservation);
+
+        onClose();
       }
+    } catch (err) {
+      const msg = getErrorMsg(
+        err,
+        mode === "CREATE"
+          ? "예약에 실패했습니다. 다시 시도해주세요."
+          : "예약 수정에 실패했습니다. 다시 시도해주세요.",
+      );
+
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if(step === "COMPLETE" && summary) {
+    return (
+      <ReservationCompleteModal 
+        summary={summary}
+        onClose={onClose}
+      />
+    )
+  }
 
   return (
     <Overlay>
@@ -164,7 +211,7 @@ function ReservationModal({
         <Section>
           <Label>픽업 시간</Label>
           <TimeSlotGrid>
-            {timeSlots.map(slot => (
+            {timeSlots.map((slot) => (
               <TimeSlotButton
                 key={slot.start.toISOString()}
                 disabled={slot.disabled}
@@ -179,88 +226,85 @@ function ReservationModal({
 
         {menus && (
           <Section>
-          <Label>메뉴</Label>
-          <MenuList>
-            {menus.map(menu => {
-              const qty = menuQty[menu.id] ?? 0;
+            <Label>메뉴</Label>
+            <MenuList>
+              {menus.map((menu) => {
+                const qty = menuQty[menu.id] ?? 0;
 
-              return (
-                <MenuItem
-                  key={menu.id}
-                  data-soldout={menu.soldOut}
-                >
-                  <div>
-                    <MenuName>{menu.name}</MenuName>
-                    {menu.description && (
-                      <MenuOption>{menu.description}</MenuOption>
-                    )}
-                  </div>
+                return (
+                  <MenuItem key={menu.id} data-soldout={menu.isSoldOut}>
+                    <div>
+                      <MenuName>{menu.name}</MenuName>
+                      {menu.description && (
+                        <MenuOption>{menu.description}</MenuOption>
+                      )}
+                    </div>
 
-                  <MenuRight>
-                    <QtyControl>
-                      <QtyButton
-                        disabled={qty === 0 || menu.soldOut}
-                        onClick={() => setMenuQty(prev => ({
-                          ...prev, [menu.id]: qty - 1
-                        }))}
-                      >
-                        -
-                      </QtyButton>
+                    <MenuRight>
+                      <QtyControl>
+                        <QtyButton
+                          disabled={qty === 0 || menu.isSoldOut}
+                          onClick={() =>
+                            setMenuQty((prev) => ({
+                              ...prev,
+                              [menu.id]: qty - 1,
+                            }))
+                          }
+                        >
+                          -
+                        </QtyButton>
 
-                      <Qty>{qty}</Qty>
+                        <Qty>{qty}</Qty>
 
-                      <QtyButton
-                        disabled={menu.soldOut}
-                        onClick={() => setMenuQty(prev => ({
-                          ...prev, [menu.id]: qty + 1
-                        }))}
-                      >
-                        +
-                      </QtyButton>
-                    </QtyControl>
+                        <QtyButton
+                          disabled={menu.isSoldOut}
+                          onClick={() =>
+                            setMenuQty((prev) => ({
+                              ...prev,
+                              [menu.id]: qty + 1,
+                            }))
+                          }
+                        >
+                          +
+                        </QtyButton>
+                      </QtyControl>
 
-                    <MenuPrice>
-                      {menu.price.toLocaleString()} KRW
-                    </MenuPrice>
-                  </MenuRight>
-                </MenuItem>
-              );
-            })}
-          </MenuList>
-        </Section>
+                      <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
+                    </MenuRight>
+                  </MenuItem>
+                );
+              })}
+            </MenuList>
+          </Section>
         )}
-        
 
         <Section>
           <Label>요청사항 (선택)</Label>
-          <NoteInput 
+          <NoteInput
             placeholder="요청사항을 입력해주세요"
             value={note}
-            onChange={e => setNote(e.target.value)}
+            onChange={(e) => setNote(e.target.value)}
           />
         </Section>
 
         <Footer>
-          <SubmitButton 
-            disabled={!canSubmit}
-            onClick={handleSubmit}
-          >
+          <SubmitButton disabled={!canSubmit} onClick={handleSubmit}>
             {mode === "EDIT"
-            ? "예약 수정"
-            : `${totalAmount.toLocaleString()} KRW · 예약하기`}
+              ? "예약 수정"
+              : `${totalAmount.toLocaleString()} KRW · 예약하기`}
           </SubmitButton>
         </Footer>
       </Modal>
     </Overlay>
-  )
+  );
 }
 
-export default ReservationModal
+export default ReservationModal;
 
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;

@@ -1,4 +1,3 @@
-
 DROP DATABASE IF EXISTS `mini-foodtruck-db`;
 CREATE DATABASE IF NOT EXISTS `mini-foodtruck-db`
   CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -8,6 +7,7 @@ USE `mini-foodtruck-db`;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS reservation_items;
 DROP TABLE IF EXISTS reservations;
 DROP TABLE IF EXISTS menu_items;
 DROP TABLE IF EXISTS truck_schedules;
@@ -16,6 +16,8 @@ DROP TABLE IF EXISTS trucks;
 DROP TABLE IF EXISTS refresh_tokens;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS payment_refunds;
+DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS users;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -37,6 +39,47 @@ CREATE TABLE users (
   CONSTRAINT `chk_users_status` CHECK (status IN ('TEMP', 'ACTIVE')),
   CONSTRAINT `uk_users_login_id` UNIQUE(login_id),
   CONSTRAINT `uk_users_email` UNIQUE(email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE payments (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NULL,
+    order_id VARCHAR(100) NOT NULL COMMENT '내부 주문 번호',
+    payment_key VARCHAR(100) NOT NULL,
+    amount BIGINT NOT NULL,
+    method VARCHAR(30) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    product_code VARCHAR(50) NOT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    failure_code VARCHAR(50) NULL,
+    failure_message VARCHAR(255) NULL,
+    requested_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    approved_at DATETIME(6) NULL,
+    cancelled_at DATETIME(6) NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    CONSTRAINT `fk_payments_user` FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT `uk_payments_payment_key` UNIQUE (payment_key),
+    CONSTRAINT `chk_payments_method` CHECK (method IN ('MOCK', 'TOSSPAY')),
+    CONSTRAINT `chk_payments_status` CHECK (status IN ('READY', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED')),
+    INDEX `idx_payments_user_id` (user_id),
+    INDEX `idx_payments_order_id` (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE payment_refunds (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    payment_id BIGINT NOT NULL,
+    amount BIGINT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    failure_code VARCHAR(50) NULL,
+    failure_message VARCHAR(255) NULL,
+    requested_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    completed_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    CONSTRAINT `fk_payment_refunds_payment` FOREIGN KEY (payment_id) REFERENCES payments(id),
+    CONSTRAINT `chk_payment_refunds_status` CHECK (status IN ('REQUESTED', 'COMPLETED', 'FAILED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE roles (

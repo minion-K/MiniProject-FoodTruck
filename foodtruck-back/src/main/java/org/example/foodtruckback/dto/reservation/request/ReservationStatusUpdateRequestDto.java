@@ -7,6 +7,7 @@ import org.example.foodtruckback.common.enums.ReservationStatus;
 public record ReservationStatusUpdateRequestDto(
         @NotNull
         ReservationStatus status,
+
         @Size(max = 255)
         String note
 ) {}

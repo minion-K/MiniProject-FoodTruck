@@ -2,10 +2,13 @@ package org.example.foodtruckback.security.util;
 
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
+import org.example.foodtruckback.common.enums.RoleType;
+import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.truck.Truck;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
+import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
@@ -21,6 +24,7 @@ public class AuthorizationChecker {
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
     private final TruckRepository truckRepository;
+    private final PaymentRepository paymentRepository;
 
     public boolean isUserAuthor(String loginId, Authentication principal) {
         if (loginId == null || principal == null) return false;

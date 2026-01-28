@@ -1,35 +1,36 @@
-import { truckApi } from '@/apis/truck/truck.api';
-import KakaoMap from '@/components/map/KakaoMap';
-import ReservationModal from '@/components/reservation/ReservationModal';
-import { useAuthStore } from '@/stores/auth.store';
-import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
-import { type TruckDetailResponse } from '@/types/truck/truck.dto';
-import styled from '@emotion/styled'
-import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { truckApi } from "@/apis/truck/truck.api";
+import KakaoMap from "@/components/map/KakaoMap";
+import ReservationModal from "@/components/reservation/ReservationModal";
+import { useAuthStore } from "@/stores/auth.store";
+import type { TruckScheduleItemResponse } from "@/types/schedule/schedule.dto";
+import { type TruckDetailResponse } from "@/types/truck/truck.dto";
+import styled from "@emotion/styled";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 function TruckDetail() {
-  const {truckId} = useParams();
-  const[truck, setTruck] = useState<TruckDetailResponse | null>(null);
-  const {accessToken, isInitialized} = useAuthStore();
-  const [selectedSchedule, setSelectedSchedule] = useState<TruckScheduleItemResponse | null>(null);
+  const { truckId } = useParams();
+  const [truck, setTruck] = useState<TruckDetailResponse | null>(null);
+  const { accessToken, isInitialized } = useAuthStore();
+  const [selectedSchedule, setSelectedSchedule] =
+    useState<TruckScheduleItemResponse | null>(null);
 
   const navigate = useNavigate();
 
   const handleReservationClick = (schedule: TruckScheduleItemResponse) => {
     const isLoggedIn = isInitialized === true && accessToken !== null;
 
-    if(!isInitialized) return ;
+    if (!isInitialized) return;
 
-    if(!isLoggedIn) {
-      alert("예약은 로그인 후에 가능합니다.")
+    if (!isLoggedIn) {
+      alert("예약은 로그인 후에 가능합니다.");
 
       return navigate("/login");
-    };
+    }
 
     setSelectedSchedule(schedule);
-  }
-  
+  };
+
   const isReservation = (schedule: TruckScheduleItemResponse) => {
     const now = new Date();
 
@@ -41,21 +42,20 @@ function TruckDetail() {
   };
 
   useEffect(() => {
-    if(!truckId) return;
+    if (!truckId) return;
 
-    truckApi.getTruckById(Number(truckId)).then(data =>{
-      console.log(data);
+    truckApi.getTruckById(Number(truckId)).then((data) => {
       setTruck(data);
     });
   }, [truckId]);
 
   const activeSchedule = useMemo(() => {
-    if(!truck || truck.schedules.length === 0) return null;
+    if (!truck || truck.schedules.length === 0) return null;
 
     const now = new Date();
 
     return (
-      truck.schedules.find(schedule => {
+      truck.schedules.find((schedule) => {
         return (
           schedule.status == "OPEN" &&
           new Date(schedule.startTime) <= now &&
@@ -65,15 +65,13 @@ function TruckDetail() {
     );
   }, [truck]);
 
-  if(!truck) return null;
+  if (!truck) return null;
 
-  const center = activeSchedule 
-    ? {lat: activeSchedule.latitude, lng: activeSchedule.longitude} 
-    : {lat: 35.15776, lng: 129.05657};
+  const center = activeSchedule
+    ? { lat: activeSchedule.latitude, lng: activeSchedule.longitude }
+    : { lat: 35.15776, lng: 129.05657 };
 
-  const markers = activeSchedule
-    ? [{lat: center.lat, lng: center.lng}]
-    : [];
+  const markers = activeSchedule ? [{ lat: center.lat, lng: center.lng }] : [];
 
   return (
     <Container>
@@ -92,7 +90,7 @@ function TruckDetail() {
         </LocationText>
 
         <MapWrapper>
-          <KakaoMap center={center} markers={markers}/>
+          <KakaoMap center={center} markers={markers} />
         </MapWrapper>
       </Section>
 
@@ -104,7 +102,7 @@ function TruckDetail() {
               <div>
                 <div>{schedule.locationName}</div>
                 <ScheduleTime>
-                  {new Date(schedule.startTime).toLocaleString()} ~{' '}
+                  {new Date(schedule.startTime).toLocaleString()} ~{" "}
                   {new Date(schedule.endTime).toLocaleDateString()}
                 </ScheduleTime>
               </div>
@@ -131,15 +129,13 @@ function TruckDetail() {
           <EmptyText>등록된 메뉴가 없습니다.</EmptyText>
         ) : (
           <MenuList>
-            {truck.menu.map(menu => (
+            {truck.menu.map((menu) => (
               <MenuItem key={menu.id}>
                 <MenuName isSoldOut={menu.isSoldOut}>
                   {menu.name}
                   {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
                 </MenuName>
-                <MenuPrice>
-                  {menu.price.toLocaleString()} KRW
-                </MenuPrice>
+                <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
               </MenuItem>
             ))}
           </MenuList>
@@ -147,17 +143,17 @@ function TruckDetail() {
       </Section>
 
       {selectedSchedule && (
-        <ReservationModal 
+        <ReservationModal
           schedule={selectedSchedule}
           menus={truck.menu}
           onClose={() => setSelectedSchedule(null)}
         />
       )}
     </Container>
-  )
+  );
 }
 
-export default TruckDetail
+export default TruckDetail;
 
 const Container = styled.div`
   padding: 16px;
@@ -260,26 +256,23 @@ const Badge = styled.span`
   }
 `;
 
-const ReservationButton = styled.button<{disabled?: boolean}>`
+const ReservationButton = styled.button<{ disabled?: boolean }>`
   padding: 6px 8px;
   font-size: 12px;
   font-weight: 600;
   border-radius: 8px;
   border: none;
 
-  cursor: ${({disabled}) => (disabled ? "not-allowed" : "pointer")};
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
 
-  background-color: ${({disabled}) => 
-    disabled ? "#e5e7eb": "#ff6b00"};
-  
-  color: ${({disabled}) => 
-    disabled ? "#9ca3af" : "#ffffff"};
+  background-color: ${({ disabled }) => (disabled ? "#e5e7eb" : "#ff6b00")};
+
+  color: ${({ disabled }) => (disabled ? "#9ca3af" : "#ffffff")};
 
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: ${({disabled}) => 
-      disabled ? "#e5e7eb" : "#e55f00"};
+    background-color: ${({ disabled }) => (disabled ? "#e5e7eb" : "#e55f00")};
   }
 `;
 
@@ -299,12 +292,12 @@ const MenuItem = styled.div`
   border: 1px solid #eee;
 `;
 
-const MenuName = styled.div<{isSoldOut?: boolean}>`
+const MenuName = styled.div<{ isSoldOut?: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
 
-  color: ${({isSoldOut}) => (isSoldOut ? "rgba(0,0,0,0.5)" : "#000")};
+  color: ${({ isSoldOut }) => (isSoldOut ? "rgba(0,0,0,0.5)" : "#000")};
 `;
 
 const MenuPrice = styled.div`

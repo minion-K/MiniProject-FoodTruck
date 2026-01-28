@@ -1,8 +1,8 @@
-import { formatTime } from '@/utils/date';
-import styled from '@emotion/styled';
-import React from 'react'
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { formatTime } from "@/utils/date";
+import styled from "@emotion/styled";
+import React from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ReservationSummary {
   reservationId: number;
@@ -20,75 +20,85 @@ interface Props {
   onClose: () => void;
 }
 
-function ReservationCompleteModal({summary, onClose}: Props) {
+function ReservationCompleteModal({ summary, onClose }: Props) {
   const navigate = useNavigate();
 
   const handlePayment = () => {
     toast("결제 기능은 준비중입니다.", {
-      icon: '💳'
+      icon: "💳",
     });
   };
 
   const handleMyPage = () => {
     navigate("/mypage");
     onClose();
-  }
+  };
 
   return (
-    <Container>
-      <Icon>✅</Icon>
-      
-      <Title>예약이 접수되었습니다.</Title>
-      <Description>
-        픽업 시 현장 결제도 가능합니다.
-      </Description>
+    <Overlay>
+      <Container>
+        <Icon>✅</Icon>
 
-      <ReservationWrapper>
-        <Label>예약 번호</Label>
-        <ReservationId>#{summary.reservationId}</ReservationId>
-      </ReservationWrapper>
+        <Title>예약이 접수되었습니다.</Title>
+        <Description>픽업 시 현장 결제도 가능합니다.</Description>
 
-      <SummaryWrapper>
-        <SummaryRow>
-          <SummaryLabel>픽업 시간</SummaryLabel>
-          <SummaryValue>{formatTime(new Date(summary.pickupTime))}</SummaryValue>
-        </SummaryRow>
+        <ReservationWrapper>
+          <Label>예약 번호</Label>
+          <ReservationId>#{summary.reservationId}</ReservationId>
+        </ReservationWrapper>
 
-        <SummaryRow>
-          <SummaryLabel>메뉴</SummaryLabel>
-          <SummaryValue>
-            {summary.menus.map(menu => (
-              <MenuLine key={menu.name}>
-                {menu.name} X {menu.quantity} 개
-              </MenuLine>
-            ))}
-          </SummaryValue>
-        </SummaryRow>
+        <SummaryWrapper>
+          <SummaryRow>
+            <SummaryLabel>픽업 시간</SummaryLabel>
+            <SummaryValue>
+              {formatTime(new Date(summary.pickupTime))}
+            </SummaryValue>
+          </SummaryRow>
 
-        <SummaryRow>
-          <SummaryLabel>총 금액</SummaryLabel>
-          <TotalAmount>{summary.totalAmount.toLocaleString()} KRW</TotalAmount>
-        </SummaryRow>
-      </SummaryWrapper>
+          <SummaryRow>
+            <SummaryLabel>메뉴</SummaryLabel>
+            <SummaryValue>
+              {summary.menus.map((menu) => (
+                <MenuLine key={menu.name}>
+                  {menu.name} X {menu.quantity} 개
+                </MenuLine>
+              ))}
+            </SummaryValue>
+          </SummaryRow>
 
-      <ButtonWrapper>
-        <PrimaryButton onClick={handlePayment}>
-          결제하기
-        </PrimaryButton>
+          <SummaryRow>
+            <SummaryLabel>총 금액</SummaryLabel>
+            <TotalAmount>
+              {summary.totalAmount.toLocaleString()} KRW
+            </TotalAmount>
+          </SummaryRow>
+        </SummaryWrapper>
 
-        <SecondaryButton onClick={handleMyPage}>
-          마이페이지로 이동
-        </SecondaryButton>
+        <ButtonWrapper>
+          <PrimaryButton onClick={handlePayment}>결제하기</PrimaryButton>
 
-        <TextButton onClick={onClose}>
-          나중에 할게요
-        </TextButton>
-      </ButtonWrapper>
-    </Container>
-  )
+          <SecondaryButton onClick={handleMyPage}>
+            마이페이지로 이동
+          </SecondaryButton>
+
+          <TextButton onClick={onClose}>나중에 할게요</TextButton>
+        </ButtonWrapper>
+      </Container>
+    </Overlay>
+  );
 }
 
-export default ReservationCompleteModal
+export default ReservationCompleteModal;
+
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
 
 const Container = styled.div`
   background-color: white;
