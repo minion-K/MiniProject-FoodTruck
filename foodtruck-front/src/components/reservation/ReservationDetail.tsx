@@ -1,28 +1,33 @@
-import { reservationApi } from '@/apis/reservation/reservation.api';
-import type { ReservationDetailResponse } from '@/types/reservation/reservation.dto';
-import { formatTime } from '@/utils/date';
-import { getErrorMsg } from '@/utils/error';
-import styled from '@emotion/styled';
-import React, { useEffect, useState } from 'react'
-import KakaoMap from '../map/KakaoMap';
-import ReservationModal from './ReservationModal';
-import toast from 'react-hot-toast';
+import { reservationApi } from "@/apis/reservation/reservation.api";
+import type { ReservationDetailResponse } from "@/types/reservation/reservation.dto";
+import { formatTime } from "@/utils/date";
+import { getErrorMsg } from "@/utils/error";
+import styled from "@emotion/styled";
+import React, { useEffect, useState } from "react";
+import KakaoMap from "../map/KakaoMap";
+import ReservationModal from "./ReservationModal";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   reservationId: string;
 }
 
-function ReservationDetail({reservationId}: Props) {
-  const [reservation, setReservation] = useState<ReservationDetailResponse | null>(null);
+function ReservationDetail({ reservationId }: Props) {
+  const [reservation, setReservation] =
+    useState<ReservationDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEdit, setIsEdit] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if(!reservationId) return;
+    if (!reservationId) return;
 
     const fetchReservation = async () => {
       try {
-        const data = await reservationApi.getReservationById(Number(reservationId));
+        const data = await reservationApi.getReservationById(
+          Number(reservationId),
+        );
 
         setReservation(data);
       } catch (err) {
@@ -38,21 +43,20 @@ function ReservationDetail({reservationId}: Props) {
   const handleUpdateReservation = (update: ReservationDetailResponse) => {
     setReservation(update);
     setIsEdit(false);
-  }
+  };
 
   const handleCancelReservation = async () => {
-    if(!reservation) return ;
+    if (!reservation) return;
 
     const confirmCancel = window.confirm("예약을 취소하시겠습니까?");
-    if(!confirmCancel) return ;
+    if (!confirmCancel) return;
 
     try {
-      await reservationApi.cancelReservation(Number(reservationId))
+      await reservationApi.cancelReservation(Number(reservationId));
 
-      setReservation(prev => 
-        prev ? {...prev, status: "CANCELED"} : prev);
+      setReservation((prev) => (prev ? { ...prev, status: "CANCELED" } : prev));
 
-      toast.success("예약이 취소되었습니다.")
+      toast.success("예약이 취소되었습니다.");
     } catch (err) {
       const msg = getErrorMsg(err, "예약 취소에 실패했습니다.");
 
@@ -60,8 +64,23 @@ function ReservationDetail({reservationId}: Props) {
     }
   };
 
-  if(loading) return <Container>Loading...</Container>;
-  if(!reservation) return <Container>예약 정보를 불러올 수 없습니다.</Container>;
+  const handlePayment = () => {
+    if (!reservation) return;
+
+    navigate("/pay/toss", {
+      state: {
+        targetId: reservation.id,
+        targetType: "RESERVATION",
+        productCode: `RES-${reservation.id}`,
+        productName: reservation.truckName,
+        amount: reservation.totalAmount,
+      },
+    });
+  };
+
+  if (loading) return <Container>Loading...</Container>;
+  if (!reservation)
+    return <Container>예약 정보를 불러올 수 없습니다.</Container>;
 
   const isPending = reservation.status === "PENDING";
 
@@ -80,9 +99,11 @@ function ReservationDetail({reservationId}: Props) {
           <Label>위치: {reservation.locationName}</Label>
         </InfoRow>
         <MapWrapper>
-          <KakaoMap 
-            center={{lat: reservation.latitude, lng: reservation.longitude}}
-            markers={[{lat: reservation.latitude, lng: reservation.longitude}]}
+          <KakaoMap
+            center={{ lat: reservation.latitude, lng: reservation.longitude }}
+            markers={[
+              { lat: reservation.latitude, lng: reservation.longitude },
+            ]}
           />
         </MapWrapper>
       </Section>
@@ -93,7 +114,9 @@ function ReservationDetail({reservationId}: Props) {
           <Label>예약자 ID: {reservation.username}</Label>
         </InfoRow>
         <InfoRow>
-          <Label>픽업 시간: {formatTime(new Date(reservation.pickupTime))}</Label>
+          <Label>
+            픽업 시간: {formatTime(new Date(reservation.pickupTime))}
+          </Label>
         </InfoRow>
         <InfoRow>
           <Label>총 금액: {reservation.totalAmount.toLocaleString()} KRW</Label>
@@ -109,18 +132,19 @@ function ReservationDetail({reservationId}: Props) {
       <Section>
         <SectionTitle>주문 메뉴</SectionTitle>
 
-        {reservation.menuItems?.length > 0 && (
-          reservation.menuItems.map(menu => (
+        {reservation.menuItems?.length > 0 &&
+          reservation.menuItems.map((menu) => (
             <MenuRow key={menu.menuItemId}>
               <span>{menu.name}</span>
               <span>
                 {menu.quantity}개 X {menu.price.toLocaleString()} KRW
               </span>
             </MenuRow>
-          ))
-        )}
+          ))}
 
-        <TotalRow>총 금액: {reservation.totalAmount.toLocaleString()} KRW</TotalRow>
+        <TotalRow>
+          총 금액: {reservation.totalAmount.toLocaleString()} KRW
+        </TotalRow>
       </Section>
 
       <Section>
@@ -136,53 +160,70 @@ function ReservationDetail({reservationId}: Props) {
       <ButtonWrapper>
         {isPending && reservation.schedule && (
           <>
-            <ActionButton 
+            <ActionButton
               cancel
               disabled={new Date(reservation.schedule.endTime) <= new Date()}
-              title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
+              title={
+                new Date(reservation.schedule.endTime) <= new Date()
+                  ? "이미 지난 예약입니다."
+                  : ""
+              }
               onClick={handleCancelReservation}
-            >예약 취소</ActionButton>
+            >
+              예약 취소
+            </ActionButton>
             <ActionButton
+              onClick={handlePayment}
               disabled={new Date(reservation.schedule.endTime) <= new Date()}
-              title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
-            >결제하기</ActionButton>
-            <ActionButton 
+              title={
+                new Date(reservation.schedule.endTime) <= new Date()
+                  ? "이미 지난 예약입니다."
+                  : ""
+              }
+            >
+              결제하기
+            </ActionButton>
+            <ActionButton
               onClick={() => setIsEdit(true)}
               disabled={new Date(reservation.schedule.endTime) <= new Date()}
-              title={new Date(reservation.schedule.endTime) <= new Date() ? "이미 지난 예약입니다." : ""}
-            >예약 변경</ActionButton>  
+              title={
+                new Date(reservation.schedule.endTime) <= new Date()
+                  ? "이미 지난 예약입니다."
+                  : ""
+              }
+            >
+              예약 변경
+            </ActionButton>
           </>
         )}
       </ButtonWrapper>
 
       {isEdit && reservation.schedule && (
-        <ReservationModal 
+        <ReservationModal
           mode="EDIT"
           reservationId={reservation.id}
           schedule={reservation.schedule}
           initialPickupTime={reservation.pickupTime}
-          initialMenuItems={reservation.menuItems
-            .map(item => ({
-              menuItemId: item.menuItemId,
-              quantity: item.quantity
-            }))}
+          initialMenuItems={reservation.menuItems.map((item) => ({
+            menuItemId: item.menuItemId,
+            quantity: item.quantity,
+          }))}
           initialNote={reservation.note}
-          menus={reservation.menuItems
-            .map(item => ({
-              id: item.menuItemId,
-              name: item.name,
-              price: item.price,
-              isSoldOut: false,
-            }))}
+          menus={reservation.menuItems.map((item) => ({
+            id: item.menuItemId,
+            name: item.name,
+            price: item.price,
+            isSoldOut: false,
+          }))}
           onClose={() => setIsEdit(false)}
           onUpdate={handleUpdateReservation}
         />
       )}
     </Container>
-  )
+  );
 }
 
-export default ReservationDetail
+export default ReservationDetail;
 
 const Container = styled.div`
   padding: 16px;
@@ -252,7 +293,7 @@ const ButtonWrapper = styled.div`
   margin-top: 12px;
 `;
 
-const ActionButton = styled.button<{cancel?: boolean}>`
+const ActionButton = styled.button<{ cancel?: boolean }>`
   padding: 10px 16px;
   font-size: 14px;
   font-weight: 600;
@@ -260,11 +301,11 @@ const ActionButton = styled.button<{cancel?: boolean}>`
   border: none;
   cursor: pointer;
 
-  background-color: ${({cancel}) => (cancel ? "#f8d7da" : "#d1e7dd")};
-  color: ${({cancel}) => (cancel ? "#842029" : "#0f5132")};
+  background-color: ${({ cancel }) => (cancel ? "#f8d7da" : "#d1e7dd")};
+  color: ${({ cancel }) => (cancel ? "#842029" : "#0f5132")};
 
   &:hover {
-    background-color: ${({cancel}) => (cancel ? "#f5c2c7" : "#badbcc")};
+    background-color: ${({ cancel }) => (cancel ? "#f5c2c7" : "#badbcc")};
   }
 
   &:disabled {

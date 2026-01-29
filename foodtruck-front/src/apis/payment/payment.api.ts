@@ -7,6 +7,7 @@ import type {
   PaymentRefundRequest,
   PaymentResponseList,
 } from "@/types/payment/payment.dto";
+import type { PaymentMethod } from "@/types/payment/payment.type";
 
 export const paymentApi = {
   createPayment: async (
@@ -48,6 +49,14 @@ export const paymentApi = {
       PAYMENT_PATH.ME,
     );
 
+    return res.data.data ?? [];
+  },
+
+  getPaymentMethods: async () => {
+    const res = await privateApi.get<ApiResponse<PaymentMethod[]>>(
+      PAYMENT_PATH.METHOD,
+    );
+
     return res.data.data;
-  }
+  },
 };

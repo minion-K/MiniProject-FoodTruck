@@ -1,2 +1,7 @@
-export type PaymentMethod = "MOCK" | "TOSSPAY"
-export type PaymentStatus = "READY" | "SUCCESS" | "FAILED" | "CANCELLED" | "REFUNDED"
+export type PaymentMethod = "MOCK" | "TOSS_PAY";
+export type PaymentStatus =
+  | "READY"
+  | "SUCCESS"
+  | "FAILED"
+  | "CANCELLED"
+  | "REFUNDED";

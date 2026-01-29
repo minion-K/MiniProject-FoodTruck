@@ -26,23 +26,14 @@ VALUES
 (2, 2, '부산타코', '멕시칸', 'ACTIVE'),
 (3, 2, '커피한잔', '카페', 'ACTIVE');
 
--- 3) 스케줄 (예약 테스트 최적화)
+-- 3) 스케줄 (항상 현재 기준으로 OPEN)
 INSERT INTO truck_schedules
 (id, truck_id, location_id, start_time, end_time, status, max_reservations)
 VALUES
--- 🔥 메인 예약 테스트용 (지금부터 2~6시간)
 (1, 1, 1, DATE_ADD(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 6 HOUR), 'OPEN', 10),
-
--- 예약 거의 찬 상태 테스트
 (2, 1, 2, DATE_ADD(NOW(), INTERVAL 3 HOUR), DATE_ADD(NOW(), INTERVAL 7 HOUR), 'OPEN', 3),
-
--- 다른 트럭 정상 OPEN
 (3, 2, 2, DATE_ADD(NOW(), INTERVAL 2 HOUR), DATE_ADD(NOW(), INTERVAL 5 HOUR), 'OPEN', 20),
-
--- 과거 CLOSED (목록 필터 테스트용)
 (4, 2, 3, DATE_SUB(NOW(), INTERVAL 6 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR), 'CLOSED', 20),
-
--- 오늘 하루 종일 OPEN
 (5, 3, 3, DATE_ADD(CURDATE(), INTERVAL 10 HOUR), DATE_ADD(CURDATE(), INTERVAL 20 HOUR), 'OPEN', 50);
 
 -- 4) 메뉴
@@ -52,20 +43,15 @@ VALUES
 (2, 1, '계란김밥', 3000, FALSE),
 (3, 2, '타코세트', 8000, FALSE),
 (4, 2, '부리토', 9000, FALSE),
-(5, 3, '아메리카노', 4000, FALSE),
+(5, 3, '아메리카노', 1, FALSE),
 (6, 3, '카페라떼', 4500, FALSE);
 
--- 5) 예약 (OPEN 스케줄 기준)
+-- 5) 예약 (항상 현재 기준으로 PENDING/CONFIRMED)
 INSERT INTO reservations
 (id, schedule_id, user_id, pickup_time, total_amount, status, note)
 VALUES
--- 정상 CONFIRMED
 (1, 1, 1, DATE_ADD(NOW(), INTERVAL 3 HOUR), 6500, 'CONFIRMED', '참치김밥 1, 계란김밥 1'),
-
--- PENDING (승인 대기)
 (2, 1, 1, DATE_ADD(NOW(), INTERVAL 4 HOUR), 3500, 'PENDING', NULL),
-
--- 거의 찬 스케줄
 (3, 2, 1, DATE_ADD(NOW(), INTERVAL 4 HOUR), 3500, 'CONFIRMED', NULL),
 (4, 2, 1, DATE_ADD(NOW(), INTERVAL 5 HOUR), 3000, 'CONFIRMED', NULL);
 

@@ -52,7 +52,7 @@ public class PaymentService {
 
         return switch(request.method()) {
             case MOCK -> ResponseDto.success(processMockPayment(user, request));
-            case TOSS_PAY -> throw new BusinessException(ErrorCode.INVALID_INPUT);
+            case TOSS_PAY -> ResponseDto.success(processTossPayment(user, request));
         };
     }
 
@@ -63,6 +63,24 @@ public class PaymentService {
                 .paymentKey("MOCK-" + UUID.randomUUID())
                 .amount(request.amount())
                 .method(PaymentMethod.MOCK)
+                .status(PaymentStatus.READY)
+                .productCode(request.productCode())
+                .productName(request.productName())
+                .build();
+
+        payment.markSuccess();
+        paymentRepository.save(payment);
+
+        return toDto(payment);
+    }
+
+    private PaymentResponseDto processTossPayment(User user, PaymentCreateRequestDto request) {
+        Payment payment = Payment.builder()
+                .user(user)
+                .orderId("ORD_" + UUID.randomUUID())
+                .paymentKey("TOSS-" + UUID.randomUUID())
+                .amount(request.amount())
+                .method(PaymentMethod.TOSS_PAY)
                 .status(PaymentStatus.READY)
                 .productCode(request.productCode())
                 .productName(request.productName())

@@ -59,6 +59,7 @@ function ReservationModal({
   const [step, setStep] = useState<"FORM" | "COMPLETE">("FORM");
   const [summary, setSummary] = useState<{
     reservationId: number;
+    truckName: string;
     pickupTime: string;
     menus: {
       name: string;
@@ -145,6 +146,7 @@ function ReservationModal({
 
         setSummary({
           reservationId: reservation.id,
+          truckName: reservation.truckName,
           pickupTime,
           menus: summaryMenus,
           totalAmount,
@@ -152,7 +154,6 @@ function ReservationModal({
 
         toast.success("예약이 완료되었습니다.");
         setStep("COMPLETE");
-        
       } else if (mode === "EDIT" && reservationId) {
         const updateRequest: ReservationUpdateRequest = {
           pickupTime,
@@ -184,13 +185,8 @@ function ReservationModal({
     }
   };
 
-  if(step === "COMPLETE" && summary) {
-    return (
-      <ReservationCompleteModal 
-        summary={summary}
-        onClose={onClose}
-      />
-    )
+  if (step === "COMPLETE" && summary) {
+    return <ReservationCompleteModal summary={summary} onClose={onClose} />;
   }
 
   return (

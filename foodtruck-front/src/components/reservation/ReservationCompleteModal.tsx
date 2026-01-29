@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 interface ReservationSummary {
   reservationId: number;
+  truckName: string;
   pickupTime: string;
   menus: {
     name: string;
@@ -24,8 +25,14 @@ function ReservationCompleteModal({ summary, onClose }: Props) {
   const navigate = useNavigate();
 
   const handlePayment = () => {
-    toast("결제 기능은 준비중입니다.", {
-      icon: "💳",
+    navigate("/pay/toss", {
+      state: {
+        targetId: summary.reservationId,
+        targetType: "RESERVATION",
+        productCode: `RES-${summary.reservationId}`,
+        productName: summary.truckName,
+        amount: summary.totalAmount,
+      },
     });
   };
 
@@ -41,6 +48,11 @@ function ReservationCompleteModal({ summary, onClose }: Props) {
 
         <Title>예약이 접수되었습니다.</Title>
         <Description>픽업 시 현장 결제도 가능합니다.</Description>
+
+        <ReservationWrapper>
+          <Label>이름</Label>
+          <ReservationId>#{summary.truckName}</ReservationId>
+        </ReservationWrapper>
 
         <ReservationWrapper>
           <Label>예약 번호</Label>

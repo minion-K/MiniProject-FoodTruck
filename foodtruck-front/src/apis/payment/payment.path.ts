@@ -8,4 +8,5 @@ export const PAYMENT_PATH = {
   APPROVE: `${PAYMENT_PREFIX}/approve`,
   ME: `${PAYMENT_PREFIX}/me`,
   REFUND: (paymentId: number) => `${PAYMENT_PREFIX}/${paymentId}/refund`,
+  METHOD: `${PAYMENT_PREFIX}/methods`,
 };

@@ -60,7 +60,7 @@ CREATE TABLE payments (
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     CONSTRAINT `fk_payments_user` FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT `uk_payments_payment_key` UNIQUE (payment_key),
-    CONSTRAINT `chk_payments_method` CHECK (method IN ('MOCK', 'TOSSPAY')),
+    CONSTRAINT `chk_payments_method` CHECK (method IN ('MOCK', 'TOSS_PAY')),
     CONSTRAINT `chk_payments_status` CHECK (status IN ('READY', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED')),
     INDEX `idx_payments_user_id` (user_id),
     INDEX `idx_payments_order_id` (order_id)

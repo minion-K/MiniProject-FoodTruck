@@ -31,7 +31,7 @@ export interface PaymentResponse {
   productCode: string;
   productName: string;
   requestedAt: string;
-  approvedAt?: string | null;
+  approvedAt: string | null;
 }
 
 export type PaymentResponseList = PaymentResponse[];
