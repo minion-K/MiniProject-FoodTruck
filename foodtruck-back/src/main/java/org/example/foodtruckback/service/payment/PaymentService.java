@@ -50,6 +50,13 @@ public class PaymentService {
     ) {
         User user = getUser(principal);
 
+        boolean exists = paymentRepository.existsByProductCodeAndStatus(
+                request.productCode(), PaymentStatus.SUCCESS
+        );
+        if(exists) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PROCESSED);
+        }
+
         return switch(request.method()) {
             case MOCK -> ResponseDto.success(processMockPayment(user, request));
             case TOSS_PAY -> ResponseDto.success(processTossPayment(user, request));
@@ -77,7 +84,7 @@ public class PaymentService {
     private PaymentResponseDto processTossPayment(User user, PaymentCreateRequestDto request) {
         Payment payment = Payment.builder()
                 .user(user)
-                .orderId("ORD_" + UUID.randomUUID())
+                .orderId("RES_" + UUID.randomUUID())
                 .paymentKey("TOSS-" + UUID.randomUUID())
                 .amount(request.amount())
                 .method(PaymentMethod.TOSS_PAY)

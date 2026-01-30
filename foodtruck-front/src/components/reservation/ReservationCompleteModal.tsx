@@ -1,7 +1,5 @@
-import { formatTime } from "@/utils/date";
+import { formatPickupRange } from "@/utils/date";
 import styled from "@emotion/styled";
-import React from "react";
-import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 interface ReservationSummary {
@@ -32,6 +30,11 @@ function ReservationCompleteModal({ summary, onClose }: Props) {
         productCode: `RES-${summary.reservationId}`,
         productName: summary.truckName,
         amount: summary.totalAmount,
+
+        displayInfo: {
+          pickupTime: summary.pickupTime,
+          menus: summary.menus,
+        },
       },
     });
   };
@@ -62,9 +65,12 @@ function ReservationCompleteModal({ summary, onClose }: Props) {
         <SummaryWrapper>
           <SummaryRow>
             <SummaryLabel>픽업 시간</SummaryLabel>
-            <SummaryValue>
-              {formatTime(new Date(summary.pickupTime))}
-            </SummaryValue>
+            <PickupWrapper>
+              <SummaryValue>
+                {formatPickupRange(summary.pickupTime)}
+              </SummaryValue>
+              <Notice>※ 해당 시간 내 방문</Notice>
+            </PickupWrapper>
           </SummaryRow>
 
           <SummaryRow>
@@ -164,6 +170,17 @@ const SummaryValue = styled.div`
   font-size: 13px;
   font-weight: 500;
   text-align: right;
+`;
+
+const PickupWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const Notice = styled.span`
+  font-size: 12px;
+  color: #888;
 `;
 
 const MenuLine = styled.div`

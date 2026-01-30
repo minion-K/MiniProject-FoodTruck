@@ -1,6 +1,6 @@
 export function formatTime(date: Date) {
   const hour = String(date.getHours()).padStart(2, "0");
-  
+
   return `${hour}:00`;
 }
 
@@ -14,3 +14,10 @@ export function toKstString(date: Date) {
 
   return `${year}-${month}-${day}T${hour}:00:00`;
 }
+
+export const formatPickupRange = (pickupTime: string | Date) => {
+  const start = new Date(pickupTime);
+  const end = new Date(start.getTime() + ONE_HOUR);
+
+  return `${formatTime(start)} - ${formatTime(end)}`;
+};

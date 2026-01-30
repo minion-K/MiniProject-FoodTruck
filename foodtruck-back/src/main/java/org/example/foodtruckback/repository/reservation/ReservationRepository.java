@@ -30,12 +30,12 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     );
 
     @Query("SELECT DISTINCT r" +
-           " FROM Reservation r" +
-           " JOIN FETCH r.schedule s" +
-           " JOIN FETCH s.truck t " +
-           "JOIN FETCH s.location l " +
-           "WHERE r.user.id = :userId " +
-           "ORDER BY r.createdAt DESC")
+            " FROM Reservation r" +
+            " JOIN FETCH r.schedule s" +
+            " JOIN FETCH s.truck t " +
+            "JOIN FETCH s.location l " +
+            "WHERE r.user.id = :userId " +
+            "ORDER BY r.createdAt DESC")
     List<Reservation> findForUserReservationList(@Param("userId") Long userId);
 
     @Query("SELECT DISTINCT r" +
@@ -63,7 +63,7 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         JOIN FETCH s.truck t
         JOIN FETCH s.location l
         LEFT JOIN FETCH r.menuItems m
-        WHERE r.id = :reservationId          
+        WHERE r.id = :reservationId
     """)
     Optional<Reservation> findDetail(@Param("reservationId") Long reservationId);
 }

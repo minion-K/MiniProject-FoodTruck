@@ -2,6 +2,7 @@ package org.example.foodtruckback.service.reservation.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
+import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
@@ -11,6 +12,7 @@ import org.example.foodtruckback.dto.reservation.request.ReservationUpdateReques
 import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationMenuItemResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
+import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.reservation.ReservationItem;
 import org.example.foodtruckback.entity.truck.MenuItem;
@@ -18,6 +20,7 @@ import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
+import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
@@ -44,6 +47,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final MenuItemRepository menuItemRepository;
     private final ScheduleRepository scheduleRepository;
+    private final PaymentRepository paymentRepository;
 
     @Override
     @Transactional
@@ -134,7 +138,13 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findDetail(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        ReservationResponseDto response = ReservationResponseDto.from(reservation);
+        String productCode = "RES-" + reservation.getId();
+        PaymentStatus paymentStatus = paymentRepository
+                .findTopByProductCodeOrderByCreatedAt(productCode)
+                .map(Payment::getStatus)
+                .orElse(PaymentStatus.READY);
+
+        ReservationResponseDto response = ReservationResponseDto.fromWithPayment(reservation, paymentStatus);
 
         return ResponseDto.success("조회 성공", response);
     }
@@ -158,7 +168,16 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         List<ReservationListResponseDto> response = reservations.stream()
-                .map(ReservationListResponseDto::from)
+                .map(reservation -> {
+                    String productCode = "RES-" + reservation.getId();
+
+                    PaymentStatus paymentStatus = paymentRepository
+                            .findTopByProductCodeOrderByCreatedAt(productCode)
+                            .map(Payment::getStatus)
+                            .orElse(PaymentStatus.READY);
+
+                    return ReservationListResponseDto.from(reservation, paymentStatus);
+                })
                 .toList();
 
         return ResponseDto.success("조회 성공", response);
@@ -275,7 +294,7 @@ public class ReservationServiceImpl implements ReservationService {
         List<ReservationMenuItemResponseDto> menuDtos = newItems.stream()
                 .map(ReservationMenuItemResponseDto::from)
                 .toList();
-        ReservationResponseDto updatedReservation = ReservationResponseDto.from(reservation, menuDtos);
+        ReservationResponseDto updatedReservation = ReservationResponseDto.fromWithPayment(reservation, menuDtos);
 
         return ResponseDto.success("예약 수정 성공적으로 변경되었습니다.", updatedReservation);
     }

@@ -1,3 +1,4 @@
+import type { PaymentStatus } from "../payment/payment.type";
 import type { TruckScheduleItemResponse } from "../schedule/schedule.dto";
 import type { ReservationStatus } from "./reservation.type";
 
@@ -7,8 +8,8 @@ export interface ReservationMenuItemRequest {
 }
 
 export interface ReservationCreateRequest {
-  scheduleId: number; 
-  pickupTime: string; 
+  scheduleId: number;
+  pickupTime: string;
   menuItems: ReservationMenuItemRequest[];
   note?: string;
 }
@@ -18,6 +19,7 @@ export interface ReservationListItemResponse {
   pickupTime: string;
   totalAmount: number;
   status: ReservationStatus;
+  paymentStatus: PaymentStatus;
   truckName: string;
   locationName: string;
 }
@@ -34,11 +36,12 @@ export interface ReservationMenuItemResponse {
 export interface ReservationDetailResponse {
   id: number;
   schedule?: TruckScheduleItemResponse;
-  scheduleId: number
+  scheduleId: number;
   username: string;
   pickupTime: string;
   totalAmount: number;
   status: ReservationStatus;
+  paymentStatus: PaymentStatus;
   note?: string;
   createdAt: string;
   updatedAt: string;

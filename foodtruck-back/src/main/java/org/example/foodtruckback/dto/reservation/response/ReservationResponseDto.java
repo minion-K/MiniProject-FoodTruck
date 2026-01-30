@@ -1,5 +1,6 @@
 package org.example.foodtruckback.dto.reservation.response;
 
+import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.common.utils.DateTimeUtil;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
@@ -20,6 +21,7 @@ public record ReservationResponseDto(
         LocalDateTime pickupTime,
         int totalAmount,
         ReservationStatus status,
+        PaymentStatus paymentStatus,
         String note,
         String createdAt,
         String updatedAt,
@@ -45,6 +47,7 @@ public record ReservationResponseDto(
                 reservation.getPickupTime(),
                 reservation.getTotalAmount(),
                 reservation.getStatus(),
+                null,
                 reservation.getNote(),
                 DateTimeUtil.toKstString(reservation.getCreatedAt()),
                 DateTimeUtil.toKstString(reservation.getUpdatedAt()),
@@ -56,7 +59,36 @@ public record ReservationResponseDto(
         );
     }
 
-    public static ReservationResponseDto from(
+    public static ReservationResponseDto fromWithPayment (
+            Reservation reservation, PaymentStatus paymentStatus
+    ) {
+        List<ReservationMenuItemResponseDto> menus = reservation.getMenuItems().stream()
+                .map(ReservationMenuItemResponseDto::from)
+                .toList();
+
+        ScheduleItemResponseDto scheduleDto = ScheduleItemResponseDto.from(reservation.getSchedule());
+
+        return new ReservationResponseDto(
+                reservation.getId(),
+                reservation.getSchedule().getId(),
+                scheduleDto,
+                reservation.getUser().getName(),
+                reservation.getPickupTime(),
+                reservation.getTotalAmount(),
+                reservation.getStatus(),
+                paymentStatus,
+                reservation.getNote(),
+                DateTimeUtil.toKstString(reservation.getCreatedAt()),
+                DateTimeUtil.toKstString(reservation.getUpdatedAt()),
+                reservation.getSchedule().getTruck().getName(),
+                reservation.getSchedule().getLocationName(),
+                reservation.getSchedule().getLocation().getLatitude(),
+                reservation.getSchedule().getLocation().getLongitude(),
+                menus
+        );
+    }
+
+    public static ReservationResponseDto fromWithPayment(
             Reservation reservation,
             List<ReservationMenuItemResponseDto> dtos
     ) {
@@ -78,6 +110,7 @@ public record ReservationResponseDto(
                 reservation.getPickupTime(),
                 reservation.getTotalAmount(),
                 reservation.getStatus(),
+                null,
                 reservation.getNote(),
                 DateTimeUtil.toKstString(reservation.getCreatedAt()),
                 DateTimeUtil.toKstString(reservation.getUpdatedAt()),

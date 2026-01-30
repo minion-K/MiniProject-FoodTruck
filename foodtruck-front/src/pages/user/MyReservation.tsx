@@ -1,12 +1,14 @@
-import { reservationApi } from '@/apis/reservation/reservation.api';
-import SearchInput from '@/components/common/SearchInput';
-import ReservationFilter from '@/components/reservation/ReservationFilter';
-import { type ReservationListResponse } from '@/types/reservation/reservation.dto'
-import { formatTime } from '@/utils/date';
-import { getErrorMsg } from '@/utils/error';
-import styled from '@emotion/styled';
-import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { reservationApi } from "@/apis/reservation/reservation.api";
+import SearchInput from "@/components/common/SearchInput";
+import ReservationFilter from "@/components/reservation/ReservationFilter";
+import { type ReservationListResponse } from "@/types/reservation/reservation.dto";
+import { formatPickupRange, formatTime } from "@/utils/date";
+import { getErrorMsg } from "@/utils/error";
+import { getPaymentStatus } from "@/utils/paymentStatus";
+import { getReservationStatus } from "@/utils/reservationStatus";
+import styled from "@emotion/styled";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function MyReservation() {
   const [reservations, setReservations] = useState<ReservationListResponse>([]);
@@ -29,34 +31,35 @@ function MyReservation() {
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchReservations();
   }, []);
 
   const filteredReservations = useMemo(() => {
-    return reservations.filter(res => {
-      if(statusFilter !== "ALL" && res.status !== statusFilter) return false;
+    return reservations.filter((res) => {
+      if (statusFilter !== "ALL" && res.status !== statusFilter) return false;
 
-      if(search && !res.truckName.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !res.truckName.toLowerCase().includes(search.toLowerCase()))
+        return false;
 
       return true;
-    })
+    });
   }, [reservations, statusFilter, search]);
 
-  if(loading) return <LoadingMsg>예약 내역 불러오는 중...</LoadingMsg>
+  if (loading) return <LoadingMsg>예약 내역 불러오는 중...</LoadingMsg>;
 
-  if(reservations.length === 0) {
-    return <Empty>예약 내역이 없습니다.</Empty>
+  if (reservations.length === 0) {
+    return <Empty>예약 내역이 없습니다.</Empty>;
   }
 
   const handleSearch = () => {
     setSearch(searchInput);
-  }
+  };
 
-  const handleKeyDown = (e:React.KeyboardEvent<HTMLInputElement>) => {
-    if(e.key === "Enter") handleSearch();
-  }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSearch();
+  };
 
   return (
     <Container>
@@ -64,12 +67,12 @@ function MyReservation() {
 
       <FilterRow>
         <SearchWrapper>
-          <ReservationFilter 
+          <ReservationFilter
             status={statusFilter}
             onStatusChange={setStatusFilter}
           />
 
-          <SearchInput 
+          <SearchInput
             value={searchInput}
             onChange={setSearchInput}
             onKeyDown={handleKeyDown}
@@ -77,38 +80,45 @@ function MyReservation() {
             placeholder="검색어를 입력하세요."
           />
         </SearchWrapper>
-        
       </FilterRow>
 
-      {filteredReservations.map(reservation => (
-        <Card
-          key={reservation.id}
-          onClick={() => navigate(`/mypage/reservation/${reservation.id}`)}
-        >
-          <Row>
-            <Title>{reservation.truckName}</Title>
-            <Status status={reservation.status}>
-              {reservation.status}
-            </Status>
-          </Row>
+      {filteredReservations.map((reservation) => {
+        const payment = getPaymentStatus(reservation.paymentStatus);
+        const status = getReservationStatus(reservation.status);
 
-          <Location>
-            {reservation.locationName}
-          </Location>
+        return (
+          <Card
+            key={reservation.id}
+            onClick={() => navigate(`/mypage/reservation/${reservation.id}`)}
+          >
+            <Row>
+              <Title>{reservation.truckName}</Title>
 
-          <Info>
-            픽업 시간: {formatTime(new Date(reservation.pickupTime)).toLocaleString()}
-          </Info>
-          <Info>
-            결제 금액: {reservation.totalAmount?.toLocaleString() ?? "-s"} KRW
-          </Info>
-        </Card>
-      ))} 
+              <StatusColumn>
+                <Status style={{ backgroundColor: status.color }}>
+                  {status.label}
+                </Status>
+
+                <PaymentStatus style={{ backgroundColor: payment.color }}>
+                  {payment.label}
+                </PaymentStatus>
+              </StatusColumn>
+            </Row>
+
+            <Location>{reservation.locationName}</Location>
+
+            <Info>픽업 시간: {formatPickupRange(reservation.pickupTime)}</Info>
+            <Info>
+              결제 금액: {reservation.totalAmount?.toLocaleString() ?? "-s"} KRW
+            </Info>
+          </Card>
+        );
+      })}
     </Container>
-  )
+  );
 }
 
-export default MyReservation
+export default MyReservation;
 
 const Container = styled.div`
   display: flex;
@@ -144,7 +154,7 @@ const Card = styled.div`
   border: 1px solid #eee;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 `;
 
@@ -177,17 +187,22 @@ const Empty = styled.div`
   margin-top: 80px;
 `;
 
-const Status = styled.span<{status: string}>` 
+const Status = styled.span`
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 8px;
+`;
 
-  background-color: ${({status}) => {
-    switch(status) {
-      case "PENDING": return "#fff3cd";
-      case "CONFIRMED": return "#d1e7dd";
-      case "CANCELED": return "#f8d7da";
-      default: return "#eee";
-    }
-  }};
+const StatusColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+`;
+
+const PaymentStatus = styled.span`
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  width: fit-content;
 `;
