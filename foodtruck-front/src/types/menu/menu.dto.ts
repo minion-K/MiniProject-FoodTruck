@@ -1,5 +1,4 @@
 export interface MenuCreateRequest {
-  truckId: number;     // 어떤 트럭의 메뉴인지
   name: string;
   price: number;
   optionText?: string;
@@ -9,7 +8,6 @@ export interface MenuUpdateRequest {
   price?: number;
   optionText?: string;
 }
-
 
 export interface MenuDetailResponse {
   id: number;
@@ -29,6 +27,5 @@ export interface MenuListItemResponse {
   isSoldOut: boolean;
   optionText?: string;
 }
-
 
 export type MenuListResponse = MenuListItemResponse[];

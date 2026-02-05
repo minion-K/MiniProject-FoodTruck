@@ -64,6 +64,11 @@ public class Truck extends BaseTimeEntity {
         menu.setTruck(this);
     }
 
+    public void addSchedule(Schedule schedule) {
+        schedules.add(schedule);
+        schedule.setTruck(this);
+    }
+
     public void removeMenu(MenuItem menu) {
         menus.remove(menu);
         menu.setTruck(null);

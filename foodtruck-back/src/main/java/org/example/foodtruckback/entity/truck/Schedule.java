@@ -49,6 +49,14 @@ public class Schedule extends BaseTimeEntity {
     @Column(name = "max_reservations", nullable = false)
     private int maxReservations = 100;
 
+    public Schedule(Truck truck, LocalDateTime startTime, LocalDateTime endTime, Location location, Integer maxReservations) {
+        this.truck = truck;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.location = location;
+        this.maxReservations = maxReservations != null ? maxReservations : 100;
+        this.status = ScheduleStatus.PLANNED;
+    }
     public boolean isNowActive() {
         LocalDateTime now = LocalDateTime.now();
         return !now.isBefore(startTime) && !now.isAfter(endTime)
@@ -68,5 +76,9 @@ public class Schedule extends BaseTimeEntity {
         if(pickupTime.isBefore(startTime) || pickupTime.isAfter(endTime)) {
             throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
+    }
+
+    public void setTruck(Truck truck) {
+        this.truck = truck;
     }
 }

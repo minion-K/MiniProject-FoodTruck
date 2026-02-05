@@ -1,4 +1,3 @@
-import type { TruckStatus } from "../truck/truck.type";
 import type { ScheduleStatus } from "./schedule.type";
 
 export interface ScheduleCreateRequest {
@@ -34,7 +33,7 @@ export interface TruckScheduleItemResponse {
   scheduleId: number;
   startTime: string;
   endTime: string;
-  locationId: number; 
+  locationId: number;
   locationName?: string;
   latitude: number;
   longitude: number;

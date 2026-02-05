@@ -1,26 +1,19 @@
-import { truckApi } from '@/apis/truck/truck.api';
-import type { TruckListResponse } from '@/types/truck/truck.dto'
-import styled from '@emotion/styled';
-import React, { useEffect, useState } from 'react'
-import TruckCard from './TruckCard';
-import { useNavigate } from 'react-router-dom';
+import type { TruckListResponse } from "@/types/truck/truck.dto";
+import styled from "@emotion/styled";
+import TruckCard from "./TruckCard";
+import { useNavigate } from "react-router-dom";
 
-function Trucks() {
-  const [trucks, setTrucks] = useState<TruckListResponse>([]);
+interface Props {
+  trucks: TruckListResponse;
+}
+
+function Trucks({ trucks }: Props) {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    truckApi.getTruckList().then(setTrucks);
-  } ,[]);
-
   return (
     <List>
-      {trucks.map(truck => (
-        <Item
-          key={truck.id}
-          onClick={() => navigate(`/trucks/${truck.id}`)}
-        >
-          <TruckCard 
+      {trucks.map((truck) => (
+        <Item key={truck.id} onClick={() => navigate(`/trucks/${truck.id}`)}>
+          <TruckCard
             name={truck.name}
             cuisine={truck.cuisine}
             status={truck.status}
@@ -29,10 +22,10 @@ function Trucks() {
         </Item>
       ))}
     </List>
-  )
+  );
 }
 
-export default Trucks
+export default Trucks;
 
 const List = styled.div`
   display: flex;

@@ -24,7 +24,7 @@ function MyPayment() {
         const res = await paymentApi.getMyPayments();
 
         setPayments(res);
-      } catch (e: any) {
+      } catch (e) {
         setError(getErrorMsg(e));
       } finally {
         setLoading(false);

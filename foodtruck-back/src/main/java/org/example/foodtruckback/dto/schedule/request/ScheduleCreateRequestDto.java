@@ -18,4 +18,4 @@ public record ScheduleCreateRequestDto(
 
         @Min(1) @Max(100)
         Integer maxReservations
-){}
+) {}
