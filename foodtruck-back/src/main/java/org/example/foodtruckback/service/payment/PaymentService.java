@@ -90,7 +90,7 @@ public class PaymentService {
                 .paymentKey(result.paymentKey())
                 .amount(request.amount())
                 .method(request.method())
-                .status(result.success() ? PaymentStatus.SUCCESS : PaymentStatus.FAILED)
+                .status(result.success() ? PaymentStatus.READY : PaymentStatus.FAILED)
                 .productCode(request.productCode())
                 .productName(request.productName())
                 .failureCode(result.failureCode())
