@@ -99,9 +99,11 @@ function MyReservation() {
                   {status.label}
                 </Status>
 
-                <PaymentStatus style={{ backgroundColor: payment.color }}>
-                  {payment.label}
-                </PaymentStatus>
+                {reservation.status !== "CANCELED" && (
+                  <PaymentStatus style={{ backgroundColor: payment.color }}>
+                    {payment.label}
+                  </PaymentStatus>
+                )}
               </StatusColumn>
             </Row>
 

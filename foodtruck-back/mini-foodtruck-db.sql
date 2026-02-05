@@ -181,7 +181,7 @@ CREATE TABLE reservations (
   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   FOREIGN KEY `fk_resv_schedule`(schedule_id) REFERENCES truck_schedules(id),
   FOREIGN KEY `fk_resv_user`(user_id) REFERENCES users(id),
-  CONSTRAINT `chk_resv_status` CHECK (status IN ('PENDING','CONFIRMED','CANCELED','NO_SHOW','REFUNDED')),
+  CONSTRAINT `chk_resv_status` CHECK (status IN ('PENDING','CONFIRMED','CANCELED')),
   INDEX `idx_resv_user_time` (user_id, pickup_time),
   INDEX `idx_resv_schedule` (schedule_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

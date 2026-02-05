@@ -1,30 +1,12 @@
-import { paymentApi } from "@/apis/payment/payment.api";
 import { usePaymentContext } from "@/context/payment/PaymentContext";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useEffect } from "react";
-import toast from "react-hot-toast";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
 
 const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY as string;
 
 function UserTossPaySection() {
   const { productCode, productName, amount } = usePaymentContext();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const success = params.get("success");
-    const fail = params.get("fail");
-
-    if (success) {
-      toast.success("결제가 완료되었습니다.");
-      navigate("/mypage", { replace: true });
-    } else if (fail) {
-      alert("결제에 실패했습니다.");
-    }
-  }, [location.search, navigate]);
 
   const handleTossPay = async () => {
     if (!(window as any).TossPayments) {
@@ -33,28 +15,28 @@ function UserTossPaySection() {
       return;
     }
 
+    const tossPayments = (window as any).TossPayments(TOSS_CLIENT_KEY);
+    const orderId = crypto.randomUUID();
+    const origin = window.location.origin;
+
+    const successUrl = new URL("/pay/toss/success", origin);
+    successUrl.searchParams.set("orderId", orderId);
+    successUrl.searchParams.set("amount", String(amount));
+    successUrl.searchParams.set("productCode", productCode);
+    successUrl.searchParams.set("productName", productName);
+
+    const failUrl = `${origin}/pay/toss/fail`;
+
     try {
-      const payment = (await paymentApi.createPayment({
-        productCode,
-        productName,
-        amount,
-        method: "TOSS_PAY",
-      })) as any;
-
-      const tossPayments = (window as any).TossPayments(TOSS_CLIENT_KEY);
-
-      const successUrl = `${window.location.origin}/mypage?success=true&orderId=${payment.orderId}`;
-      const failUrl = `${window.location.origin}/mypage?fail=true&orderId=${payment.orderId}`;
-
       await tossPayments.requestPayment("카드", {
-        amount: payment.amount,
-        orderId: payment.orderId,
-        orderName: payment.productName,
-        successUrl,
+        amount: amount,
+        orderId: orderId,
+        orderName: productName,
+        successUrl: successUrl.toString(),
         failUrl,
       });
     } catch (error: any) {
-      alert(getErrorMsg(error) ?? "Toss 결제 실패");
+      alert("Toss 결제 오류: " + (getErrorMsg(error) ?? ""));
     }
   };
 

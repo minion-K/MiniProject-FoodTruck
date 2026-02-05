@@ -16,6 +16,7 @@ import org.example.foodtruckback.repository.truck.TruckRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.truck.TruckService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +34,9 @@ public class TruckServiceImpl implements TruckService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.checkOwnerOrAdmin()")
     public ResponseDto<TruckDetailResponseDto> createTruck(TruckCreateRequestDto request) {
-
         User owner = authorizationChecker.getCurrentUser();
-
-        authorizationChecker.checkOwnerOrAdmin();
 
         Truck truck = new Truck(
                 owner,
@@ -45,6 +44,10 @@ public class TruckServiceImpl implements TruckService {
                 request.cuisine(),
                 request.status()
         );
+
+        if(request.menuItems() != null) {
+            
+        }
 
         truckRepository.save(truck);
 
@@ -76,6 +79,7 @@ public class TruckServiceImpl implements TruckService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.checkOwnerOrAdmin()")
     public ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, TruckUpdateRequestDto request) {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new IllegalArgumentException("트럭이 존재하지 않습니다."));
@@ -101,6 +105,7 @@ public class TruckServiceImpl implements TruckService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.checkOwnerOrAdmin()")
     public ResponseDto<?> deleteTruck(Long truckId) {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new IllegalArgumentException("트럭이 존재하지 않습니다."));

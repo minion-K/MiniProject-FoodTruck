@@ -44,7 +44,7 @@ public class JwtProvider {
         this.emailExpMs = emailExpMs;
         this.clockSkewSeconds = Math.max(clockSkewSeconds, 0);
 
-        this.parser = Jwts.parser()
+        this.parser = Jwts.parserBuilder()
                 .setSigningKey(this.key)
                 .setAllowedClockSkewSeconds(this.clockSkewSeconds)
                 .build();

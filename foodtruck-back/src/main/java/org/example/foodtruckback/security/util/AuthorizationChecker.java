@@ -24,7 +24,6 @@ public class AuthorizationChecker {
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
     private final TruckRepository truckRepository;
-    private final PaymentRepository paymentRepository;
 
     public boolean isUserAuthor(String loginId, Authentication principal) {
         if (loginId == null || principal == null) return false;

@@ -40,7 +40,9 @@ function ReservationCompleteModal({ summary, onClose }: Props) {
   };
 
   const handleMyPage = () => {
-    navigate("/mypage");
+    navigate("/mypage", {
+      state: { activeTab: "reservations" },
+    });
     onClose();
   };
 

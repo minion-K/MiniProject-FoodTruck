@@ -420,6 +420,8 @@ const QtyButton = styled.button`
   height: 24px;
   border-radius: 6px;
   border: 1px solid #ddd;
+
+  cursor: pointer;
 `;
 
 const Qty = styled.span`

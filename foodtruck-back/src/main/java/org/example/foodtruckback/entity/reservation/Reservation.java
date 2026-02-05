@@ -70,9 +70,7 @@ public class Reservation extends BaseTimeEntity {
         }
 
         public void updateStatus(ReservationStatus newStatus, String note) {
-                if(this.status == ReservationStatus.CANCELED
-                        || this.status == ReservationStatus.REFUNDED
-                ) {
+                if(this.status == ReservationStatus.CANCELED) {
                         throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
                 }
 
@@ -83,8 +81,7 @@ public class Reservation extends BaseTimeEntity {
                 boolean valid = switch (this.status) {
                         case PENDING -> newStatus == ReservationStatus.CONFIRMED
                                 || newStatus == ReservationStatus.CANCELED;
-                        case CONFIRMED -> newStatus == ReservationStatus.NO_SHOW;
-                        case NO_SHOW -> newStatus == ReservationStatus.REFUNDED;
+                        case CONFIRMED -> newStatus == ReservationStatus.CANCELED;
                         default -> false;
                 };
 

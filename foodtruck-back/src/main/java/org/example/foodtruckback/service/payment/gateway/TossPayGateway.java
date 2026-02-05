@@ -43,7 +43,7 @@ public class TossPayGateway implements PaymentGateway{
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-            String response = restTemplate.postForObject(url, entity, String.class);
+           restTemplate.postForObject(url, entity, String.class);
 
             return PaymentResult.ok(request.paymentKey());
         } catch(Exception e) {

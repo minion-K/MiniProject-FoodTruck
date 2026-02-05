@@ -1,5 +1,5 @@
-import styled from '@emotion/styled';
-import React from 'react'
+import styled from "@emotion/styled";
+import React from "react";
 
 interface Tab {
   key: string;
@@ -10,30 +10,32 @@ interface Tab {
 interface Props {
   tabs: Tab[];
   active: string;
-  onChange: (key: string) => void
+  onChange: (key: string) => void;
 }
 
-function MyPageSide({tabs, active, onChange}: Props) {
+function MyPageSide({ tabs, active, onChange }: Props) {
   return (
     <Sidebar>
       <Title>마이페이지</Title>
 
       <Menu>
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <MenuItem
             key={tab.key}
             active={active === tab.key}
-            onClick={() => {onChange(tab.key);}}
+            onClick={() => {
+              onChange(tab.key);
+            }}
           >
             {tab.label}
           </MenuItem>
         ))}
       </Menu>
     </Sidebar>
-  )
+  );
 }
 
-export default MyPageSide
+export default MyPageSide;
 
 const Sidebar = styled.aside`
   width: 220px;
@@ -57,18 +59,16 @@ const Menu = styled.div`
   gap: 8px;
 `;
 
-const MenuItem = styled.div<{active: boolean}>`
+const MenuItem = styled.div<{ active: boolean }>`
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
 
-  background-color: ${({active}) => 
-    active ? "#ffb600" : "transparent"};
-  color: ${({active}) => (active ? "#fff" : "#333")};
+  background-color: ${({ active }) => (active ? "#ffb600" : "transparent")};
+  color: ${({ active }) => (active ? "#fff" : "#333")};
 
   &:hover {
-    background-color: ${({active}) => 
-      active ? "#ff6b00" : "#f2f2f2"};
+    background-color: ${({ active }) => (active ? "#ff6b00" : "#f2f2f2")};
   }
 `;

@@ -50,16 +50,9 @@ public class PaymentService {
     ) {
         User user = getUser(principal);
 
-        boolean exists = paymentRepository.existsByProductCodeAndStatus(
-                request.productCode(), PaymentStatus.SUCCESS
-        );
-        if(exists) {
-            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PROCESSED);
-        }
-
         return switch(request.method()) {
             case MOCK -> ResponseDto.success(processMockPayment(user, request));
-            case TOSS_PAY -> ResponseDto.success(processTossPayment(user, request));
+            case TOSS_PAY -> throw new BusinessException(ErrorCode.INVALID_INPUT);
         };
     }
 
@@ -70,24 +63,6 @@ public class PaymentService {
                 .paymentKey("MOCK-" + UUID.randomUUID())
                 .amount(request.amount())
                 .method(PaymentMethod.MOCK)
-                .status(PaymentStatus.READY)
-                .productCode(request.productCode())
-                .productName(request.productName())
-                .build();
-
-        payment.markSuccess();
-        paymentRepository.save(payment);
-
-        return toDto(payment);
-    }
-
-    private PaymentResponseDto processTossPayment(User user, PaymentCreateRequestDto request) {
-        Payment payment = Payment.builder()
-                .user(user)
-                .orderId("RES_" + UUID.randomUUID())
-                .paymentKey("TOSS-" + UUID.randomUUID())
-                .amount(request.amount())
-                .method(PaymentMethod.TOSS_PAY)
                 .status(PaymentStatus.READY)
                 .productCode(request.productCode())
                 .productName(request.productName())
@@ -115,19 +90,14 @@ public class PaymentService {
                 .paymentKey(result.paymentKey())
                 .amount(request.amount())
                 .method(request.method())
-                .status(PaymentStatus.READY)
+                .status(result.success() ? PaymentStatus.SUCCESS : PaymentStatus.FAILED)
                 .productCode(request.productCode())
                 .productName(request.productName())
                 .failureCode(result.failureCode())
                 .failureMessage(result.failureMessage())
                 .build();
 
-        if(result.success()) {
-            payment.markSuccess();
-        } else {
-            payment.markFailed(result.failureCode(), result.failureMessage());
-        }
-
+        if(result.success()) payment.markSuccess();
         paymentRepository.save(payment);
 
         return ResponseDto.success(toDto(payment));
@@ -137,7 +107,7 @@ public class PaymentService {
     public ResponseDto<List<PaymentResponseDto>> getMyPayments(UserPrincipal principal) {
         User user = getUser(principal);
 
-        List<Payment> payments = paymentRepository.findByUserOrderByCreatedAtDesc(user);
+        List<Payment> payments = paymentRepository.findByUserWithUser(user);
 
         List<PaymentResponseDto> response = payments.stream()
                 .map(PaymentResponseDto::from)
@@ -184,6 +154,37 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         return ResponseDto.success(null);
+    }
+
+    @Transactional
+    public void refundInternal(
+            Payment payment,
+            Long amount,
+            String reason
+    ) {
+        if(payment.getStatus() != PaymentStatus.SUCCESS) return;
+
+        refundCore(payment, amount, reason);
+    }
+
+    private void refundCore(
+            Payment payment,
+            Long amount,
+            String reason
+    ) {
+        PaymentRefund refund = PaymentRefund.builder()
+                .payment(payment)
+                .amount(amount)
+                .reason(reason)
+                .status(RefundStatus.REQUESTED)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        refund.markCompleted();
+        payment.markRefunded();
+
+        paymentRefundRepository.save(refund);
+        paymentRepository.save(payment);
     }
 
     private PaymentResponseDto toDto(Payment payment) {

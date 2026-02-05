@@ -68,6 +68,8 @@ public record ReservationResponseDto(
 
         ScheduleItemResponseDto scheduleDto = ScheduleItemResponseDto.from(reservation.getSchedule());
 
+        paymentStatus = paymentStatus != null ? paymentStatus : PaymentStatus.READY;
+
         return new ReservationResponseDto(
                 reservation.getId(),
                 reservation.getSchedule().getId(),

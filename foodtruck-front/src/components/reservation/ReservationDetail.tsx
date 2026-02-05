@@ -1,6 +1,6 @@
 import { reservationApi } from "@/apis/reservation/reservation.api";
 import type { ReservationDetailResponse } from "@/types/reservation/reservation.dto";
-import { formatPickupRange, formatTime, ONE_HOUR } from "@/utils/date";
+import { formatPickupRange, ONE_HOUR } from "@/utils/date";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
@@ -56,9 +56,16 @@ function ReservationDetail({ reservationId }: Props) {
     try {
       await reservationApi.cancelReservation(Number(reservationId));
 
-      setReservation((prev) => (prev ? { ...prev, status: "CANCELED" } : prev));
+      toast.success(
+        reservation.paymentStatus === "SUCCESS"
+          ? "예약이 취소되었습니다. 결제 금액은 자동으로 환불 처리됩니다."
+          : "예약이 취소되었습니다.",
+      );
 
-      toast.success("예약이 취소되었습니다.");
+      navigate("/mypage", {
+        replace: true,
+        state: { activeTab: "reservations" },
+      });
     } catch (err) {
       const msg = getErrorMsg(err, "예약 취소에 실패했습니다.");
 
@@ -69,7 +76,7 @@ function ReservationDetail({ reservationId }: Props) {
   const handlePayment = () => {
     if (!reservation) return;
 
-    if (now >= start && !isPaid) {
+    if (now >= start && !isDone) {
       toast("결제 가능한 시간이 지났습니다. 현장에서 결제해주세요.");
 
       return;
@@ -106,28 +113,35 @@ function ReservationDetail({ reservationId }: Props) {
   const end = new Date(start.getTime() + ONE_HOUR);
 
   const isPending = reservation.status === "PENDING";
+  const isConfirmed = reservation.status === "CONFIRMED";
   const isCancelled = reservation.status === "CANCELED";
-  const isPaid = reservation.paymentStatus === "SUCCESS";
+  const isDone =
+    reservation.paymentStatus === "SUCCESS" ||
+    reservation.paymentStatus === "REFUNDED";
 
-  const cancelDisabled = isCancelled || now >= start;
-  const payDisabled = isPaid || isCancelled || now >= end;
-  const editDisabled = !isPending || now >= start || isPaid;
+  const cancelDisabled = !isPending || now >= start;
+  const payDisabled = isDone || isCancelled || now >= end;
+  const editDisabled = !isPending || now >= start || isDone;
 
   const cancelTitle = cancelDisabled
     ? isCancelled
       ? "예약이 취소되었습니다."
-      : "이미 지난 예약입니다."
+      : isConfirmed
+        ? "예약이 확정되어 취소할 수 없습니다."
+        : now >= start
+          ? "이미 지난 예약입니다."
+          : ""
     : "";
 
   const editTitle = editDisabled
-    ? isPaid
+    ? isDone
       ? "결제 완료된 예약은 변경할 수 없습니다."
       : "이미 지난 예약입니다."
     : "";
 
   const payTitle = payDisabled
-    ? isPaid
-      ? "이미 결제되었습니다."
+    ? isDone
+      ? "이미 결제가 완료되거나 환불된 예약입니다."
       : isCancelled
         ? "취소된 예약입니다."
         : "픽업 시간이 지난 예약은 결제할 수 없습니다."
@@ -181,14 +195,23 @@ function ReservationDetail({ reservationId }: Props) {
             </Status>
           </Label>
         </InfoRow>
-        <InfoRow>
-          <Label>
-            결제 상태:{" "}
-            <PaymentStatus style={{ backgroundColor: payment.color }}>
-              {payment.label}
-            </PaymentStatus>
-          </Label>
-        </InfoRow>
+        {!isCancelled && (
+          <InfoRow>
+            <Label>
+              결제 상태:{" "}
+              <PaymentStatus style={{ backgroundColor: payment.color }}>
+                {payment.label}
+              </PaymentStatus>
+            </Label>
+          </InfoRow>
+        )}
+        {isCancelled && (
+          <InfoRow>
+            <Notice>
+              ※ 취소된 예약입니다. 결제된 금액은 자동으로 환불 처리되었습니다.
+            </Notice>
+          </InfoRow>
+        )}
         <InfoRow>
           <Label>요청 사항: {reservation.note || "요청사항 없음"}</Label>
         </InfoRow>
@@ -237,7 +260,7 @@ function ReservationDetail({ reservationId }: Props) {
           disabled={payDisabled}
           title={payTitle}
         >
-          {isPaid ? "결제완료" : "결제하기"}
+          {isDone ? "결제완료" : "결제하기"}
         </ActionButton>
         <ActionButton
           edit

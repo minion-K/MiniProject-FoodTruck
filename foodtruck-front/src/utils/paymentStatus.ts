@@ -1,7 +1,9 @@
 import type { PaymentStatus } from "@/types/payment/payment.type";
 
 export function getPaymentStatus(status?: PaymentStatus | null) {
-  switch (status?.toUpperCase()) {
+  if (!status) return { label: "결제대기", color: "#fff3cd" };
+
+  switch (status.toUpperCase()) {
     case "READY":
       return { label: "결제대기", color: "#fff3cd" };
     case "SUCCESS":

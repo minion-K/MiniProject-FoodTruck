@@ -25,7 +25,9 @@ import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
+import org.example.foodtruckback.service.payment.PaymentService;
 import org.example.foodtruckback.service.reservation.ReservationService;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final MenuItemRepository menuItemRepository;
     private final ScheduleRepository scheduleRepository;
     private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
@@ -202,15 +205,37 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    @PreAuthorize("@authz.isReservationOwner(#reservationId)")
+    @PreAuthorize(
+            "@authz.isReservationOwner(#reservationId) or " +
+            "@authz.isTruckOwnerByReservation(#reservationId) or " +
+            "hasRole('ADMIN')"
+    )
     public ResponseDto<Void> cancelReservation(
             @AuthenticationPrincipal UserPrincipal principal,
             Long reservationId
     ) {
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
+        if(reservation.getStatus() == ReservationStatus.CANCELED) {
+            throw new BusinessException(ErrorCode.RESERVATION_ALREADY_CANCELLED);
+        }
+
+        if(reservation.getPickupTime().isBefore(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
+        }
+
         reservation.cancelByUser();
+
+        String productCode = "RES-" + reservation.getId();
+
+        List<Payment> payments = paymentRepository.findByProductCodeAndStatus(productCode, PaymentStatus.SUCCESS);
+        for(Payment payment: payments) {
+            paymentService.refundInternal(payment, payment.getAmount(), "예약취소로 인한 환불");
+        }
 
         return ResponseDto.success("예약이 취소되었습니다.");
     }

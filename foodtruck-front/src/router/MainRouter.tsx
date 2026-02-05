@@ -10,6 +10,7 @@ import AdminRouter from "./admin/AdminRouter";
 import ProfilePendingPage from "@/pages/auth/ProfilePendingPage";
 import UserTossPaymentPage from "@/pages/payment/UserTossPaymentPage";
 import OwnerOnsitePaymentPage from "@/pages/payment/OwnerOnsitePaymentPage";
+import TossSuccessPage from "@/components/payment/TossSuccessPage";
 
 function MainRouter() {
   const { user, isInitialized } = useAuthStore();
@@ -35,6 +36,7 @@ function MainRouter() {
 
       <Route path="/pay/toss" element={<UserTossPaymentPage />} />
       <Route path="/pay/onsite" element={<OwnerOnsitePaymentPage />} />
+      <Route path="/pay/toss/success" element={<TossSuccessPage />} />
     </Routes>
   );
 }
