@@ -10,5 +10,5 @@ public class MenuApi {
 
     public static final String BY_ID = "/{menuId}";
     public static final String TRUCK_MENU_VIEW = "/trucks/{truckId}";
-    public static final String SOLD_OUT = BY_ID + "/soldout";
+    public static final String SOLD_OUT = BY_ID + "/soldOut";
 }

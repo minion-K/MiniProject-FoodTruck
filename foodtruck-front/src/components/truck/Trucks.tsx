@@ -5,14 +5,18 @@ import { useNavigate } from "react-router-dom";
 
 interface Props {
   trucks: TruckListResponse;
+  urlPrefix?: string;
 }
 
-function Trucks({ trucks }: Props) {
+function Trucks({ trucks, urlPrefix = "" }: Props) {
   const navigate = useNavigate();
   return (
     <List>
       {trucks.map((truck) => (
-        <Item key={truck.id} onClick={() => navigate(`/trucks/${truck.id}`)}>
+        <Item
+          key={truck.id}
+          onClick={() => navigate(`${urlPrefix}/trucks/${truck.id}`)}
+        >
           <TruckCard
             name={truck.name}
             cuisine={truck.cuisine}

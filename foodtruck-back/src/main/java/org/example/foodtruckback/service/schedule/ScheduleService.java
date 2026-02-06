@@ -13,9 +13,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ScheduleService {
-    ResponseDto<ScheduleDetailResponseDto> create(@Valid ScheduleCreateRequestDto request);
-    ResponseDto<List<ScheduleItemResponseDto>> search(Long truckId, Location locationId, LocalDateTime startTime, LocalDateTime endTime, ScheduleStatus status);
-    ResponseDto<ScheduleDetailResponseDto> getById(Long scheduleId);
-    ResponseDto<ScheduleDetailResponseDto> update(Long scheduleId, @Valid ScheduleUpdateRequestDto request);
-    ResponseDto<Void> delete(Long scheduleId);
+    ResponseDto<ScheduleDetailResponseDto> createSchedule(Long truckId, @Valid ScheduleCreateRequestDto request);
+
+    ResponseDto<List<ScheduleItemResponseDto>> getTruckSchedule(Long truckId);
+
+    ResponseDto<ScheduleDetailResponseDto> getScheduleById(Long scheduleId);
+
+    ResponseDto<ScheduleDetailResponseDto> updateSchedule(Long scheduleId, @Valid ScheduleUpdateRequestDto request);
+
+    ResponseDto<Void> deleteSchedule(Long scheduleId);
 }

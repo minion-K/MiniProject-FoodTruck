@@ -13,10 +13,7 @@ public record TruckCreateRequestDto(
         @NotBlank(message = "트럭명을 입력해주세요.")
         String name,
 
-        @Size(max = 50, message = "음식장르는 50자 내로 작성해주세요.")
-        String cuisine,
-
-        TruckStatus status,
-        List<MenuItemCreateRequestDto> menuItems,
-        List<ScheduleCreateRequestDto> schedules
+        @Size(max = 50, message = "음식 장르는 50자 내로 작성해주세요.")
+        @NotBlank(message = "음식 장르를 입력해주세요.")
+        String cuisine
 ){}

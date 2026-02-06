@@ -10,6 +10,7 @@ export interface ScheduleCreateRequest {
 export interface ScheduleUpdateRequest {
   startTime?: string;
   endTime?: string;
+  locationId: number;
   status?: ScheduleStatus;
   maxReservations?: number;
 }
@@ -39,3 +40,5 @@ export interface TruckScheduleItemResponse {
   longitude: number;
   status: ScheduleStatus;
 }
+
+export type TruckScheduleListResponse = TruckScheduleItemResponse[];

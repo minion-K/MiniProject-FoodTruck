@@ -12,12 +12,14 @@ import java.util.List;
 public interface TruckService {
     ResponseDto<TruckDetailResponseDto> createTruck(@Valid TruckCreateRequestDto request);
 
-    ResponseDto<TruckDetailResponseDto> getTruck(Long truckId);
+    ResponseDto<TruckDetailResponseDto> getTruckById(Long truckId);
 
     ResponseDto<List<TruckListItemResponseDto>> getAllTrucks();
 
+    ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks();
+
     ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, @Valid TruckUpdateRequestDto request);
 
-    ResponseDto<?> deleteTruck(Long truckId);
+    ResponseDto<Void> deleteTruck(Long truckId);
 
 }

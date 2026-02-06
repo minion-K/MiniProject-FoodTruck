@@ -1,11 +1,12 @@
 import Layout from "@/components/layouts/Layout";
 import OwnerPage from "@/pages/owner/OwnerPage";
-import TruckPaymentPage from "@/pages/owner/TruckPaymentPage";
-import TruckReservationPage from "@/pages/owner/TruckReservationPage";
-import TruckStatisticspage from "@/pages/owner/TruckStatisticspage";
+import OwnerPaymentPage from "@/pages/owner/OwnerPaymentPage";
+import OwnerReservationPage from "@/pages/owner/OwnerReservationPage";
+import OwnerStatisticspage from "@/pages/owner/OwnerStatisticspage";
+import OwnerTruckDetail from "@/pages/owner/OwnerTruckDetailPage";
 import { useAuthStore } from "@/stores/auth.store";
 import React, { useEffect } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 function OwnerRouter() {
   const { user } = useAuthStore();
@@ -29,8 +30,10 @@ function OwnerRouter() {
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/owner/trucks" replace />} />
+
       <Route
-        path="/"
+        path="/trucks"
         element={
           <Layout showSidebar={true}>
             <OwnerPage />
@@ -41,7 +44,7 @@ function OwnerRouter() {
         path="/reservations"
         element={
           <Layout showSidebar={true}>
-            <TruckReservationPage />
+            <OwnerReservationPage />
           </Layout>
         }
       />
@@ -49,7 +52,7 @@ function OwnerRouter() {
         path="/payments"
         element={
           <Layout showSidebar={true}>
-            <TruckPaymentPage />
+            <OwnerPaymentPage />
           </Layout>
         }
       />
@@ -57,7 +60,16 @@ function OwnerRouter() {
         path="/statistics"
         element={
           <Layout showSidebar={true}>
-            <TruckStatisticspage />
+            <OwnerStatisticspage />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/trucks/:truckId"
+        element={
+          <Layout showSidebar={true}>
+            <OwnerTruckDetail />
           </Layout>
         }
       />

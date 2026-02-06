@@ -55,6 +55,7 @@ public enum ErrorCode {
     // ===========================
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "해당 스케줄을 찾을 수 없습니다.", "Schedule not found"),
     INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "S002", "예약할 수 없는 스케줄입니다.", "Invalid schedule"),
+    DUPLICATE_SCHEDULE(HttpStatus.CONFLICT, "S003", "이미 예약된 스케줄입니다.", "Duplicate schedule"),
 
     // ===========================
     // reservation (Rxxx)

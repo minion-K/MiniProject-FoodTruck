@@ -8,4 +8,5 @@ public class ScheduleApi {
     public static final String ROOT = ApiBase.BASE + "/schedules";
 
     public static final String BY_ID = "/{scheduleId}";
+    public static final String TRUCK_SCHEDULE = "/trucks/{truckId}";
 }

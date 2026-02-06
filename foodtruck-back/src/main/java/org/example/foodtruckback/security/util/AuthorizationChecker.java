@@ -48,13 +48,11 @@ public class AuthorizationChecker {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    public void checkOwnerOrAdmin() {
+    public boolean isOwnerOrAdmin() {
         User user = getCurrentUser();
-        String role = user.getRoleTypes().toString();
 
-        if (!(role.equals("ADMIN") || role.equals("OWNER"))) {
-            throw new AccessDeniedException("관리자 또는 트럭오너 권한이 필요합니다.");
-        }
+        return user.getRoleTypes().contains(RoleType.OWNER)
+                || user.getRoleTypes().contains(RoleType.ADMIN);
     }
 
 //    예약자 본인확인 체커

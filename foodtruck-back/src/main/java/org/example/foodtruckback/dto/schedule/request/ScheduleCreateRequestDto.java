@@ -7,15 +7,15 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 public record ScheduleCreateRequestDto(
-        @NotNull(message = "시작일을 지정해주세요.")
+        @NotNull(message = "시작 시간을 지정해주세요.")
         LocalDateTime startTime,
 
-        @NotNull(message = "마감일을 지정해주세요.")
+        @NotNull(message = "마감 시간을 지정해주세요.")
         LocalDateTime endTime,
 
-        @NotNull(message = "지역을 지정해주세요.")
+        @NotNull(message = "장소를 지정해주세요.")
         Long locationId,
 
-        @Min(1) @Max(100)
+        @Max(100)
         Integer maxReservations
 ) {}

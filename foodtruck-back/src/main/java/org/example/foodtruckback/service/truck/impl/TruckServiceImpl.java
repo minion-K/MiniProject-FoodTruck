@@ -36,61 +36,26 @@ public class TruckServiceImpl implements TruckService {
     public final UserRepository userRepository;
     public final ScheduleRepository scheduleRepository;
     private final MenuItemRepository menuItemRepository;
-    private final LocationRepository locationRepository;
     private final AuthorizationChecker authorizationChecker;
 
     @Override
     @Transactional
-    @PreAuthorize("@authz.checkOwnerOrAdmin()")
-    public ResponseDto<TruckDetailResponseDto> createTruck(TruckCreateRequestDto request) {
+    @PreAuthorize("@authz.isOwnerOrAdmin()")
+    public ResponseDto<TruckDetailResponseDto> createTruck(
+            TruckCreateRequestDto request
+    ) {
         User owner = authorizationChecker.getCurrentUser();
 
         Truck truck = new Truck(
                 owner,
                 request.name(),
-                request.cuisine(),
-                request.status()
+                request.cuisine()
         );
-
-        if(request.menuItems() != null) {
-            request.menuItems().forEach(menuDto -> {
-                MenuItem menu = new MenuItem(
-                        truck,
-                        menuDto.name(),
-                        menuDto.price(),
-                        menuDto.optionText()
-                );
-
-                truck.addMenu(menu);
-            });
-        }
-
-        if(request.schedules() != null) {
-            request.schedules().forEach(scheduleDto -> {
-                Location location = locationRepository.findById(scheduleDto.locationId())
-                        .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
-
-                Schedule schedule = new Schedule(
-                        truck,
-                        scheduleDto.startTime(),
-                        scheduleDto.endTime(),
-                        location,
-                        scheduleDto.maxReservations()
-                );
-
-                truck.addSchedule(schedule);
-            });
-        }
 
         truckRepository.save(truck);
 
-        List<MenuItemDetailResponseDto> menuItems = truck.getMenus().stream()
-                .map(MenuItemDetailResponseDto::from)
-                .toList();
-
-        List<ScheduleItemResponseDto> schedules = truck.getSchedules().stream()
-                .map(ScheduleItemResponseDto::from)
-                .toList();
+        List<MenuItemDetailResponseDto> menuItems = List.of();
+        List<ScheduleItemResponseDto> schedules = List.of();
 
         return ResponseDto.success(
                 TruckDetailResponseDto.from(truck, schedules, menuItems)
@@ -98,59 +63,11 @@ public class TruckServiceImpl implements TruckService {
     }
 
     @Override
-    public ResponseDto<TruckDetailResponseDto> getTruck(Long truckId) {
+    public ResponseDto<TruckDetailResponseDto> getTruckById(Long truckId) {
         Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new IllegalArgumentException("트럭이 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
-        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckId(truckId).stream()
-                .map(ScheduleItemResponseDto::from)
-                .toList();
-
-        List<MenuItemDetailResponseDto> menuItems = menuItemRepository.findByTruckId(truckId).stream()
-                .map(MenuItemDetailResponseDto::from)
-                .toList();
-
-        return ResponseDto.success(
-                TruckDetailResponseDto.from(truck, schedules, menuItems)
-        );
-    }
-
-    @Override
-    @Transactional
-    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.checkOwnerOrAdmin()")
-    public ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, TruckUpdateRequestDto request) {
-        Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new IllegalArgumentException("트럭이 존재하지 않습니다."));
-
-        truck.update(
-                request.name(),
-                request.cuisine(),
-                request.status()
-        );
-
-        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckId(truckId).stream()
-                .map(ScheduleItemResponseDto::from)
-                .toList();
-
-        List<MenuItemDetailResponseDto> menuItems = menuItemRepository.findByTruckId(truckId).stream()
-                .map(MenuItemDetailResponseDto::from)
-                .toList();
-
-        return ResponseDto.success(
-                TruckDetailResponseDto.from(truck, schedules, menuItems)
-        );
-    }
-
-    @Override
-    @Transactional
-    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.checkOwnerOrAdmin()")
-    public ResponseDto<?> deleteTruck(Long truckId) {
-        Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new IllegalArgumentException("트럭이 존재하지 않습니다."));
-
-        truckRepository.delete(truck);
-
-        return ResponseDto.success("트럭이 삭제되었습니다.");
+        return ResponseDto.success(toDetailDto(truck));
     }
 
     @Override
@@ -160,5 +77,57 @@ public class TruckServiceImpl implements TruckService {
                 .toList();
 
         return ResponseDto.success(list);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks() {
+        User owner = authorizationChecker.getCurrentUser();
+
+        List<TruckListItemResponseDto> list = truckRepository.findByOwnerIdOrderByIdDesc(owner.getId()).stream()
+                .map(TruckListItemResponseDto::from)
+                .toList();
+
+        return ResponseDto.success(list);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.isOwnerOrAdmin()")
+    public ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, TruckUpdateRequestDto request) {
+        Truck truck = truckRepository.findById(truckId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
+
+        truck.update(
+                request.name(),
+                request.cuisine(),
+                request.status()
+        );
+
+        return ResponseDto.success(toDetailDto(truck));
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.isOwnerOrAdmin()")
+    public ResponseDto<Void> deleteTruck(Long truckId) {
+        Truck truck = truckRepository.findById(truckId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
+
+        truckRepository.delete(truck);
+
+        return ResponseDto.success("트럭이 삭제되었습니다.");
+    }
+
+    private TruckDetailResponseDto toDetailDto(Truck truck) {
+        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckId(truck.getId()).stream()
+                .map(ScheduleItemResponseDto::from)
+                .toList();
+
+        List<MenuItemDetailResponseDto> menuItems = menuItemRepository.findByTruckId(truck.getId()).stream()
+                .map(MenuItemDetailResponseDto::from)
+                .toList();
+
+        return TruckDetailResponseDto.from(truck, schedules, menuItems);
     }
 }

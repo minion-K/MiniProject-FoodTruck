@@ -1,6 +1,7 @@
 package org.example.foodtruckback.service.menu.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemCreateRequestDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldoutRequestDto;
@@ -8,6 +9,7 @@ import org.example.foodtruckback.dto.menuItem.request.MenuItemUpdateRequestDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.entity.truck.MenuItem;
 import org.example.foodtruckback.entity.truck.Truck;
+import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
 import org.example.foodtruckback.service.menu.MenuItemService;
@@ -29,7 +31,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     public ResponseDto<MenuItemDetailResponseDto> createMenu(MenuItemCreateRequestDto request) {
 
         Truck truck = truckRepository.findById(request.truckId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 트럭을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
         MenuItem menuItem = new MenuItem(
                 truck,
@@ -47,7 +49,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     public ResponseDto<MenuItemDetailResponseDto> getMenu(Long menuId) {
 
         MenuItem menuItem = menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
         return ResponseDto.success(MenuItemDetailResponseDto.from(menuItem));
     }
@@ -56,7 +58,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     public ResponseDto<List<MenuItemDetailResponseDto>> getTruckMenus(Long truckId) {
 
         Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 트럭을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
         List<MenuItemDetailResponseDto> menuList =
                 menuItemRepository.findAllByTruck(truck).stream()
@@ -72,7 +74,7 @@ public class MenuItemServiceImpl implements MenuItemService {
             Long menuId, MenuItemUpdateRequestDto request
     ) {
         MenuItem menuItem = menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
         menuItem.update(
                 request.name(),
@@ -89,7 +91,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     public ResponseDto<?> deleteMenu(Long menuId) {
 
         MenuItem menuItem = menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
         menuItemRepository.delete(menuItem);
 
@@ -102,7 +104,7 @@ public class MenuItemServiceImpl implements MenuItemService {
             Long menuId, MenuItemIsSoldoutRequestDto request
     ) {
         MenuItem menuItem = menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
         menuItem.setSoldOut(request.isSoldOut());
 

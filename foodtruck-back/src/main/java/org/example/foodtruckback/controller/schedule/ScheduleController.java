@@ -3,13 +3,11 @@ package org.example.foodtruckback.controller.schedule;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.schedule.ScheduleApi;
-import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.schedule.request.ScheduleCreateRequestDto;
 import org.example.foodtruckback.dto.schedule.request.ScheduleUpdateRequestDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
-import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.service.schedule.ScheduleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,58 +21,52 @@ import java.util.List;
 public class ScheduleController {
     private final ScheduleService scheduleService;
 
-    // 생성
-    @PostMapping
-    public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> create(
+    @PostMapping(ScheduleApi.TRUCK_SCHEDULE)
+    public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> createSchedule(
+            @PathVariable Long truckId,
             @Valid @RequestBody ScheduleCreateRequestDto request
     ) {
-        ResponseDto<ScheduleDetailResponseDto> result = scheduleService.create(request);
+        ResponseDto<ScheduleDetailResponseDto> response = scheduleService.createSchedule(truckId,request);
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok(response);
     }
 
-    // 검색
-    @GetMapping
-    public ResponseEntity<ResponseDto<List<ScheduleItemResponseDto>>> search(
-            @RequestParam Long truckId,
-            @RequestParam Location locationId,
-            @RequestParam LocalDateTime startTime,
-            @RequestParam LocalDateTime endTime,
-            @RequestParam ScheduleStatus status
+    @GetMapping(ScheduleApi.TRUCK_SCHEDULE)
+    public ResponseEntity<ResponseDto<List<ScheduleItemResponseDto>>> getTruckSchedule(
+            @PathVariable Long truckId
     ) {
-        ResponseDto<List<ScheduleItemResponseDto>> result = scheduleService.search(truckId, locationId, startTime, endTime, status);
+        ResponseDto<List<ScheduleItemResponseDto>> response = scheduleService.getTruckSchedule(truckId);
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok(response);
     }
 
-    // 상세페이지
     @GetMapping(ScheduleApi.BY_ID)
-    public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> getById(
+    public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> getScheduleById(
             @PathVariable Long scheduleId
     ) {
-        ResponseDto<ScheduleDetailResponseDto> result = scheduleService.getById(scheduleId);
+        ResponseDto<ScheduleDetailResponseDto> response = scheduleService.getScheduleById(scheduleId);
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok(response);
     }
 
     // 수정
     @PutMapping(ScheduleApi.BY_ID)
-    public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> update(
+    public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> updateSchedule(
             @PathVariable Long scheduleId,
             @Valid @RequestBody ScheduleUpdateRequestDto request
     ) {
-        ResponseDto<ScheduleDetailResponseDto> result = scheduleService.update(scheduleId, request);
+        ResponseDto<ScheduleDetailResponseDto> response = scheduleService.updateSchedule(scheduleId, request);
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok(response);
     }
 
     // 삭제
     @DeleteMapping(ScheduleApi.BY_ID)
-    public ResponseEntity<ResponseDto<Void>> delete(
+    public ResponseEntity<ResponseDto<Void>> deleteSchedule(
             @PathVariable Long scheduleId
     ) {
-        ResponseDto<Void> result = scheduleService.delete(scheduleId);
+        ResponseDto<Void> response = scheduleService.deleteSchedule(scheduleId);
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok(response);
     }
 }

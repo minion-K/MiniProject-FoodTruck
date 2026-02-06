@@ -25,24 +25,32 @@ public class TruckController {
     public ResponseEntity<ResponseDto<TruckDetailResponseDto>> createTruck(
             @Valid @RequestBody TruckCreateRequestDto request
     ) {
-        ResponseDto<TruckDetailResponseDto> data = truckService.createTruck(request);
-        return ResponseEntity.ok(data);
+        ResponseDto<TruckDetailResponseDto> response = truckService.createTruck(request);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping(TruckApi.BY_ID)
-    public ResponseEntity<ResponseDto<TruckDetailResponseDto>> getTruck(
+    public ResponseEntity<ResponseDto<TruckDetailResponseDto>> getTruckById(
             @PathVariable Long truckId
     ) {
-        ResponseDto<TruckDetailResponseDto> data = truckService.getTruck(truckId);
-        return ResponseEntity.ok(data);
+        ResponseDto<TruckDetailResponseDto> response = truckService.getTruckById(truckId);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getAllTrucks() {
-        ResponseDto<List<TruckListItemResponseDto>> data =
-                truckService.getAllTrucks();
+        ResponseDto<List<TruckListItemResponseDto>> response = truckService.getAllTrucks();
 
-        return ResponseEntity.ok(data);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(TruckApi.OWNER)
+    public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getOwnerTrucks() {
+        ResponseDto<List<TruckListItemResponseDto>> response = truckService.getOwnerTrucks();
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping(TruckApi.BY_ID)
@@ -50,15 +58,17 @@ public class TruckController {
             @PathVariable Long truckId,
             @Valid @RequestBody TruckUpdateRequestDto request
     ) {
-        ResponseDto<TruckDetailResponseDto> data = truckService.updateTruck(truckId, request);
-        return ResponseEntity.ok(data);
+        ResponseDto<TruckDetailResponseDto> response = truckService.updateTruck(truckId, request);
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping(TruckApi.BY_ID)
-    public ResponseEntity<ResponseDto<?>> deleteTruck(
+    public ResponseEntity<ResponseDto<Void>> deleteTruck(
             @PathVariable Long truckId
     ) {
-        ResponseDto<?> data = truckService.deleteTruck(truckId);
-        return ResponseEntity.ok(data);
+        ResponseDto<Void> response = truckService.deleteTruck(truckId);
+
+        return ResponseEntity.ok(response);
     }
 }

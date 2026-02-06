@@ -1,13 +1,13 @@
 import type { MenuCreateRequest } from "../menu/menu.dto";
-import type { ScheduleCreateRequest, TruckScheduleItemResponse } from "../schedule/schedule.dto";
+import type {
+  ScheduleCreateRequest,
+  TruckScheduleItemResponse,
+} from "../schedule/schedule.dto";
 import type { TruckStatus } from "./truck.type";
 
 export interface TruckCreateRequest {
   name: string;
   cuisine: string;
-
-  menuItems?: MenuCreateRequest[];
-  schedules?: ScheduleCreateRequest[];
 }
 
 export interface TruckUpdateRequest {
@@ -27,7 +27,6 @@ export interface TruckListItemResponse {
 }
 
 export type TruckListResponse = TruckListItemResponse[];
-
 
 export interface TruckMenuItemResponse {
   id: number;

@@ -77,3 +77,33 @@ VALUES
 (2, 1, 2, '계란김밥', 3000, 1),
 (3, 2, 1, '참치김밥', 3500, 1),
 (4, 3, 3, '타코세트', 8000, 1);
+
+-- 7) 운영자 유저 추가
+INSERT INTO users (
+    id,
+    email,
+    password,
+    nickname,
+    role,
+    created_at
+) VALUES (
+    5,
+    'owner_test@foodtruck.com',
+    '$2a$10$testpasswordhash',
+    '테스트운영자',
+    'OWNER',
+    NOW()
+);
+
+-- 8) 운영자(5)의 트럭들
+INSERT INTO trucks (
+    id,
+    owner_id,
+    name,
+    cuisine,
+    status
+) VALUES
+(10, 5, '민현버거', '양식', 'ACTIVE'),
+(11, 5, '민현라멘', '일식', 'ACTIVE'),
+(12, 5, '민현분식', '한식', 'ACTIVE');
+
