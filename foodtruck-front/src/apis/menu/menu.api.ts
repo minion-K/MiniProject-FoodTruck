@@ -1,4 +1,4 @@
-import { publicApi } from "../common/axiosInstance";
+import { privateApi, publicApi } from "../common/axiosInstance";
 import { MENU_PATH } from "./menu.path";
 import type { ApiResponse } from "@/types/common/ApiResponse";
 
@@ -12,7 +12,7 @@ import type {
 export const menuApi = {
   createMenu: async (
     body: MenuCreateRequest): Promise<MenuDetailResponse> => {
-    const res = await publicApi.post<ApiResponse<MenuDetailResponse>>(
+    const res = await privateApi.post<ApiResponse<MenuDetailResponse>>(
       MENU_PATH.ROOT,
       body
     );
@@ -21,7 +21,7 @@ export const menuApi = {
   },
 
   getMenuById: async (menuId: number): Promise<MenuDetailResponse> => {
-    const res = await publicApi.get<ApiResponse<MenuDetailResponse>>(
+    const res = await privateApi.get<ApiResponse<MenuDetailResponse>>(
       MENU_PATH.BY_ID(menuId)
     );
     
@@ -29,7 +29,7 @@ export const menuApi = {
   },
 
   updateMenu: async (menuId: number, body: MenuUpdateRequest): Promise<MenuDetailResponse> => {
-    const res = await publicApi.patch<ApiResponse<MenuDetailResponse>>(
+    const res = await privateApi.put<ApiResponse<MenuDetailResponse>>(
       MENU_PATH.UPDATE(menuId),
       body
     );
@@ -38,11 +38,11 @@ export const menuApi = {
   },
 
   deleteMenu: async (menuId: number): Promise<void> => {
-    await publicApi.delete<ApiResponse<void>>(MENU_PATH.DELETE(menuId));
+    await privateApi.delete<ApiResponse<void>>(MENU_PATH.DELETE(menuId));
   },
 
   toggleSoldOut: async (menuId: number): Promise<MenuDetailResponse> => {
-    const res = await publicApi.patch<ApiResponse<MenuDetailResponse>>(
+    const res = await privateApi.put<ApiResponse<MenuDetailResponse>>(
       MENU_PATH.SOLD_OUT(menuId)
     );
 

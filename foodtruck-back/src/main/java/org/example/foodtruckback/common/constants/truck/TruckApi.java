@@ -7,6 +7,7 @@ public class TruckApi {
 
     public static final String ROOT = ApiBase.BASE + "/trucks";
 
-    public static final String BY_ID = "/{truckId}"; 
+    public static final String BY_ID = "/{truckId}";
+    public static final String STATUS = BY_ID + "/status";
     public static final String OWNER = "/owner";
 }

@@ -1,32 +1,47 @@
-import { truckApi } from "@/apis/truck/truck.api";
+import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialValue?: TruckFormData;
+  onSubmit: (data: TruckFormData) => Promise<void>;
 }
 
-function TruckCreateModal({ open, onClose }: Props) {
+function TruckModal({ open, onClose, initialValue, onSubmit }: Props) {
   const [name, setName] = useState("");
   const [cuisine, setCuisine] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   if (!open) return null;
+  const isEdit = !!initialValue;
+
+  useEffect(() => {
+    if(initialValue) {
+      setName(initialValue.name ?? "");
+      setCuisine(initialValue.cuisine ?? "");
+    } else {
+      setName("");
+      setCuisine("");
+    }
+  }, [initialValue, open]);
 
   const handleSubmit = async () => {
+    if(!name.trim()) return alert("트럭명을 입력해주세요");
+    if(name.length > 100) return alert("트럭명은 100자 이내로 입력해주세요");
+    if(cuisine.length > 50) return alert("음식 장르는 50자 이내로 입력해주세요");
+
+    setLoading(true);
     try {
-      const truck = await truckApi.createTruck({
-        name,
-        cuisine,
-      });
+      await onSubmit({name, cuisine});
 
       onClose();
-      navigate(`/owner/trucks/${truck.id}`);
     } catch (e) {
-      alert(getErrorMsg(e));
+      alert(getErrorMsg(e) || "처리에 실패했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,8 +49,8 @@ function TruckCreateModal({ open, onClose }: Props) {
     <Overlay>
       <Modal>
         <Header>
-          <Title>트럭 추가</Title>
-          <SubTitle>새로운 푸드트럭 정보를 입력해주세요</SubTitle>
+          <Title>{isEdit ? "트럭 정보 수정" : "트럭 추가"}</Title>
+          <SubTitle>{isEdit ? "수정할 트럭 정보를 입력해주세요" : "새로운 푸드트럭 정보를 입력해주세요"}</SubTitle>
         </Header>
 
         <Body>
@@ -59,14 +74,19 @@ function TruckCreateModal({ open, onClose }: Props) {
 
         <Footer>
           <GhostButton onClick={onClose}>취소</GhostButton>
-          <PrimaryButton onClick={handleSubmit}>추가</PrimaryButton>
+          <PrimaryButton 
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "처리 중..." : isEdit ? "저장" : "추가"}
+          </PrimaryButton>
         </Footer>
       </Modal>
     </Overlay>
   );
 }
 
-export default TruckCreateModal;
+export default TruckModal;
 
 const Overlay = styled.div`
   position: fixed;

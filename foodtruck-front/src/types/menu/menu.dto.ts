@@ -1,4 +1,5 @@
 export interface MenuCreateRequest {
+  truckId: number;
   name: string;
   price: number;
   optionText?: string;

@@ -33,6 +33,11 @@ public class MenuItemServiceImpl implements MenuItemService {
         Truck truck = truckRepository.findById(request.truckId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
+        boolean existsMenu = menuItemRepository.existsByName(request.name());
+        if(existsMenu) {
+            throw new BusinessException(ErrorCode.DUPLICATE_MENU);
+        }
+
         MenuItem menuItem = new MenuItem(
                 truck,
                 request.name(),
@@ -76,11 +81,15 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
+        boolean existsMenu = menuItemRepository.existsByName(request.name());
+        if(existsMenu) {
+            throw new BusinessException(ErrorCode.DUPLICATE_MENU);
+        }
+
         menuItem.update(
                 request.name(),
                 request.price(),
-                request.optionText(),
-                request.isSoldOut()
+                request.optionText()
         );
 
         return ResponseDto.success(MenuItemDetailResponseDto.from(menuItem));

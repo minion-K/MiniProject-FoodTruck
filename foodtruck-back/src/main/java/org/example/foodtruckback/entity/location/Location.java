@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -32,15 +34,16 @@ public class Location {
     private BigDecimal longitude;
 
     @Column(name = "created_at", nullable = false , columnDefinition = "DATETIME(6)")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Builder
-    public Location(String name, String address, BigDecimal latitude, BigDecimal longitude, LocalDateTime createdAt) {
+    public Location(String name, String address, BigDecimal latitude, BigDecimal longitude) {
         this.name = name;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
     public void updatedLocation(String name, String address, BigDecimal latitude, BigDecimal longitude) {

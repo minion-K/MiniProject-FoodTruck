@@ -48,4 +48,17 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
             @Param("endTime") LocalDateTime endTime,
             @Param("excludeId") Long excludeId
     );
+
+    @Query("""
+        SELECT count(s) > 0
+        FROM Schedule s
+        WHERE s.location = :location
+            and s.truck.owner.id <> :ownerId
+    """)
+    boolean existsByLocationAndOtherOwner(
+            @Param("location") Location location,
+            @Param("ownerId") Long ownerId
+    );
+
+    boolean existsByLocationId(Long locationId);
 }

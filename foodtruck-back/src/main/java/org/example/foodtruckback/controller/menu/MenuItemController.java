@@ -67,7 +67,7 @@ public class MenuItemController {
         return ResponseEntity.ok(data);
     }
 
-    @PatchMapping(MenuApi.SOLD_OUT)
+    @PutMapping(MenuApi.SOLD_OUT)
     public ResponseEntity<ResponseDto<MenuItemDetailResponseDto>> toggleSoldOut(
             @PathVariable Long menuId,
             @Valid @RequestBody MenuItemIsSoldoutRequestDto request

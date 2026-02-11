@@ -1,46 +1,112 @@
 import { truckApi } from "@/apis/truck/truck.api";
+import Navibar from "@/components/layouts/Navibar";
 import KakaoMap from "@/components/map/KakaoMap";
 import TruckMenuManager from "@/components/menu/TruckMenuManager";
-import type { TruckDetailResponse } from "@/types/truck/truck.dto";
+import ScheduleManager from "@/components/schedule/scheduleManager";
+import TruckCreateModal from "@/components/truck/TruckModal";
+import type { TruckDetailResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
+import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
 
 function OwnerTruckDetailPage() {
   const { truckId } = useParams();
   const [truck, setTruck] = useState<TruckDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [center, setCenter] = useState<{lat: number, lng: number} | null>(null)
+  const [isOpen, setIsOpen] = useState(false);
 
-  if (!truckId) return;
+  if (!truckId) return null;
 
-  const fetchTruck = async () => {
-    try {
-      setLoading(true);
-
-      const res = await truckApi.getTruckById(Number(truckId));
-
-      setTruck(res);
-      setError(null);
-    } catch (e) {
-      setError(getErrorMsg(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchTruck = React.useCallback(
+    async () => {
+      try {
+        setLoading(true);
+  
+        const res = await truckApi.getTruckById(Number(truckId));
+  
+        setTruck(res);
+        setError(null);
+      } catch (e) {
+        setError(getErrorMsg(e));
+      } finally {
+        setLoading(false);
+      }
+    }, [truckId]);
 
   useEffect(() => {
     fetchTruck();
-  }, [truckId]);
+  }, [fetchTruck]);
+
+  useEffect(() => {
+    if(!truck) return;
+
+    if(truck.schedules.length > 0) {
+      setCenter({
+        lat: truck.schedules[0].latitude,
+        lng: truck.schedules[0].longitude
+      });
+
+      return;
+    }
+
+    if(navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+
+        () => {
+          setCenter({
+            lat: 35.15776,
+            lng: 129.05657
+          })
+        }
+      )
+    }
+  }, [truck])
+
+  const handleStatusToggle = async () => {
+    if(!truck) return;
+
+    const newStatus = truck.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    setTruck({...truck, status: newStatus});
+
+    try {
+      await truckApi.updateTruckStatus(truck.id, {status: newStatus});
+      toast.success(
+        `${newStatus === "ACTIVE" ? "OPEN" : "CLOSE"}로 변경되었습니다.`
+      );
+    } catch (e) {
+      setTruck({...truck, status: truck.status});
+      alert(getErrorMsg(e));
+    }
+  }
+
+  const handleTruckUpdate = async (data: TruckFormData) => {
+    if(!truck) return;
+
+    try {
+      await truckApi.updateTruck(truck.id, data);
+      toast.success("트럭 정보가 수정되었습니다.");
+
+      fetchTruck();
+    } catch (e) {
+      alert(getErrorMsg(e));
+    }
+  }
 
   if (loading) return <Loading>트럭 정보 불러오는 중...</Loading>;
   if (error || !truck) return <Error>{error}</Error>;
-
-  const center = truck.schedules.length
-    ? { lat: truck.schedules[0].latitude, lng: truck.schedules[0].longitude }
-    : { lat: 35.15776, lng: 129.05657 };
 
   const markers = truck.schedules.map((schedule) => ({
     lat: schedule.latitude,
@@ -52,19 +118,46 @@ function OwnerTruckDetailPage() {
   return (
     <Container>
       <Header>
-        <NameStatusRow>
-          <TruckName>{truck.name}</TruckName>
-          <Status style={{ backgroundColor: truckStatus.color }}>
-            {truckStatus.label}
-          </Status>
-        </NameStatusRow>
-        {truck.cuisine && <Cuisine>{truck.cuisine}</Cuisine>}
+        <HeaderRow>
+          <NameStatusRow>
+            <TruckName>{truck.name}</TruckName>
+            <Status style={{ backgroundColor: truckStatus.color }}>
+              {truckStatus.label}
+            </Status>
+          </NameStatusRow>
+
+          <Actions>
+            <EditButton onClick={() => setIsOpen(true)}>
+              수정
+            </EditButton>
+
+            <ToggleButton 
+              active={truck.status === "ACTIVE"} 
+              onClick={handleStatusToggle}
+            />
+          </Actions>
+        </HeaderRow>
+
+          {truck.cuisine && <Cuisine>{truck.cuisine}</Cuisine>}
       </Header>
+
+      {isOpen && truck && (
+        <TruckCreateModal 
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+          initialValue={{name: truck.name, cuisine: truck.cuisine}}
+          onSubmit={handleTruckUpdate}
+        />
+      )}
 
       <Section>
         <SectionTitle>위치</SectionTitle>
         <MapWrapper>
-          <KakaoMap center={center} markers={markers} />
+          {center ? (
+            <KakaoMap center={center} markers={markers} />
+          ) : (
+            <Loading>현재 위치 확인 중...</Loading>
+          )}
         </MapWrapper>
       </Section>
 
@@ -79,6 +172,11 @@ function OwnerTruckDetailPage() {
 
       <Section>
         <SectionTitle>스케줄 관리</SectionTitle>
+        <ScheduleManager 
+          truckId={truck.id}
+          schedules={truck.schedules}
+          onUpdate={fetchTruck}
+        />
       </Section>
     </Container>
   );
@@ -97,6 +195,12 @@ const Header = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const NameStatusRow = styled.div`
@@ -121,6 +225,56 @@ const Status = styled.span`
   text-align: center;
   color: white;
   white-space: nowrap;
+`;
+
+const ToggleButton = styled.button<{active: boolean}>`
+  position: relative;
+  width: 50px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: ${({active}) => (active ? "#4caf50" : "#ccc")};
+  transition: background 0.3s;
+
+  &:focus {
+    outline: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: ${({active}) => (active ? "26px" : "2px")};
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.3s;
+  }
+`;
+
+const Actions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const EditButton = styled.button`
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  color: white;
+  background: #444;
+  
+
+  &:hover {
+    background: #d0d0d0;
+    color: #222;
+  }
 `;
 
 const Cuisine = styled.div`

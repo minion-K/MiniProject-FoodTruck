@@ -49,6 +49,14 @@ public class ScheduleServiceImpl implements ScheduleService {
             throw new BusinessException(ErrorCode.DUPLICATE_SCHEDULE);
         }
 
+        if(request.startTime() == null || request.endTime() == null) {
+            throw new BusinessException(ErrorCode.MISSING_TIME);
+        }
+
+        if(!request.startTime().isBefore(request.endTime())) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE);
+        }
+
         Schedule schedule = new Schedule(
                 truck,
                 request.startTime(),

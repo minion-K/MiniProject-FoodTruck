@@ -1,8 +1,9 @@
 import { truckApi } from "@/apis/truck/truck.api";
 import KakaoMap from "@/components/map/KakaoMap";
-import TruckCreateModal from "@/components/truck/TruckCreateModal";
+import TruckModal from "@/components/truck/TruckModal";
 import Trucks from "@/components/truck/Trucks";
-import type { TruckListResponse } from "@/types/truck/truck.dto";
+import type { TruckCreateRequest, TruckListResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
+import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
@@ -51,6 +52,13 @@ function OwnerPage() {
       lng: truck.longitude,
     }));
 
+    const handleCreateTruck = async (data: TruckFormData) => {
+      await truckApi.createTruck(data);
+
+      setOpen(false);
+      fetchTruck();
+    };
+
   if (loading) return <LoadingMsg>내 트럭 내역 불러오는 중...</LoadingMsg>;
   if (error) return <ErrorMsg>{error}</ErrorMsg>;
 
@@ -71,7 +79,11 @@ function OwnerPage() {
         </ListWrapper>
       </Content>
 
-      <TruckCreateModal open={open} onClose={() => setOpen(false)} />
+      <TruckModal 
+        open={open} 
+        onClose={() => setOpen(false)}
+        onSubmit={handleCreateTruck}
+      />
     </Container>
   );
 }

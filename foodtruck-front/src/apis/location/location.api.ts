@@ -1,19 +1,19 @@
 import type { ApiResponse } from "@/types/common/ApiResponse"
 import { privateApi, publicApi } from "../common/axiosInstance"
-import type { LocationDetailResponse, LocationListResponse } from "@/types/location/location.dto"
+import type { LocationCreateRequest, LocationDetailResponse, LocationListResponse, LocationUpdateRequest } from "@/types/location/location.dto"
 import { LOCATION_PATH } from "./location.path"
 
 export const locationApi = {
-  createLocation: async (): Promise<LocationDetailResponse> => {
+  createLocation: async (request: LocationCreateRequest): Promise<LocationDetailResponse> => {
     const res = await privateApi.post<ApiResponse<LocationDetailResponse>> (
-      LOCATION_PATH.CREATE
+      LOCATION_PATH.CREATE, request
     );
 
     return res.data.data;
   },
 
   getLocationList: async (): Promise<LocationListResponse> => {
-    const res = await publicApi.get<ApiResponse<LocationListResponse>> (
+    const res = await privateApi.get<ApiResponse<LocationListResponse>> (
       LOCATION_PATH.LIST
     );
 
@@ -21,16 +21,16 @@ export const locationApi = {
   },
 
   getLocationById: async (locationId: number): Promise<LocationDetailResponse> => {
-    const res = await publicApi.get<ApiResponse<LocationDetailResponse>> (
+    const res = await privateApi.get<ApiResponse<LocationDetailResponse>> (
       LOCATION_PATH.ORDERBYID(locationId)
     );
 
     return res.data.data
   },
 
-  updateLocation: async (locationId: number): Promise<LocationDetailResponse> => {
+  updateLocation: async (locationId: number, request: LocationUpdateRequest): Promise<LocationDetailResponse> => {
     const res = await privateApi.put<ApiResponse<LocationDetailResponse>> (
-      LOCATION_PATH.UPDATE(locationId)
+      LOCATION_PATH.UPDATE(locationId), request
     );
 
     return res.data.data;

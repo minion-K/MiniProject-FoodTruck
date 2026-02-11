@@ -1,6 +1,5 @@
 import { reservationApi } from "@/apis/reservation/reservation.api";
 import type { TruckScheduleItemResponse } from "@/types/schedule/schedule.dto";
-import type { TruckMenuItemResponse } from "@/types/truck/truck.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useMemo, useState } from "react";
@@ -12,10 +11,11 @@ import type {
   ReservationUpdateRequest,
 } from "@/types/reservation/reservation.dto";
 import ReservationCompleteModal from "./ReservationCompleteModal";
+import type { MenuListItemResponse } from "@/types/menu/menu.dto";
 
 interface ReservationModalProps {
   schedule?: TruckScheduleItemResponse;
-  menus?: TruckMenuItemResponse[];
+  menus?: MenuListItemResponse[];
 
   mode?: "CREATE" | "EDIT";
   reservationId?: number;
@@ -231,8 +231,8 @@ function ReservationModal({
                   <MenuItem key={menu.id} data-soldout={menu.isSoldOut}>
                     <div>
                       <MenuName>{menu.name}</MenuName>
-                      {menu.description && (
-                        <MenuOption>{menu.description}</MenuOption>
+                      {menu.optionText && (
+                        <MenuOption>{menu.optionText}</MenuOption>
                       )}
                     </div>
 

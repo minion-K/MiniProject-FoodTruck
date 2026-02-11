@@ -49,11 +49,10 @@ public class MenuItem extends BaseTimeEntity {
         this.isSoldOut = false;
     }
 
-    public void update(String name, Integer price, String optionText, Boolean isSoldOut ) {
+    public void update(String name, Integer price, String optionText) {
         if (name != null && !name.isBlank()) this.name = name;
         if (price != null) this.price = price;
         if (optionText != null) this.optionText = optionText;
-        if (isSoldOut != null) this.isSoldOut = isSoldOut;
     }
 
     public void setTruck(Truck truck) {

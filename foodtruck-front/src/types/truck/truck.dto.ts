@@ -1,19 +1,21 @@
-import type { MenuCreateRequest } from "../menu/menu.dto";
+import type { MenuListItemResponse } from "../menu/menu.dto";
 import type {
-  ScheduleCreateRequest,
   TruckScheduleItemResponse,
 } from "../schedule/schedule.dto";
 import type { TruckStatus } from "./truck.type";
 
 export interface TruckCreateRequest {
   name: string;
-  cuisine: string;
+  cuisine?: string;
 }
 
 export interface TruckUpdateRequest {
-  name?: string;
-  cuisine: string;
-  status?: TruckStatus;
+  name: string;
+  cuisine?: string;
+}
+
+export interface TruckStatusUpdateRequest {
+  status: TruckStatus;
 }
 
 export interface TruckListItemResponse {
@@ -28,17 +30,6 @@ export interface TruckListItemResponse {
 
 export type TruckListResponse = TruckListItemResponse[];
 
-export interface TruckMenuItemResponse {
-  id: number;
-  name: string;
-  price: number;
-  description?: string;
-  imageUrl?: string;
-  isSoldOut: boolean;
-}
-
-export type TruckMenuListResponse = TruckMenuItemResponse[];
-
 export interface TruckDetailResponse {
   id: number;
   ownerId: number;
@@ -48,6 +39,6 @@ export interface TruckDetailResponse {
   createdAt: string;
   updatedAt: string;
 
-  menu: TruckMenuItemResponse[];
+  menu: MenuListItemResponse[];
   schedules: TruckScheduleItemResponse[];
 }

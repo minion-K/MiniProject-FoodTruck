@@ -3,8 +3,10 @@ package org.example.foodtruckback.controller.truck;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.truck.TruckApi;
+import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.truck.request.TruckCreateRequestDto;
+import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
@@ -59,6 +61,16 @@ public class TruckController {
             @Valid @RequestBody TruckUpdateRequestDto request
     ) {
         ResponseDto<TruckDetailResponseDto> response = truckService.updateTruck(truckId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(TruckApi.STATUS)
+    public ResponseEntity<ResponseDto<Void>> updateTruckStatus(
+            @PathVariable Long truckId,
+            @RequestBody TruckStatusUpdateRequestDto request
+            ) {
+        ResponseDto<Void> response = truckService.updateTruckStatus(truckId, request);
 
         return ResponseEntity.ok(response);
     }

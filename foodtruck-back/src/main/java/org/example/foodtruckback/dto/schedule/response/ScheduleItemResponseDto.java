@@ -13,7 +13,8 @@ public record ScheduleItemResponseDto(
         String locationName,
         BigDecimal latitude,
         BigDecimal longitude,
-        ScheduleStatus status
+        ScheduleStatus status,
+        int maxReservation
 ) {
     public static ScheduleItemResponseDto from(Schedule schedule) {
         return new ScheduleItemResponseDto(
@@ -24,7 +25,8 @@ public record ScheduleItemResponseDto(
                 schedule.getLocation().getName(),
                 schedule.getLocation().getLatitude(),
                 schedule.getLocation().getLongitude(),
-                schedule.getStatus()
+                schedule.getStatus(),
+                schedule.getMaxReservations()
         );
     }
 

@@ -11,6 +11,7 @@ import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.location.LocationRepository;
+import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.location.LocationService;
@@ -25,18 +26,17 @@ import java.util.List;
 public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
     private final UserRepository userRepository;
+    private final ScheduleRepository scheduleRepository;
 
     // create location
     @Override
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
     public ResponseDto<LocationDetailResponseDto> createLocation(
             UserPrincipal principal, LocationCreateRequestDto request
     ) {
-        User admin = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
         boolean exists = locationRepository.existsByAddress(request.address());
+
         if(exists) {
             throw new BusinessException(ErrorCode.DUPLICATE_LOCATION);
         }
@@ -56,6 +56,7 @@ public class LocationServiceImpl implements LocationService {
 
     // get location (All)
     @Override
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseDto<List<LocationListItemResponseDto>> getAllLocation() {
         List<LocationListItemResponseDto> response = locationRepository.findAll().stream()
                 .map(LocationListItemResponseDto::from)
@@ -66,6 +67,7 @@ public class LocationServiceImpl implements LocationService {
 
     // get location (byId)
     @Override
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseDto<LocationDetailResponseDto> getLocationById(Long locationId) {
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
@@ -76,13 +78,19 @@ public class LocationServiceImpl implements LocationService {
 
     // update location
     @Override
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
     public ResponseDto<LocationDetailResponseDto> updateLocation(
             UserPrincipal principal, Long locationId, LocationUpdateRequestDto request
     ) {
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+
+        boolean usedByOtherTruck = scheduleRepository.existsByLocationAndOtherOwner(location, principal.getId());
+
+        if(usedByOtherTruck) {
+            throw new BusinessException(ErrorCode.LOCATION_IN_USE_BY_OTHER_TRUCK);
+        }
 
         boolean exists = locationRepository.existsByAddress(request.address());
         boolean isChangeAddress = !location.getAddress().equals(request.address());
@@ -105,11 +113,17 @@ public class LocationServiceImpl implements LocationService {
 
     // delete location
     @Override
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
     public ResponseDto<Void> deleteLocation(UserPrincipal principal, Long locationId) {
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+
+        boolean isUsed = scheduleRepository.existsByLocationId(locationId);
+
+        if(isUsed) {
+            throw new BusinessException(ErrorCode.LOCATION_IN_USE);
+        }
 
         locationRepository.delete(location);
 

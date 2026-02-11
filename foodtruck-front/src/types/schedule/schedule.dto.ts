@@ -25,8 +25,8 @@ export interface ScheduleDetailResponse {
   startTime: string;
   endTime: string;
   status: ScheduleStatus;
-  maxReservation: number;
-  createAt: string;
+  maxReservations: number;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -39,6 +39,7 @@ export interface TruckScheduleItemResponse {
   latitude: number;
   longitude: number;
   status: ScheduleStatus;
+  maxReservations: number;
 }
 
 export type TruckScheduleListResponse = TruckScheduleItemResponse[];

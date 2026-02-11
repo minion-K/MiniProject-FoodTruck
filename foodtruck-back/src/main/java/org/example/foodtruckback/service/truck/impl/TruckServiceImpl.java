@@ -2,10 +2,12 @@ package org.example.foodtruckback.service.truck.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
+import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.dto.truck.request.TruckCreateRequestDto;
+import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
@@ -101,10 +103,28 @@ public class TruckServiceImpl implements TruckService {
         truck.update(
                 request.name(),
                 request.cuisine(),
-                request.status()
+                null
         );
 
         return ResponseDto.success(toDetailDto(truck));
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.isOwnerOrAdmin()")
+    public ResponseDto<Void> updateTruckStatus(
+            Long truckId, TruckStatusUpdateRequestDto request
+    ) {
+        Truck truck = truckRepository.findById(truckId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
+
+        if(request.status() == TruckStatus.ACTIVE) {
+            truck.activate();
+        } else {
+            truck.inactivate();
+        }
+
+        return ResponseDto.success("트럭 상태 변경이 완료되었습니다.");
     }
 
     @Override

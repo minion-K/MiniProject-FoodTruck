@@ -2,8 +2,8 @@ import type {
   TruckCreateRequest,
   TruckListResponse,
   TruckDetailResponse,
-  TruckMenuListResponse,
   TruckUpdateRequest,
+  TruckStatusUpdateRequest,
 } from "@/types/truck/truck.dto";
 
 import { privateApi, publicApi } from "../common/axiosInstance";
@@ -48,14 +48,24 @@ export const truckApi = {
 
   updateTruck: async (
     truckId: number,
-    body: TruckUpdateRequest,
+    request: TruckUpdateRequest,
   ): Promise<TruckDetailResponse> => {
-    const res = await privateApi.patch<ApiResponse<TruckDetailResponse>>(
+    const res = await privateApi.put<ApiResponse<TruckDetailResponse>>(
       TRUCK_PATH.UPDATE(truckId),
-      body,
+      request,
     );
 
     return res.data.data;
+  },
+
+  updateTruckStatus: async (
+    truckId: number, 
+    request: TruckStatusUpdateRequest
+  ): Promise<void> => {
+    const res = await privateApi.put<ApiResponse<void>>(
+      TRUCK_PATH.STATUSUPDATE(truckId),
+      request
+    )
   },
 
   deleteTruck: async (truckId: number): Promise<void> => {

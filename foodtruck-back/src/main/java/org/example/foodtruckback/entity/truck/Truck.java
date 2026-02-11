@@ -55,6 +55,7 @@ public class Truck extends BaseTimeEntity {
     public void update(String name, String cuisine, TruckStatus status) {
         if (name != null && !name.isBlank()) this.name = name;
         if (cuisine != null && !cuisine.isBlank()) this.cuisine = cuisine;
+        if (status != null) this.status = status;
     }
 
     public void activate() {
@@ -63,20 +64,5 @@ public class Truck extends BaseTimeEntity {
 
     public void inactivate() {
         this.status = TruckStatus.INACTIVE;
-    }
-
-    public void addMenu(MenuItem menu) {
-        menus.add(menu);
-        menu.setTruck(this);
-    }
-
-    public void addSchedule(Schedule schedule) {
-        schedules.add(schedule);
-        schedule.setTruck(this);
-    }
-
-    public void removeMenu(MenuItem menu) {
-        menus.remove(menu);
-        menu.setTruck(null);
     }
 }

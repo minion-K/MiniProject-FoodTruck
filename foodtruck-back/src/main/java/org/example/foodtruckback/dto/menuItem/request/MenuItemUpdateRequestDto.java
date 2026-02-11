@@ -12,8 +12,5 @@ public record MenuItemUpdateRequestDto(
         int price,
 
         @Size(max = 255)
-        String optionText,
-
-        @NotNull(message = "매진상태를 설정해주세요.")
-        Boolean isSoldOut
+        String optionText
 ){}

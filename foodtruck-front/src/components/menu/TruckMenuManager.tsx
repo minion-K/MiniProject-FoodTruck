@@ -1,40 +1,50 @@
 import { menuApi } from "@/apis/menu/menu.api";
-import { truckApi } from "@/apis/truck/truck.api";
-import type {
-  TruckMenuItemResponse,
-  TruckMenuListResponse,
-} from "@/types/truck/truck.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useState } from "react";
 import MenuModal from "./MenuModal";
+import type { MenuListItemResponse, MenuListResponse } from "@/types/menu/menu.dto";
+import toast from "react-hot-toast";
 
 interface Props {
   truckId: number;
-  menuList: TruckMenuListResponse;
+  menuList: MenuListResponse;
   onUpdate: () => void;
 }
 
 function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
-  const [menus, setMenus] = useState(menuList);
   const [open, setOpen] = useState(false);
-  const [editMenu, setEditMenu] = useState<TruckMenuItemResponse | null>(null);
+  const [editMenu, setEditMenu] = useState<MenuListItemResponse | null>(null);
 
   const handleAdd = () => {
     setEditMenu(null);
     setOpen(true);
   };
 
-  const handleEdit = (menu: TruckMenuItemResponse) => {
+  const handleEdit = (menu: MenuListItemResponse) => {
     setEditMenu(menu);
     setOpen(true);
   };
+
+  const handleSuccess = () => {
+    setOpen(false);
+
+    if(editMenu) {
+      toast.success("메뉴가 수정되었습니다.");
+    } else {
+      toast.success("메뉴가 추가되었습니다.");
+    }
+
+    onUpdate();
+  }
 
   const handleDelete = async (menuId: number) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
 
     try {
       await menuApi.deleteMenu(menuId);
+
+      toast.success("메뉴가 삭제되었습니다.", {icon: "🗑️"});
       onUpdate();
     } catch (e) {
       alert(getErrorMsg(e));
@@ -43,18 +53,21 @@ function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
 
   return (
     <Container>
-      <ButtonRow>
-        <ActionButton onClick={handleAdd}>+ 메뉴 추가</ActionButton>
-      </ButtonRow>
+      <Header>
+        <AddButton onClick={handleAdd}>+ 메뉴 추가</AddButton>
+      </Header>
 
-      {menus.length === 0 ? (
+      {menuList.length === 0 ? (
         <EmptyText>등록된 메뉴가 없습니다.</EmptyText>
       ) : (
-        <MenuList>
-          {menus.map((menu) => (
-            <MenuItem key={menu.id}>
-              <MenuName isSoldOut={menu.isSoldOut}>{menu.name}</MenuName>
-              <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
+        <List>
+          {menuList.map((menu) => (
+            <Item key={menu.id}>
+              <Info>
+                <MenuName isSoldOut={menu.isSoldOut}>{menu.name}</MenuName>
+                <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
+              </Info>
+
               <Actions>
                 <ActionButton onClick={() => handleEdit(menu)}>
                   수정
@@ -63,9 +76,9 @@ function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
                   삭제
                 </ActionButton>
               </Actions>
-            </MenuItem>
+            </Item>
           ))}
-        </MenuList>
+        </List>
       )}
 
       {open && (
@@ -73,10 +86,7 @@ function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
           truckId={truckId}
           menu={editMenu}
           onClose={() => setOpen(false)}
-          onSuccess={() => {
-            setOpen(false);
-            onUpdate;
-          }}
+          onSuccess={handleSuccess}
         />
       )}
     </Container>
@@ -88,16 +98,20 @@ export default TruckMenuManager;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
 `;
 
-const ButtonRow = styled.div`
+const Header = styled.div`
   display: flex;
   justify-content: flex-end;
 `;
 
 const AddButton = styled.button`
-  padding: 6px 10px;
+  padding: 6px 12px;
   background-color: #ff6b00;
   color: white;
   border-radius: 6px;
@@ -105,19 +119,25 @@ const AddButton = styled.button`
   cursor: pointer;
 `;
 
-const MenuList = styled.div`
+const List = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 `;
 
-const MenuItem = styled.div`
+const Item = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
   background: #fafafa;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+`;
+
+const Info = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const MenuName = styled.div<{ isSoldOut?: boolean }>`
@@ -126,21 +146,22 @@ const MenuName = styled.div<{ isSoldOut?: boolean }>`
 `;
 
 const MenuPrice = styled.div`
-  font-weight: 500;
+  font-size: 13px;
+  color: #666;
 `;
 
 const Actions = styled.div`
   display: flex;
-  gap: 4px;
+  gap: 6px;
 `;
 
 const ActionButton = styled.div`
-  padding: 4px 6px;
+  padding: 4px 8px;
   font-size: 12px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
-  background-color: #eee;
+  background-color: #f2f2f2;
 
   &:hover {
     background-color: #ddd;
@@ -150,4 +171,8 @@ const ActionButton = styled.div`
 const EmptyText = styled.div`
   font-size: 14px;
   color: #888;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 10px;
+  text-align: center;
 `;

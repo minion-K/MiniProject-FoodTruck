@@ -21,3 +21,27 @@ export const formatPickupRange = (pickupTime: string | Date) => {
 
   return `${formatTime(start)} - ${formatTime(end)}`;
 };
+
+export function formatDateTime(date: string | Date) {
+  const d = typeof date === "string" ? new Date(date) : date;
+
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+
+  const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+  const hour = d.getHours().toString().padStart(2, "0");
+  const min = d.getMinutes().toString().padStart(2, "0");
+
+  return `${year}. ${month.toString().padStart(2, "0")}. 
+    ${day.toString().padStart(2, "0")} 
+    (${weekday}) ${hour}:${min}`
+}
+
+export function DateAndHour(date: string, hour: string) {
+  return `${date}T${hour}:00`;
+}
+
+export function formatHour(date: Date) {
+  return `${date.getHours().toString().padStart(2, "0")}:00`;
+}

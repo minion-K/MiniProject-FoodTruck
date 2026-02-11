@@ -7,9 +7,10 @@ interface Props {
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onSearch: () => void;
   placeholder?: string;
+  onEnter?: boolean
 }
 
-function SearchInput ({value, onChange, onKeyDown, onSearch, placeholder}: Props) {
+function SearchInput ({value, onChange, onKeyDown, onSearch, placeholder, onEnter}: Props) {
   return (
     <SearchWrapper>
       <Input 
@@ -17,7 +18,12 @@ function SearchInput ({value, onChange, onKeyDown, onSearch, placeholder}: Props
         value={value}
         placeholder={placeholder || "검색어를 입력하세요"}
         onChange={(e) => {onChange(e.target.value)}}
-        onKeyDown={onKeyDown}
+        onKeyDown={(e) => {
+          if(e.key === "Enter" && onEnter !== false) {
+            onSearch();
+          }
+          onKeyDown?.(e);
+        }}
       />
       <Button onClick={onSearch}>검색</Button>
     </SearchWrapper>

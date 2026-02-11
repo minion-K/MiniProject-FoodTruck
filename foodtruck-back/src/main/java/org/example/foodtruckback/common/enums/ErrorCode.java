@@ -39,6 +39,8 @@ public enum ErrorCode {
     // ===========================
     DUPLICATE_LOCATION(HttpStatus.CONFLICT, "L001", "이미 존재하는 스팟입니다.", "Duplicate location"),
     LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "L002", "스팟을 찾을 수 없습니다.", "LocationApi not found"),
+    LOCATION_IN_USE(HttpStatus.BAD_REQUEST, "L003", "사용 중인 위치는 삭제할 수 없습니다.", "Location is in use"),
+    LOCATION_IN_USE_BY_OTHER_TRUCK(HttpStatus.FORBIDDEN, "L004", "다른 트럭에서 사용 중인 위치는 수정할 수 없습니다.", "Location is used by another truck"),
 
     // ===========================
     // email (Exxx)
@@ -56,6 +58,7 @@ public enum ErrorCode {
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "해당 스케줄을 찾을 수 없습니다.", "Schedule not found"),
     INVALID_SCHEDULE(HttpStatus.BAD_REQUEST, "S002", "예약할 수 없는 스케줄입니다.", "Invalid schedule"),
     DUPLICATE_SCHEDULE(HttpStatus.CONFLICT, "S003", "이미 예약된 스케줄입니다.", "Duplicate schedule"),
+    MISSING_TIME(HttpStatus.BAD_REQUEST, "S004", "스케줄의 시작 시간과 종료시간을 모두 입력해주세요", "Missing startTime or endTime"),
 
     // ===========================
     // reservation (Rxxx)
@@ -73,6 +76,7 @@ public enum ErrorCode {
     MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "메뉴를 찾을 수 없습니다.", "Menu not found"),
     INVALID_MENU(HttpStatus.BAD_REQUEST, "M002", "해당 트럭의 메뉴가 아닙니다.", "Invalid menu this truck"),
     MENU_SOLD_OUT(HttpStatus.CONFLICT, "M003", "해당 메뉴는 품절 상태입니다.", "Menu is Sold out"),
+    DUPLICATE_MENU(HttpStatus.CONFLICT, "M004", "이미 등록된 메뉴입니다.", "Duplicate menuItem"),
 
     // ===========================
     // truck (Txxx)

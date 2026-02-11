@@ -8,7 +8,5 @@ public record TruckUpdateRequestDto(
         String name,
 
         @Size(max = 50, message = "음식장르는 50자 내로 작성해주세요.")
-        String cuisine,
-
-        TruckStatus status
+        String cuisine
 ) {}

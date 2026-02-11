@@ -21,14 +21,6 @@ function TossSuccessPage() {
     const productCode = params.get("productCode");
     const productName = params.get("productName");
 
-    console.log("💣 [TOSS PARAMS]", {
-      paymentKey,
-      orderId,
-      amount,
-      productCode,
-      productName,
-    });
-
     if (!paymentKey || !orderId || !amount || !productCode || !productName) {
       alert("필수 파라미터가 누락되었습니다.");
 
@@ -40,15 +32,6 @@ function TossSuccessPage() {
 
     (async () => {
       try {
-        console.log("🚀 [CALL APPROVE PAYMENT]", {
-          paymentKey,
-          orderId,
-          amount: Number(amount),
-          method: "TOSS_PAY",
-          productCode,
-          productName,
-        });
-
         const res = await paymentApi.approvePayment({
           paymentKey,
           orderId,
