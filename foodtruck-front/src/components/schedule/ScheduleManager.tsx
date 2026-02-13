@@ -2,10 +2,12 @@ import { scheduleApi } from '@/apis/schedule/schdule.api';
 import type { TruckScheduleItemResponse, TruckScheduleListResponse } from '@/types/schedule/schedule.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ScheduleModal from './ScheduleModal';
-import { formatDateTime, formatTime } from '@/utils/date';
+import { formatDateTime } from '@/utils/date';
 import toast from 'react-hot-toast';
+import type { ScheduleStatus } from '@/types/schedule/schedule.type';
+import { getScheduleStatus } from '@/utils/ScheduleStatus';
 
 interface Props {
   truckId: number;
@@ -16,6 +18,12 @@ interface Props {
 function ScheduleManager({truckId, schedules, onUpdate}: Props) {
   const [selected, setSelected] = useState<TruckScheduleItemResponse | null>(null);
   const [open, setOpen] = useState(false);
+  const [statusPopup, setStatusPopup] = useState< number | null>(null);
+  const [localSchedule, setLocalSchedule] = useState<TruckScheduleListResponse>(schedules);
+
+  useEffect(() => {
+    setLocalSchedule(schedules);
+  }, [schedules]);
 
   const handleAdd = () => {
     setSelected(null);
@@ -53,6 +61,40 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
     onUpdate();
   }
 
+  const handleStatusClick = (scheduleId: number) => {
+    setStatusPopup(prev => prev === scheduleId ? null : scheduleId);
+  };
+
+  const handleStatusChange = async (schedule: TruckScheduleItemResponse, newStatus: ScheduleStatus) => {
+    const prevStatus = schedule.status;
+
+    setLocalSchedule(prev =>
+      prev.map(s => s.scheduleId === schedule.scheduleId
+        ? {...s, status: newStatus}
+        : s
+      )
+    );
+
+    setStatusPopup(null);
+    
+    try {
+      await scheduleApi.updateScheduleStatus(schedule.scheduleId, {status : newStatus});
+      
+      toast.success("상태가 변경되었습니다.");
+    } catch (e) {
+      setLocalSchedule(prev => 
+        prev.map(s => s.scheduleId === schedule.scheduleId
+          ? {...s, status: prevStatus}
+          : s
+        )
+      );
+
+      alert(getErrorMsg(e));
+    }
+  };
+
+  const availableStatuses: ScheduleStatus[] = ["PLANNED", "OPEN", "CLOSED", "CANCELED"];
+
   return (
     <Container>
       <Header>
@@ -61,31 +103,79 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
         </AddButton>
       </Header>
 
-      {schedules.length === 0 ? (
+      {localSchedule.length === 0 ? (
         <EmptyText>등록된 스케줄이 없습니다.</EmptyText>
       ) : (
         <List>
-        {schedules.map(schedule => (
-          <Item key={schedule.scheduleId}>
-            <Info>
-              <div>{schedule.locationName ?? "장소 미지정"}</div>
-              <Time>
-                {formatDateTime(schedule.startTime)} ~ {formatDateTime(schedule.endTime)}
-              </Time>
-            </Info>
+        {localSchedule.map(schedule => {
+          const status = getScheduleStatus(schedule.status);
+          
+          return (
+            <Item key={schedule.scheduleId}>
+              <Info>
+                <LocationStatus>
+                  <Location>{schedule.locationName ?? "장소 미지정"}</Location>
 
-            <Actions>
-              <ActionButton onClick={() => {handleEdit(schedule)}}>
-                수정
-              </ActionButton>
-              <ActionButton onClick={() => {
-                handleDelete(schedule.scheduleId)
-              }}>
-                삭제
-              </ActionButton>
-            </Actions>
-          </Item>
-        ))}
+                  <StatusWrapper
+                    tabIndex={0}
+                    onBlur={() => setStatusPopup(null)}
+                  >
+                    <Status 
+                      style={{
+                        color: status.color,
+                        borderColor: status.color
+                      }}
+                      onClick={() => handleStatusClick(schedule.scheduleId)}
+                    >
+                      {status.label}
+                    </Status>
+                    
+                    {statusPopup === schedule.scheduleId && (
+                      <StatusPopup>
+                        {availableStatuses.map(status => {
+                          const s = getScheduleStatus(status);
+                          
+                          return (
+                            (
+                              <StatusOption
+                                key={status}
+                                disabled={status === schedule.status}
+                                style={{
+                                  color: s.color,
+                                  borderColor: s.color
+                                }}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleStatusChange(schedule, status)
+                                }}
+                              >
+                                {s.label}
+                              </StatusOption>
+                            ))}
+                          )}
+                      </StatusPopup>
+                    )}
+                  </StatusWrapper>
+                </LocationStatus>
+                <Time>
+                  {formatDateTime(schedule.startTime)} ~ {formatDateTime(schedule.endTime)}
+                </Time>
+              </Info>
+
+
+              <Actions>
+                <ActionButton onClick={() => {handleEdit(schedule)}}>
+                  수정
+                </ActionButton>
+                <ActionButton onClick={() => {
+                  handleDelete(schedule.scheduleId)
+                }}>
+                  삭제
+                </ActionButton>
+              </Actions>
+            </Item>
+          )
+        })}
       </List>
       )}
 
@@ -136,6 +226,22 @@ const List = styled.div`
   gap: 8px;
 `;
 
+const LocationStatus = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const StatusWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const Location = styled.div`
+  font-weight: 500;
+  font-size: 13px;
+`;
+
 const Item = styled.div`
   display: flex;
   justify-content: space-between;
@@ -149,6 +255,72 @@ const Info = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+`;
+
+const Status = styled.span`
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: white;
+  border: 1px solid;
+  cursor: pointer;
+
+  &:hover {
+    background: #f7f7f7;
+  }
+`;
+
+const StatusPopup = styled.div`
+  position: absolute;
+  padding: 2px 4px;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  border-radius: 6px;
+  z-index: 10;
+  min-width: 100px;
+  display: flex;
+  gap: 6px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    
+    border-right: 6px solid transparent;
+    border-left: 6px solid transparent;
+    border-top: 6px solid white;
+  }
+`;
+
+const StatusOption = styled.button`
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 500;
+  border: 1px solid;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #f5f5f5;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 `;
 
 const Time = styled.div`

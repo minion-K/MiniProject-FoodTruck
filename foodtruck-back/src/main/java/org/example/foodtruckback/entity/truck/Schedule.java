@@ -49,19 +49,43 @@ public class Schedule extends BaseTimeEntity {
     @Column(name = "max_reservations", nullable = false)
     private int maxReservations = 100;
 
-    public Schedule(Truck truck, LocalDateTime startTime, LocalDateTime endTime, Location location, Integer maxReservations) {
+    public Schedule(
+            Truck truck,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            Location location,
+            Integer maxReservations
+    ) {
+        validDateCreateTime(startTime, endTime);
+
         this.truck = truck;
         this.startTime = startTime;
         this.endTime = endTime;
         this.location = location;
         this.maxReservations = maxReservations != null ? maxReservations : 100;
-        this.status = ScheduleStatus.PLANNED;
+    }
+
+    private void validDateCreateTime(
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+
+        if(start == null || end == null) {
+            throw new BusinessException(ErrorCode.MISSING_TIME);
+        }
+
+        if(!start.isBefore(end)) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
+        }
+
+        if(start.isBefore(now)) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
+        }
     }
 
     public boolean isNowActive() {
-        LocalDateTime now = LocalDateTime.now();
-        return !now.isBefore(startTime) && !now.isAfter(endTime)
-                && status == ScheduleStatus.OPEN;
+        return getCurrentStatus() == ScheduleStatus.OPEN;
     }
 
     public String getLocationName() {
@@ -69,8 +93,7 @@ public class Schedule extends BaseTimeEntity {
     }
 
     public boolean isReservation() {
-        return status == ScheduleStatus.OPEN
-                && LocalDateTime.now().isBefore(endTime);
+        return getCurrentStatus() == ScheduleStatus.OPEN;
     }
     public void setTruck(Truck truck) {
         this.truck = truck;
@@ -79,14 +102,83 @@ public class Schedule extends BaseTimeEntity {
     public void updateSchedule(
             LocalDateTime startTime,
             LocalDateTime endTime,
-            ScheduleStatus status,
             Integer maxReservations,
             Location location
     ) {
-        if(startTime != null) this.startTime = startTime;
-        if(endTime != null) this.endTime = endTime;
-        if(status != null) this.status = status;
-        if(maxReservations != null) this.maxReservations = maxReservations;
-        if(location != null) this.location = location;
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime start = startTime != null ? startTime : this.startTime;
+        LocalDateTime end = endTime != null ? endTime : this.endTime;
+
+        if(!start.isBefore(end)) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
+        }
+
+        if(now.isAfter(this.endTime) || now.isEqual(this.endTime)) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+        }
+
+        if((now.isAfter(this.startTime)
+                || now.isEqual(this.startTime))
+                && startTime != null
+                && !startTime.equals(this.startTime)
+        ) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+        }
+
+        if(endTime != null && endTime.isBefore(now)) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
+        }
+
+        this.startTime = start;
+        this.endTime = end;
+
+        if(maxReservations != null) {
+            this.maxReservations = maxReservations;
+        }
+
+        if(location != null) {
+            this.location = location;
+        }
+    }
+
+    public void changeStatus(ScheduleStatus newStatus) {
+        if(newStatus == null) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if((now.isAfter(endTime) || now.isEqual(endTime))
+            && newStatus == ScheduleStatus.OPEN
+        ) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+        }
+
+        if((now.isAfter(startTime) || now.isEqual(startTime))
+            && newStatus == ScheduleStatus.PLANNED
+        ) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+        }
+
+        this.status = newStatus;
+    }
+
+    public ScheduleStatus getCurrentStatus() {
+        if(this.status == ScheduleStatus.CANCELED) {
+            return ScheduleStatus.CANCELED;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if(now.isAfter(endTime) || now.isEqual(endTime)) {
+            return ScheduleStatus.CLOSED;
+        }
+
+        if(now.isAfter(startTime) || now.isEqual(startTime)) {
+            return ScheduleStatus.OPEN;
+        }
+
+        return ScheduleStatus.PLANNED;
     }
 }

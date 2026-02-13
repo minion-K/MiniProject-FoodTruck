@@ -28,6 +28,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -119,6 +120,13 @@ public class TruckServiceImpl implements TruckService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
         if(request.status() == TruckStatus.ACTIVE) {
+            boolean hasMenu = menuItemRepository.existsByTruckId(truckId);
+            boolean hasSchedule = scheduleRepository.existsByTruckIdAndEndTimeAfter(truckId, LocalDateTime.now());
+
+            if(!hasMenu || !hasSchedule) {
+                throw new BusinessException(ErrorCode.TRUCK_ACTIVATION_INVALID);
+            }
+
             truck.activate();
         } else {
             truck.inactivate();

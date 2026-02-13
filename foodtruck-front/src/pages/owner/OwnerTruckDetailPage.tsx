@@ -7,6 +7,7 @@ import TruckCreateModal from "@/components/truck/TruckModal";
 import type { TruckDetailResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
 import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
+import { getScheduleStatus } from "@/utils/ScheduleStatus";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
@@ -20,6 +21,8 @@ function OwnerTruckDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [center, setCenter] = useState<{lat: number, lng: number} | null>(null)
   const [isOpen, setIsOpen] = useState(false);
+  
+  const navigate = useNavigate();
 
   if (!truckId) return null;
 
@@ -105,6 +108,21 @@ function OwnerTruckDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if(!truck) return;
+
+    if(!confirm("해당 트럭을 삭제하시겠습니까?")) return;
+
+    try {
+      await truckApi.deleteTruck(truck.id);
+
+      toast.success("트럭이 삭제되었습니다.", {icon: "🗑️"});
+      navigate("/owner/trucks");
+    } catch (e) {
+      alert(getErrorMsg(e));
+    }
+  }
+
   if (loading) return <Loading>트럭 정보 불러오는 중...</Loading>;
   if (error || !truck) return <Error>{error}</Error>;
 
@@ -121,7 +139,10 @@ function OwnerTruckDetailPage() {
         <HeaderRow>
           <NameStatusRow>
             <TruckName>{truck.name}</TruckName>
-            <Status style={{ backgroundColor: truckStatus.color }}>
+            <Status
+              style={{ backgroundColor: truckStatus.color }}
+              onClick={handleStatusToggle}
+            >
               {truckStatus.label}
             </Status>
           </NameStatusRow>
@@ -131,10 +152,9 @@ function OwnerTruckDetailPage() {
               수정
             </EditButton>
 
-            <ToggleButton 
-              active={truck.status === "ACTIVE"} 
-              onClick={handleStatusToggle}
-            />
+            <DeleteButton onClick={handleDelete}>
+              삭제
+            </DeleteButton>
           </Actions>
         </HeaderRow>
 
@@ -225,55 +245,65 @@ const Status = styled.span`
   text-align: center;
   color: white;
   white-space: nowrap;
-`;
-
-const ToggleButton = styled.button<{active: boolean}>`
-  position: relative;
-  width: 50px;
-  height: 24px;
-  border-radius: 12px;
-  border: none;
   cursor: pointer;
-  background: ${({active}) => (active ? "#4caf50" : "#ccc")};
-  transition: background 0.3s;
+  transition: transform 0.15s ease, filter 0.15s ease;
 
-  &:focus {
-    outline: none;
+  &:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: ${({active}) => (active ? "26px" : "2px")};
-    width: 20px;
-    height: 20px;
-    background: white;
-    border-radius: 50%;
-    transition: left 0.3s;
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
   }
 `;
 
 const Actions = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 `;
 
 const EditButton = styled.button`
-  padding: 6px 14px;
+  padding: 4px 12px;
   font-size: 13px;
   font-weight: 600;
   border: 1px solid #ddd;
-  border-radius: 20px;
+  border-radius: 999px;
   cursor: pointer;
-  color: white;
-  background: #444;
-  
+  color: #444;
+  background: white;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #d0d0d0;
-    color: #222;
+    background: #f5f5f5;
+    color: #111;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+`;
+
+const DeleteButton = styled.button`
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid #ff4d4f;
+  cursor: pointer;
+  background: white;
+  color: #ff4d4f;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #ff4d4f;
+    color: white;
+  }
+
+  &:active {
+    transform: translateY(1px);
   }
 `;
 

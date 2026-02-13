@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.schedule.ScheduleApi;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.schedule.request.ScheduleCreateRequestDto;
+import org.example.foodtruckback.dto.schedule.request.ScheduleStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.schedule.request.ScheduleUpdateRequestDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
@@ -19,7 +20,7 @@ import java.util.List;
 @RequestMapping(ScheduleApi.ROOT)
 @RequiredArgsConstructor
 public class ScheduleController {
-    private final ScheduleService scheduleService;
+    private final  ScheduleService scheduleService;
 
     @PostMapping(ScheduleApi.TRUCK_SCHEDULE)
     public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> createSchedule(
@@ -56,6 +57,16 @@ public class ScheduleController {
             @Valid @RequestBody ScheduleUpdateRequestDto request
     ) {
         ResponseDto<ScheduleDetailResponseDto> response = scheduleService.updateSchedule(scheduleId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping(ScheduleApi.STATUS)
+    public ResponseEntity<ResponseDto<Void>> updateStatus(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody ScheduleStatusUpdateRequestDto request
+    ) {
+        ResponseDto<Void> response = scheduleService.updateStatus(scheduleId, request);
 
         return ResponseEntity.ok(response);
     }

@@ -11,9 +11,13 @@ export interface ScheduleUpdateRequest {
   startTime?: string;
   endTime?: string;
   locationId: number;
-  status?: ScheduleStatus;
   maxReservations?: number;
 }
+
+export interface ScheduleStatueUpdateRequest {
+  status: ScheduleStatus
+}
+
 
 export interface ScheduleDetailResponse {
   id: number;

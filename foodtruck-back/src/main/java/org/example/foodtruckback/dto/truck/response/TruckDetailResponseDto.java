@@ -1,10 +1,9 @@
 package org.example.foodtruckback.dto.truck.response;
 
+import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
-import org.example.foodtruckback.dto.schedule.response.ScheduleDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
-import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
 
 import java.time.LocalDateTime;
@@ -29,7 +28,7 @@ public record TruckDetailResponseDto(
             List<MenuItemDetailResponseDto> menu
     ) {
         String locationSummary = schedules.stream()
-                .filter(ScheduleItemResponseDto::isNowActive)
+                .filter(schedule -> schedule.status() == ScheduleStatus.OPEN)
                 .max(Comparator.comparing(ScheduleItemResponseDto::startTime))
                 .map(ScheduleItemResponseDto::locationName)
                 .orElse("현재 운영하지 않음");

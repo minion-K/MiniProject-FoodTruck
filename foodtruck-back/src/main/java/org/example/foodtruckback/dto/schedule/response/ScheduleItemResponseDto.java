@@ -25,16 +25,8 @@ public record ScheduleItemResponseDto(
                 schedule.getLocation().getName(),
                 schedule.getLocation().getLatitude(),
                 schedule.getLocation().getLongitude(),
-                schedule.getStatus(),
+                schedule.getCurrentStatus(),
                 schedule.getMaxReservations()
         );
-    }
-
-    public boolean isNowActive() {
-        LocalDateTime now = LocalDateTime.now();
-
-        return status == ScheduleStatus.OPEN
-                && !now.isBefore(startTime)
-                && !now.isAfter(endTime);
     }
 }

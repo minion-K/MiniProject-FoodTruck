@@ -5,6 +5,7 @@ import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.schedule.request.ScheduleCreateRequestDto;
+import org.example.foodtruckback.dto.schedule.request.ScheduleStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.schedule.request.ScheduleUpdateRequestDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
@@ -47,14 +48,6 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         if(exists) {
             throw new BusinessException(ErrorCode.DUPLICATE_SCHEDULE);
-        }
-
-        if(request.startTime() == null || request.endTime() == null) {
-            throw new BusinessException(ErrorCode.MISSING_TIME);
-        }
-
-        if(!request.startTime().isBefore(request.endTime())) {
-            throw new BusinessException(ErrorCode.INVALID_SCHEDULE);
         }
 
         Schedule schedule = new Schedule(
@@ -103,37 +96,56 @@ public class ScheduleServiceImpl implements ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
-        Location location = null;
+        Location location = schedule.getLocation();
         if(request.locationId() != null) {
             location = locationRepository.findById(request.locationId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
         }
 
-        if(request.startTime() != null && request.endTime() != null && location != null) {
-            boolean exists = scheduleRepository.existsByTruckAndLocationAndTimeOverlapExcludingSchedule(
-                    schedule.getTruck(),
-                    location,
-                    request.startTime(),
-                    request.endTime(),
-                    scheduleId
-            );
+        LocalDateTime startTime = request.startTime() != null
+                ? request.startTime()
+                : schedule.getStartTime();
 
-            if(exists) {
-                throw new BusinessException(ErrorCode.DUPLICATE_SCHEDULE);
-            }
+        LocalDateTime endTime = request.endTime() != null
+                ? request.endTime()
+                : schedule.getEndTime();
+
+        boolean exists = scheduleRepository.existsByTruckAndLocationAndTimeOverlapExcludingSchedule(
+                schedule.getTruck(),
+                location,
+                startTime,
+                endTime,
+                scheduleId
+        );
+
+        if(exists) {
+            throw new BusinessException(ErrorCode.DUPLICATE_SCHEDULE);
         }
 
         schedule.updateSchedule(
                 request.startTime(),
                 request.endTime(),
-                request.status(),
                 request.maxReservations(),
-                location
+                request.locationId() != null ? location : null
         );
 
         ScheduleDetailResponseDto response = ScheduleDetailResponseDto.from(schedule);
 
         return ResponseDto.success(response);
+    }
+
+    @Override
+    @Transactional
+    public ResponseDto<Void> updateStatus(
+            Long scheduleId,
+            ScheduleStatusUpdateRequestDto request
+    ) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+
+        schedule.changeStatus(request.status());
+
+        return ResponseDto.success("해당 스케줄 상태 변경이 완료되었습니다.: " + schedule.getCurrentStatus());
     }
 
     @Override

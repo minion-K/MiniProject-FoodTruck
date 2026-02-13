@@ -1,6 +1,7 @@
 import type {
   ScheduleCreateRequest,
   ScheduleDetailResponse,
+  ScheduleStatueUpdateRequest,
   ScheduleUpdateRequest,
   TruckScheduleItemResponse,
   TruckScheduleListResponse,
@@ -49,6 +50,18 @@ export const scheduleApi = {
     const res = await privateApi.put<ApiResponse<ScheduleDetailResponse>>(
       SCHEDULE_PATH.BY_ID(scheduleId),
       request,
+    );
+
+    return res.data.data;
+  },
+
+  updateScheduleStatus: async (
+    scheduleId: number,
+    request: ScheduleStatueUpdateRequest
+  ): Promise<void> => {
+    const res = await privateApi.put<ApiResponse<void>>(
+      SCHEDULE_PATH.STATUS(scheduleId),
+      request
     );
 
     return res.data.data;

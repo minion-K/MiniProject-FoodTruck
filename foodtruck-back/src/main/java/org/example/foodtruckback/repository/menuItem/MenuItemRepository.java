@@ -12,4 +12,6 @@ public interface MenuItemRepository extends JpaRepository<MenuItem,Long> {
     Collection<MenuItem> findAllByTruck(Truck truck);
 
     boolean existsByName(String name);
+
+    boolean existsByTruckId(Long truckId);
 }
