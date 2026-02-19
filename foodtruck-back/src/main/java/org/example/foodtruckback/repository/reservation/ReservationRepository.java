@@ -44,15 +44,6 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
             " JOIN FETCH r.schedule s" +
             " JOIN FETCH s.truck t " +
             "JOIN FETCH s.location l " +
-            "WHERE t.owner.id = :ownerId " +
-            "ORDER BY r.createdAt DESC")
-    List<Reservation> findForOwnerReservationList(@Param("ownerId") Long ownerId);
-
-    @Query("SELECT DISTINCT r" +
-            " FROM Reservation r" +
-            " JOIN FETCH r.schedule s" +
-            " JOIN FETCH s.truck t " +
-            "JOIN FETCH s.location l " +
             "ORDER BY r.createdAt DESC")
     List<Reservation> findForAdminReservationList();
 
@@ -67,4 +58,15 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         WHERE r.id = :reservationId
     """)
     Optional<Reservation> findDetail(@Param("reservationId") Long reservationId);
+
+    @Query("""
+        SELECT DISTINCT r
+        FROM Reservation r
+        JOIN FETCH r.schedule s
+        JOIN FETCH s.truck t
+        JOIN FETCH s.location l
+        WHERE s.id = :scheduleId
+        ORDER BY r.createdAt DESC
+    """)
+    List<Reservation> findByScheduleIdFetch(@Param("scheduleId") Long scheduleId);
 }

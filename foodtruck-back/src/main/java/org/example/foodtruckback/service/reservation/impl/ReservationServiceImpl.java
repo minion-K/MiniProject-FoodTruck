@@ -9,9 +9,7 @@ import org.example.foodtruckback.dto.reservation.request.ReservationCreateReques
 import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationMenuItemResponseDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
+import org.example.foodtruckback.dto.reservation.response.*;
 import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.reservation.ReservationItem;
@@ -32,10 +30,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.example.foodtruckback.common.enums.ReservationStatus.CONFIRMED;
 import static org.example.foodtruckback.common.enums.ReservationStatus.PENDING;
@@ -134,7 +136,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
-    public ResponseDto<ReservationResponseDto> getReservation(
+    public ResponseDto<ReservationResponseDto> getReservationById(
             @AuthenticationPrincipal UserPrincipal principal,
             Long reservationId
     ) {
@@ -153,36 +155,78 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN','OWNER','USER')")
-    public ResponseDto<List<ReservationListResponseDto>> getReservationList(
+    @PreAuthorize("hasRole('USER')")
+    public ResponseDto<List<ReservationListResponseDto>> getMyReservations(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        User user = userRepository.getReferenceById(principal.getId());
+        List<Reservation> reservations = reservationRepository.findForUserReservationList(principal.getId());
 
-        List<Reservation> reservations;
-
-        if(user.getRoleTypes().contains("ADMIN")) {
-            reservations = reservationRepository.findForAdminReservationList();
-
-        } else if(user.getRoleTypes().contains("OWNER")) {
-            reservations = reservationRepository.findForOwnerReservationList(user.getId());
-        } else {
-            reservations = reservationRepository.findForUserReservationList(user.getId());
-        }
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus((reservations));
 
         List<ReservationListResponseDto> response = reservations.stream()
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
-                    PaymentStatus paymentStatus = paymentRepository
-                            .findTopByProductCodeOrderByCreatedAt(productCode)
-                            .map(Payment::getStatus)
-                            .orElse(PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return ReservationListResponseDto.from(reservation, paymentStatus);
                 })
                 .toList();
 
+        return ResponseDto.success("조회 성공", response);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(
+            Long id, Long scheduleId
+    ) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+
+        if(!schedule.getTruck().getOwner().getId().equals(id)) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+
+        List<Reservation> reservations = reservationRepository.findByScheduleIdFetch(scheduleId);
+
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservations);
+
+        List<OwnerReservationListResponseDto> response = reservations.stream()
+                .map(reservation -> {
+                    String productCode = "RES-" + reservation.getId();
+
+                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+
+                    return OwnerReservationListResponseDto.from(reservation, paymentStatus);
+                })
+                .toList();
+
+        return ResponseDto.success("조회 성공", response);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseDto<List<AdminReservationListResponseDto>> getAdminReservations( Long scheduleId) {
+        List<Reservation> reservations;
+
+        if(scheduleId != null) {
+            reservations = reservationRepository.findByScheduleIdFetch(scheduleId);
+        } else {
+            reservations = reservationRepository.findForAdminReservationList();
+        }
+
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservations);
+
+        List<AdminReservationListResponseDto> response = reservations.stream()
+                .map(reservation -> {
+                    String productCode = "RES-" + reservation.getId();
+
+                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+
+                    return AdminReservationListResponseDto.from(reservation, paymentStatus);
+                })
+                .toList();
         return ResponseDto.success("조회 성공", response);
     }
 
@@ -322,5 +366,22 @@ public class ReservationServiceImpl implements ReservationService {
         ReservationResponseDto updatedReservation = ReservationResponseDto.fromWithPayment(reservation, menuDtos);
 
         return ResponseDto.success("예약 수정 성공적으로 변경되었습니다.", updatedReservation);
+    }
+
+    private Map<String, PaymentStatus> getPaymentStatus(List<Reservation> reservations) {
+        if(reservations.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<String> productCodes = reservations.stream()
+                .map(r -> "RES-" + r.getId())
+                .toList();
+
+        return paymentRepository.findByProductCodeIn(productCodes).stream()
+                .collect(Collectors.toMap(
+                        Payment::getProductCode,
+                        Payment::getStatus,
+                        (existing, replacement) -> replacement
+                ));
     }
 }

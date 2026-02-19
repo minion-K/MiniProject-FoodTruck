@@ -23,7 +23,7 @@ function MyReservation() {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const data = await reservationApi.getReservationList();
+        const data = await reservationApi.getMyReservations();
 
         setReservations(data);
       } catch (err) {

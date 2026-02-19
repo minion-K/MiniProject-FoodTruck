@@ -1,14 +1,16 @@
 import { BASE } from "../common/base.path";
 
-const RESERVATION_FREFIX = `${BASE}/reservations`;
+const RESERVATION_PREFIX = `${BASE}/reservations`;
 
 export const RESERVATION_PATH = {
-  ROOT: RESERVATION_FREFIX,
+  ROOT: RESERVATION_PREFIX,
 
-  LIST: RESERVATION_FREFIX,
-  CREATE: RESERVATION_FREFIX,
+  CREATE: RESERVATION_PREFIX,
 
-  BY_ID: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}`,
-  STATUS: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/status`,
-  CANCEL: (reservationId: number) => `${RESERVATION_FREFIX}/${reservationId}/cancel`
+  ME: () => `${RESERVATION_PREFIX}/me`,
+  OWNER: () => `${RESERVATION_PREFIX}/owner`,
+  ADMIN: () => `${RESERVATION_PREFIX}/admin`,
+  BY_ID: (reservationId: number) => `${RESERVATION_PREFIX}/${reservationId}`,
+  STATUS: (reservationId: number) => `${RESERVATION_PREFIX}/${reservationId}/status`,
+  CANCEL: (reservationId: number) => `${RESERVATION_PREFIX}/${reservationId}/cancel`
 }

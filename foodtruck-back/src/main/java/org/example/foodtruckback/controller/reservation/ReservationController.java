@@ -7,6 +7,8 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
+import org.example.foodtruckback.dto.reservation.response.AdminReservationListResponseDto;
+import org.example.foodtruckback.dto.reservation.response.OwnerReservationListResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
 import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
 import org.example.foodtruckback.entity.user.User;
@@ -36,19 +38,41 @@ public class ReservationController {
     }
 
     @GetMapping(ReservationApi.BY_ID)
-    public ResponseEntity<ResponseDto<ReservationResponseDto>> getReservation(
+    public ResponseEntity<ResponseDto<ReservationResponseDto>> getReservationById(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.getReservation(principal, reservationId);
+        ResponseDto<ReservationResponseDto> response = reservationService.getReservationById(principal, reservationId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    public ResponseEntity<ResponseDto<List<ReservationListResponseDto>>> getReservationList(
+    @GetMapping(ReservationApi.ME)
+    public ResponseEntity<ResponseDto<List<ReservationListResponseDto>>> getMyReservations(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<List<ReservationListResponseDto>> response =  reservationService.getReservationList(principal);
+        ResponseDto<List<ReservationListResponseDto>> response =  reservationService.getMyReservations(principal);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(ReservationApi.OWNER)
+    public ResponseEntity<ResponseDto<List<OwnerReservationListResponseDto>>> getOwnerReservations(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam Long scheduleId
+    ) {
+        ResponseDto<List<OwnerReservationListResponseDto>> response =
+                reservationService.getOwnerReservations(principal.getId(), scheduleId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(ReservationApi.ADMIN)
+    public ResponseEntity<ResponseDto<List<AdminReservationListResponseDto>>> getAdminReservations(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) Long scheduleId
+    ) {
+        ResponseDto<List<AdminReservationListResponseDto>> response =
+                reservationService.getAdminReservations(scheduleId);
 
         return ResponseEntity.ok(response);
     }
@@ -59,7 +83,8 @@ public class ReservationController {
             @PathVariable Long reservationId,
             @RequestBody ReservationStatusUpdateRequestDto request
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.updateStatus(principal, reservationId, request);
+        ResponseDto<ReservationResponseDto> response =
+                reservationService.updateStatus(principal, reservationId, request);
 
         return ResponseEntity.ok(response);
     }

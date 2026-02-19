@@ -3,7 +3,7 @@ import KakaoMap from "@/components/map/KakaoMap";
 import TruckModal from "@/components/truck/TruckModal";
 import Trucks from "@/components/truck/Trucks";
 import type { TruckCreateRequest, TruckListResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
-import type { TruckFormData } from "@/types/truck/truck.type";
+import type { TruckFormData, TruckStatus } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
@@ -32,32 +32,12 @@ function OwnerPage() {
     fetchTruck();
   }, []);
 
-  const center = {
-    lat: 35.15776,
-    lng: 129.05657,
+  const handleCreateTruck = async (data: TruckFormData) => {
+    await truckApi.createTruck(data);
+
+    setOpen(false);
+    fetchTruck();
   };
-
-  const markers = trucks
-    .filter(
-      (
-        truck,
-      ): truck is typeof truck & {
-        latitude: number;
-        longitude: number;
-      } => truck.latitude !== null && truck.longitude !== null,
-    )
-    .map((truck) => ({
-      id: truck.id,
-      lat: truck.latitude,
-      lng: truck.longitude,
-    }));
-
-    const handleCreateTruck = async (data: TruckFormData) => {
-      await truckApi.createTruck(data);
-
-      setOpen(false);
-      fetchTruck();
-    };
 
   if (loading) return <LoadingMsg>내 트럭 내역 불러오는 중...</LoadingMsg>;
   if (error) return <ErrorMsg>{error}</ErrorMsg>;
@@ -70,10 +50,6 @@ function OwnerPage() {
       </HeaderRow>
 
       <Content>
-        <MapWrapper>
-          <KakaoMap center={center} markers={markers} />
-        </MapWrapper>
-
         <ListWrapper>
           <Trucks trucks={trucks} urlPrefix="/owner" />
         </ListWrapper>
@@ -128,30 +104,26 @@ const AddButton = styled.button`
 `;
 const Content = styled.div`
   display: flex;
-  gap: 20px;
+  flex-direction: column;
   flex: 1;
 `;
 
-const MapWrapper = styled.div`
-  flex: 2;
-  min-height: 400px;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
 const ListWrapper = styled.div`
-  flex: 1.2;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   padding: 8px;
-  background-color: #fafafa;
+  background: #fafafa;
   border-radius: 8px;
+  overflow-y: auto;
+  height: 100%;
 `;
 
-const LoadingMsg = styled.div``;
+const LoadingMsg = styled.div`
+  font-size: 14px;
+`;
 
 const ErrorMsg = styled.div`
+  font-size: 14px;
   color: red;
 `;

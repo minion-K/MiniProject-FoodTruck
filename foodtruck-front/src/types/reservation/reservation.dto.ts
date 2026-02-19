@@ -26,6 +26,29 @@ export interface ReservationListItemResponse {
 
 export type ReservationListResponse = ReservationListItemResponse[];
 
+export interface OwnerReservationListItemResponse {
+  id: number;
+  userName: string;
+  pickupTime: string;
+  status: ReservationStatus;
+  paymentStatus: PaymentStatus;
+  menuItems: ReservationMenuItemResponse[];
+}
+
+export type OwnerReservationListResponse = OwnerReservationListItemResponse[];
+
+export interface AdminReservationListItemResponse {
+  id: number;
+  userName: string;
+  truckName: string;
+  pickupTime: string;
+  status: ReservationStatus;
+  paymentStatus: PaymentStatus;
+  menuItems: ReservationMenuItemResponse[];
+}
+
+export type AdminReservationListResponse = AdminReservationListItemResponse[];
+
 export interface ReservationMenuItemResponse {
   menuItemId: number;
   quantity: number;
