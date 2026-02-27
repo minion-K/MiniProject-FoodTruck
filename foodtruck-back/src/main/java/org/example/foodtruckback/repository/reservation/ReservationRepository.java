@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation,Long> {
-    List<Reservation> findByUserId(Long id);
-
     boolean existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusIn(
             Long userId,
             Long ScheduleId,
@@ -65,6 +63,7 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         JOIN FETCH r.schedule s
         JOIN FETCH s.truck t
         JOIN FETCH s.location l
+        LEFT JOIN FETCH r.menuItems m
         WHERE s.id = :scheduleId
         ORDER BY r.createdAt DESC
     """)

@@ -2,15 +2,21 @@ package org.example.foodtruckback.entity.order;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.truck.Schedule;
+import org.example.foodtruckback.exception.BusinessException;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(
@@ -56,4 +62,59 @@ public class Order extends BaseTimeEntity {
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
+
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @Builder
+    public Order(
+            Schedule schedule,
+            User user,
+            OrderSource source,
+            Reservation reservation,
+            OrderStatus status,
+            int amount,
+            String currency
+    ) {
+        this.schedule = schedule;
+        this.user = user;
+        this.source = source;
+        this.reservation = reservation;
+        this.status = status;
+        this.amount = amount;
+        this.currency = currency != null ? currency : "KRW";
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
+    public void setStatus(OrderStatus orderStatus) {
+        this.status = orderStatus;
+    }
+
+    public void addOrderItem(OrderItem item) {
+        this.orderItems.add(item);
+        item.setOrder(this);
+    }
+
+    public void cancel() {
+        if(this.status == OrderStatus.CANCELED) {
+            throw new BusinessException(ErrorCode.ORDER_ALREADY_CANCELED);
+        }
+
+        if(this.status != OrderStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ORDER_CANCEL_NOT_ALLOWED);
+        }
+
+        this.status = OrderStatus.CANCELED;
+    }
+
+    public void refund() {
+        if(this.status != OrderStatus.PAID) {
+            throw new BusinessException(ErrorCode.ORDER_REFUND_NOT_ALLOWED);
+        }
+
+        this.status = OrderStatus.REFUNDED;
+    }
 }

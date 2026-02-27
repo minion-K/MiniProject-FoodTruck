@@ -29,7 +29,7 @@ public record ReservationResponseDto(
         String locationName,
         BigDecimal latitude,
         BigDecimal longitude,
-        List<ReservationMenuItemResponseDto> menuItems
+        List<ReservationMenuItemResponseDto> menus
 ) {
 
     public static ReservationResponseDto from (Reservation reservation) {

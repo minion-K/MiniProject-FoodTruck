@@ -1,5 +1,5 @@
 export type OrderSource = "ONSITE" | "RESERVATION";
-export type OrderStatus = "PAID" | "PENDING" | "FAILED" | "REFUNDED";
+export type OrderStatus = "PAID" | "PENDING" | "FAILED" | "CANCELED" | "REFUNDED";
 
 export interface CreateOrderItem {
   menuItemId: number;

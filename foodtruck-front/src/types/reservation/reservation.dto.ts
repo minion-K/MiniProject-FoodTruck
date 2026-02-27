@@ -14,6 +14,17 @@ export interface ReservationCreateRequest {
   note?: string;
 }
 
+export interface ReservationStatusUpdateRequest {
+  status: ReservationStatus;
+  note?: string;
+}
+
+export interface ReservationUpdateRequest {
+  pickupTime: string;
+  menuItems: ReservationMenuItemRequest[];
+  note?: string;
+}
+
 export interface ReservationListItemResponse {
   id: number;
   pickupTime: string;
@@ -32,7 +43,7 @@ export interface OwnerReservationListItemResponse {
   pickupTime: string;
   status: ReservationStatus;
   paymentStatus: PaymentStatus;
-  menuItems: ReservationMenuItemResponse[];
+  menus: ReservationMenuItemResponse[];
 }
 
 export type OwnerReservationListResponse = OwnerReservationListItemResponse[];
@@ -44,7 +55,7 @@ export interface AdminReservationListItemResponse {
   pickupTime: string;
   status: ReservationStatus;
   paymentStatus: PaymentStatus;
-  menuItems: ReservationMenuItemResponse[];
+  menus: ReservationMenuItemResponse[];
 }
 
 export type AdminReservationListResponse = AdminReservationListItemResponse[];
@@ -72,11 +83,5 @@ export interface ReservationDetailResponse {
   locationName: string;
   latitude: number;
   longitude: number;
-  menuItems: ReservationMenuItemResponse[];
-}
-
-export interface ReservationUpdateRequest {
-  pickupTime: string;
-  menuItems: ReservationMenuItemRequest[];
-  note?: string;
+  menus: ReservationMenuItemResponse[];
 }

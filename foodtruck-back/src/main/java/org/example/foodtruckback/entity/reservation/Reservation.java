@@ -69,34 +69,30 @@ public class Reservation extends BaseTimeEntity {
                 return reservation;
         }
 
-        public void updateStatus(ReservationStatus newStatus, String note) {
-                if(this.status == ReservationStatus.CANCELED) {
+        public void confirm(String note) {
+                if(this.status != ReservationStatus.PENDING) {
                         throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
                 }
 
-                if(this.status == newStatus) {
-                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
-                }
+                this.status = ReservationStatus.CONFIRMED;
 
-                boolean valid = switch (this.status) {
-                        case PENDING -> newStatus == ReservationStatus.CONFIRMED
-                                || newStatus == ReservationStatus.CANCELED;
-                        case CONFIRMED -> newStatus == ReservationStatus.CANCELED;
-                        default -> false;
-                };
-
-                if(!valid) {
-                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
-                }
-
-                this.status = newStatus;
-                if (note != null) {
+                if(note != null) {
                         this.note = note;
                 }
         }
 
+        public void cancel() {
+                if(this.status == ReservationStatus.CANCELED) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                this.status = ReservationStatus.CANCELED;
+                this.note = "운영자/관리자 취소";
+        }
+
         public void addMenuItem(ReservationItem item) {
                 this.menuItems.add(item);
+                item.setReservation(this);
         }
 
         public void cancelByUser() {

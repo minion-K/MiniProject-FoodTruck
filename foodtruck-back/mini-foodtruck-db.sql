@@ -216,7 +216,7 @@ CREATE TABLE orders (
   CONSTRAINT `fk_order_truck_schedule` FOREIGN KEY (schedule_id) REFERENCES truck_schedules(id),
   CONSTRAINT `fk_order_user` FOREIGN KEY (user_id) REFERENCES users(id),
   CONSTRAINT `fk_order_reservation` FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE SET NULL,
-  CONSTRAINT `chk_order_status` CHECK (status IN ('PAID','PENDING','FAILED','REFUNDED')),
+  CONSTRAINT `chk_order_status` CHECK (status IN ('PAID','PENDING','FAILED','CANCELED','REFUNDED')),
   CONSTRAINT `chk_order_source` CHECK (source IN ('ONSITE','RESERVATION')),
   INDEX `idx_orders_schedule` (schedule_id, status),
   INDEX `idx_orders_user` (user_id, paid_at)
@@ -226,11 +226,12 @@ CREATE TABLE order_items (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   order_id BIGINT NOT NULL,
   menu_item_id BIGINT NOT NULL,
+  menu_name VARCHAR(255) NOT NULL,
   qty INT NOT NULL,
   unit_price INT NOT NULL,
   CONSTRAINT `fk_order_item_order` FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-  CONSTRAINT `fk_order_item_menu_item` FOREIGN KEY (menu_item_id) REFERENCES menu_items(id),
-  INDEX `idx_order_items_order` (order_id)
+  INDEX `idx_order_items_order` (order_id),
+  INDEX `idx_order_items_menu_items_id` (menu_item_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 테스트----------------------------------------------- 

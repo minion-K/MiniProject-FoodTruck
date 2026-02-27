@@ -20,7 +20,7 @@ public interface ReservationService {
 
     ResponseDto<ReservationResponseDto> getReservationById(UserPrincipal principal, Long reservationId);
 
-    ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(Long id, Long scheduleId);
+    ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(UserPrincipal principal, Long scheduleId);
 
     ResponseDto<List<AdminReservationListResponseDto>> getAdminReservations(Long scheduleId);
 

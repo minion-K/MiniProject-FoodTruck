@@ -1,194 +1,206 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
-import type { ReservationListResponse } from '@/types/reservation/reservation.dto';
+import type { OwnerReservationListResponse } from '@/types/reservation/reservation.dto';
+import { formatPickupRange } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
+import { getPaymentStatus } from '@/utils/paymentStatus';
+import { getReservationStatus } from '@/utils/reservationStatus';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 StyleSheet
 interface Props {
   scheduleId: number;
-  onSelect: (data: any) => void;
+  onSelect: (id: number) => void;
 }
 
 function ReservationTab({scheduleId, onSelect}: Props) {
-  const [reservations, setReservations] = useState<ReservationListResponse>([]);
+  const [reservations, setReservations] = useState<OwnerReservationListResponse>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchReservation = async () => {
     try {
       setLoading(true);
 
-      const res = await reservationApi.getReservationList(scheduleId);
+      const res = await reservationApi.getOwnerReservations(scheduleId);
       setReservations(res);
     } catch (e) {
       alert(getErrorMsg(e));
-    } setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
+    if(!scheduleId) return;
+
     fetchReservation();
   }, [scheduleId]);
 
-  const handleConfirm = async (id: number) => {
-    try {
-      await reservationApi.updateStatus(id);
-
-      fetchReservation();
-    } catch (e) {
-      alert(getErrorMsg(e));
-    }
-  };
-
-  const handleCancel = async (id: number) => {
-    try {
-      await reservationApi.cancelReservation(id);
-
-      fetchReservation();
-    } catch (e) {
-      alert(getErrorMsg(e));
-    }
-  };
-
   if(loading) return <Loading>로딩 중...</Loading>
+  if(reservations.length === 0) return <EmptyText>예약 내역이 없습니다.</EmptyText>
 
   return (
-    <Container>
-      {reservations.length === 0 && (
-        <EmptyText>예약 내역이 없습니다.</EmptyText>
-      )}
+    <TableWrapper>
+      <StyledTable>
+        <thead>
+          <tr>
+            <th style={{width: "12%"}}>예약자</th>
+            <th style={{width: "18%"}}>픽업 시간</th>
+            <th style={{width: "22%"}}>주문 메뉴</th>
+            <th style={{width: "8%"}}>수량</th>
+            <th style={{width: "10%"}}>금액</th>
+            <th style={{width: "10%"}}>예약 상태</th>
+            <th style={{width: "10%"}}>결제 상태</th>
+            <th style={{width: "10%"}}>관리</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reservations.map(reservation => {
+            const reservationStatus = getReservationStatus(reservation.status);
+            const paymentStatus = getPaymentStatus(reservation.paymentStatus);
+            const menuItems = reservation.menus ?? [];
 
-      {reservations.map(reservation => (
-        <Card key={reservation.id}>
-          <InfoSection>
-            <Row>
-              <Label>예약자</Label>
-              <Value>{reservation.truckName}</Value>
-            </Row>
 
-            <Row>
-              <Label>픽업 시간</Label>
-              <Value>{reservation.pickupTime}</Value>
-            </Row>
+            const totalAmount = menuItems.reduce(
+              (sum, item) => sum + item.price * item.quantity,
+              0
+            );
 
-            <Row>
-              <Label>예약 상태</Label>
-              <StatusBadge
-                
-              >
-                {reservation.status}
-              </StatusBadge>
-            </Row>
+            const totalQuantity = menuItems.reduce(
+              (sum, item) => sum + item.quantity,
+              0
+            );
 
-            <Row>
-              <Label>결제 상태</Label>
-              <PaymentBadge
-              
-              >
-                {reservation.paymentStatus}
-              </PaymentBadge>
-            </Row>
-          </InfoSection>
+            const menuSummary = menuItems.length === 0
+              ? "메뉴 정보 없음"
+              : menuItems.length === 1
+              ? `${menuItems[0].name} ${menuItems[0].quantity}개`
+              : `${menuItems[0].name} 외 ${menuItems.length - 1}건`
 
-          <ButtonWrapper>
-            <Button onClick={() => onSelect(reservation)}>상세보기</Button>
+            const menuText = menuItems.length === 0
+              ? "메뉴 정보 없음"
+              : menuItems
+                .map(item => `${item.name} ${item.quantity}개`)
+                .join(", ");
 
-            {reservation.status === "PENDING" && (
-              <>
-                <Button primary onClick={() => handleConfirm(reservation.id)}>
-                  예약 확정
-                </Button>
-                <Button danger onClick={() => handleCancel(reservation.id)}>
-                  취소
-                </Button>
-              </>
-            )}
-          </ButtonWrapper>
-        </Card>
-      ))}
-    </Container>  
+            return (
+              <tr key={reservation.id}>
+                <td>{reservation.userName}</td>
+                <td>{formatPickupRange(reservation.pickupTime)}</td>
+                <td title={menuText}>{menuSummary}</td>
+                <td>{totalQuantity}개</td>
+                <td>{totalAmount.toLocaleString()}KRW</td>
+                <td>
+                  <Status style={{background: reservationStatus.color}}>
+                    {reservationStatus.label}
+                  </Status>
+                </td>
+                <td>
+                  <Status style={{background: paymentStatus.color}}>
+                    {paymentStatus.label}
+                  </Status>
+                </td>
+                <td>
+                  <ButtonWrapper>
+                    <Button onClick={() => onSelect(reservation.id)}>
+                      상세보기
+                    </Button>
+                  </ButtonWrapper>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </StyledTable>
+    </TableWrapper>
+
   )
 }
 
 export default ReservationTab
 
-const Container = styled.div`
+const TableWrapper = styled.div`
   margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow-x: auto;
+  background: white;
 `;
 
-const Card = styled.div`
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #fff;
+const StyledTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+  table-layout: fixed;
+
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #f1f1f1;
+    white-space: nowrap;
+  }
+
+  th {
+    background: #f3f4f6;
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+  }
+
+  tbody tr:hover {
+    background: #f9fafb;
+  }
+`;
+
+const Status = styled.span`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-`;
-
-const InfoSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const Row = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
-const Label = styled.div`
+  justify-content: center;
+  font-size: 12px;
   font-weight: 600;
-  color: #666;
-  width: 90px;
-`;
+  width: 80px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  text-align: center;
 
-const Value = styled.div`
-  color: #222;
+  white-space: nowrap;
 `;
 
 const ButtonWrapper = styled.div`
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const Button = styled.button<{
   primary?: boolean;
   danger?: boolean;
 }>`
-  padding: 6px 10px;
-  font-size: 13px;
+  padding: 5px 10px;
+  font-size: 12px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
 
-  background: ${({primary, danger}) => primary ? "#333" : danger ? "#ffdddd" : "#f5f5f5"};
-  color: ${({primary}) => primary ? "white" : "black"};
+  background: ${({primary, danger}) => primary ? "#ff6b00" : danger ? "#ef4444" : "white"};
+  color: ${({primary, danger}) => primary || danger ? "white" : "#374151"};
+  border: ${({primary, danger}) => primary || danger ? "none" : "1px solid #d1d5db"};
 
   &:hover {
-    opacity: 0.85;
+    opacity: 0.9;
   }
-`;
-
-const StatusBadge = styled.div`
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-`;
-
-const PaymentBadge = styled.div`
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
 `;
 
 const EmptyText = styled.div`
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: #6b7280;
+  font-size: 14px;
 `;
 
 const Loading = styled.div`
+  padding: 40px;
+  text-align: center;
   font-size: 16px;
+  color: #6b7280;
 `;

@@ -61,7 +61,7 @@ public class ReservationController {
             @RequestParam Long scheduleId
     ) {
         ResponseDto<List<OwnerReservationListResponseDto>> response =
-                reservationService.getOwnerReservations(principal.getId(), scheduleId);
+                reservationService.getOwnerReservations(principal, scheduleId);
 
         return ResponseEntity.ok(response);
     }
@@ -77,7 +77,7 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(ReservationApi.STATUS)
+    @PutMapping(ReservationApi.STATUS)
     public ResponseEntity<ResponseDto<ReservationResponseDto>> updateReservationStatus(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId,
@@ -89,7 +89,7 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(ReservationApi.CANCEL)
+    @PutMapping(ReservationApi.CANCEL)
     public ResponseEntity<ResponseDto<Void>> cancelReservation(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId

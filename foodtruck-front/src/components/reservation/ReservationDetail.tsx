@@ -119,24 +119,26 @@ function ReservationDetail({ reservationId }: Props) {
     reservation.paymentStatus === "SUCCESS" ||
     reservation.paymentStatus === "REFUNDED";
 
-  const cancelDisabled = !isPending || now >= start;
+  const cancelDisabled = !(isPending || isConfirmed) || now >= start;
   const payDisabled = isDone || isCancelled || now >= end;
   const editDisabled = !isPending || now >= start || isDone;
 
   const cancelTitle = cancelDisabled
     ? isCancelled
-      ? "예약이 취소되었습니다."
-      : isConfirmed
-        ? "예약이 확정되어 취소할 수 없습니다."
-        : now >= start
-          ? "이미 지난 예약입니다."
-          : ""
+      ? "이미 취소된 예약입니다."
+      : now >= start
+        ? "이미 지난 예약입니다."
+        : ""
     : "";
 
   const editTitle = editDisabled
     ? isDone
       ? "결제 완료된 예약은 변경할 수 없습니다."
-      : "이미 지난 예약입니다."
+      : !isPending
+        ? "확정된 예약은 변경할 수 없습니다."
+        : now >= start
+          ? "이미 지난 예약입니다."
+          : ""
     : "";
 
   const payTitle = payDisabled

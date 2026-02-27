@@ -46,4 +46,8 @@ public class ReservationItem {
 
         return item;
     }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
 }

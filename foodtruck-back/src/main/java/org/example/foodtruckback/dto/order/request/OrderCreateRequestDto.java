@@ -8,11 +8,10 @@ import java.util.List;
 public record OrderCreateRequestDto(
         @NotNull
         Long scheduleId,
-        Long userId,
-        @NotNull
-        OrderSource source,
         Long reservationId,
         @NotNull
-        List<CreateOrderItemRequestDto> items
+        OrderSource source,
+        @NotNull
+        List<CreateOrderItemRequestDto> menus
 ) {
 }

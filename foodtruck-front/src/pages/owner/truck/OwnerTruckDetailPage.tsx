@@ -1,13 +1,11 @@
 import { truckApi } from "@/apis/truck/truck.api";
-import Navibar from "@/components/layouts/Navibar";
 import KakaoMap from "@/components/map/KakaoMap";
 import TruckMenuManager from "@/components/menu/TruckMenuManager";
-import ScheduleManager from "@/components/schedule/scheduleManager";
+import ScheduleManager from "@/components/schedule/ScheduleManager";
 import TruckCreateModal from "@/components/truck/TruckModal";
 import type { TruckDetailResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
 import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
-import { getScheduleStatus } from "@/utils/ScheduleStatus";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";

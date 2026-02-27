@@ -6,10 +6,10 @@ import type {
   ReservationCreateRequest,
   ReservationDetailResponse,
   ReservationListResponse,
+  ReservationStatusUpdateRequest,
   ReservationUpdateRequest,
 } from "@/types/reservation/reservation.dto";
 import type { ApiResponse } from "@/types/common/ApiResponse";
-import { scheduleApi } from "../schedule/schdule.api";
 
 export const reservationApi = {
   createReservation: async (
@@ -18,19 +18,6 @@ export const reservationApi = {
     const res = await privateApi.post<ApiResponse<ReservationDetailResponse>>(
       RESERVATION_PATH.ROOT,
       request,
-    );
-
-    return res.data.data;
-  },
-
-  getReservationList: async (
-    scheduleId?: number
-  ): Promise<ReservationListResponse> => {
-    const res = await privateApi.get<ApiResponse<ReservationListResponse>>(
-      RESERVATION_PATH.ROOT, 
-      {
-        params: scheduleId ? {scheduleId} : {},
-      }
     );
 
     return res.data.data;
@@ -45,11 +32,11 @@ export const reservationApi = {
   },
 
   getOwnerReservations: async (
-    schduleId: number
+    scheduleId: number
   ): Promise<OwnerReservationListResponse> => {
     const res = await privateApi.get<ApiResponse<OwnerReservationListResponse>>(
       RESERVATION_PATH.OWNER(),
-      {params: {schduleId}}
+      {params: {scheduleId}}
     );
 
     return res.data.data;
@@ -78,9 +65,11 @@ export const reservationApi = {
 
   updateStatus: async (
     reservationId: number,
+    request: ReservationStatusUpdateRequest
   ): Promise<ReservationDetailResponse> => {
-    const res = await privateApi.post<ApiResponse<ReservationDetailResponse>>(
+    const res = await privateApi.put<ApiResponse<ReservationDetailResponse>>(
       RESERVATION_PATH.STATUS(reservationId),
+      request
     );
 
     return res.data.data;
@@ -99,7 +88,7 @@ export const reservationApi = {
   },
 
   cancelReservation: async (reservationId: number): Promise<void> => {
-    const res = await privateApi.post<ApiResponse<void>>(
+    const res = await privateApi.put<ApiResponse<void>>(
       RESERVATION_PATH.CANCEL(reservationId),
     );
 

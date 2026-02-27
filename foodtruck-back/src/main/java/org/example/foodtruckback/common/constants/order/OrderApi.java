@@ -8,6 +8,13 @@ public class OrderApi {
     public static final String ROOT = ApiBase.BASE + "/orders";
 
     public static final String BY_ID = "/{orderId}";
+
+    // get order user
+    public static final String ME = "/me";
+
+    //get order owner
+    public static final String TRUCK = "/trucks/{truckId}";
+
     // cancel
     public static final String CANCEL = BY_ID + "/cancel";
     // refund

@@ -1,42 +1,87 @@
-import type { CreateOrderItem, OrderItem, OrderSource, OrderStatus, UpdateOrderItem } from "./order.type";
+import type { PaymentStatus } from "../payment/payment.type";
+import type { OrderSource, OrderStatus } from "./order.type";
 
-export interface OrderCreateRequest {
-  scheduleId: number;
-  userId?: number | null
-  source: OrderSource;
-  reservationId?: number | null;
-  items: CreateOrderItem[];
+export interface CreateOrderItemRequest {
+  menuItemId: number;
+  qty: number;
 }
 
-export interface OrderUpdateRequest {
-  items: UpdateOrderItem[];
+export interface UpdateOrderItemRequest {
+  menuItemId: number;
+  qty: number;
+}
+
+export interface OrderCreateReqeust {
+  scheduleId: number;
+  reservationId?: number;
+  source: OrderSource;
+  menus: CreateOrderItemRequest[];
+}
+
+export interface OrderUpdateReqeust {
+  items: UpdateOrderItemRequest[];
+}
+
+export interface OrderItemResponse {
+  menuItemId: number;
+  menuItemName: String;
+  qty: number;
+  unitPrice: number;
+}
+
+export interface AdminOrderListResponse {
+  id: number;
+  scheduleId: number;
+  userId?: number;
+  username?: string;
+  reservationId: number;
+  source: OrderSource;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  amount: number;
+  currency: string;
+  createdAt: string;
+}
+
+export interface OwnerOrderListResponse {
+  id: number;
+  scheduleId: number;
+  username?: String;
+  source: OrderSource;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  amount: number;
+  currency: string;
+  menus: OrderItemResponse[];
+  createdAt: string;
+}
+
+export interface UserOrderListResponse {
+  id: number;
+  scheduleId: number;
+  userId?: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  amount: number;
+  currency: string;
+  createdAt: string;
 }
 
 export interface OrderDetailResponse {
   id: number;
   scheduleId: number;
-  userId: number | null;
+  userId?: number;
+  username?: string;
+  reservationId?: number;
   source: OrderSource;
-  reservationId: number | null;
-  amount: number;
-  currency: "KRW";
   status: OrderStatus;
-
-  paidAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-
-  items: OrderItem[];
-}
-
-export interface OrderListItemResponse {
-  id: number;
-  scheduleId: number;
-  userId: number | null;
-  source: OrderSource;
   amount: number;
-  status: OrderStatus;
-  createdAt: string;
-}
+  currency: string;
 
-export type OrderListResponse = OrderListItemResponse[];
+  paidAt?: string;
+  createdAt: string;
+  updateAt: string;
+
+  menus: OrderItemResponse[];
+
+}

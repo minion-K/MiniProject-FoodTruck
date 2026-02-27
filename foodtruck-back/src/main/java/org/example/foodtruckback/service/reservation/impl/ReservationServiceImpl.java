@@ -1,15 +1,15 @@
 package org.example.foodtruckback.service.reservation.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.foodtruckback.common.enums.ErrorCode;
-import org.example.foodtruckback.common.enums.PaymentStatus;
-import org.example.foodtruckback.common.enums.ReservationStatus;
+import org.example.foodtruckback.common.enums.*;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.response.*;
+import org.example.foodtruckback.entity.order.Order;
+import org.example.foodtruckback.entity.order.OrderItem;
 import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.reservation.ReservationItem;
@@ -18,6 +18,7 @@ import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
+import org.example.foodtruckback.repository.order.OrderRepository;
 import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
@@ -48,6 +49,7 @@ import static org.example.foodtruckback.common.enums.ReservationStatus.PENDING;
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final MenuItemRepository menuItemRepository;
     private final ScheduleRepository scheduleRepository;
@@ -79,7 +81,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         boolean exist = reservationRepository.existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusIn(
-                principal.getId(), schedule.getId(),request.pickupTime(), List.of(PENDING, CONFIRMED)
+                principal.getId(), schedule.getId(),pickupTime, List.of(PENDING, CONFIRMED)
         );
 
         if(exist) {
@@ -179,12 +181,12 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @PreAuthorize("hasRole('OWNER')")
     public ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(
-            Long id, Long scheduleId
+            @AuthenticationPrincipal UserPrincipal principal, Long scheduleId
     ) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
-        if(!schedule.getTruck().getOwner().getId().equals(id)) {
+        if(!schedule.getTruck().getOwner().getId().equals(principal.getId())) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
@@ -207,7 +209,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<List<AdminReservationListResponseDto>> getAdminReservations( Long scheduleId) {
+    public ResponseDto<List<AdminReservationListResponseDto>> getAdminReservations(Long scheduleId) {
         List<Reservation> reservations;
 
         if(scheduleId != null) {
@@ -239,9 +241,15 @@ public class ReservationServiceImpl implements ReservationService {
             ReservationStatusUpdateRequestDto request
     ) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        reservation.updateStatus(request.status(), request.note());
+        if(request.status() != ReservationStatus.CONFIRMED) {
+            throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+        }
+
+        reservation.confirm(request.note());
+        createOrderFromReservation(reservation);
+
         ReservationResponseDto response = ReservationResponseDto.from(reservation);
 
         return ResponseDto.success("예약상태 수정 완료", response);
@@ -258,21 +266,30 @@ public class ReservationServiceImpl implements ReservationService {
             @AuthenticationPrincipal UserPrincipal principal,
             Long reservationId
     ) {
-        User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
-
-        if(reservation.getStatus() == ReservationStatus.CANCELED) {
-            throw new BusinessException(ErrorCode.RESERVATION_ALREADY_CANCELLED);
-        }
 
         if(reservation.getPickupTime().isBefore(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
         }
 
-        reservation.cancelByUser();
+        boolean isReservationOwner = reservation.getUser().getId().equals(principal.getId());
+
+        if(isReservationOwner) {
+            reservation.cancelByUser();
+        } else {
+            reservation.cancel();
+        }
+
+        orderRepository.findByReservation(reservation)
+                .ifPresent(order -> {
+                    if(order.getStatus() == OrderStatus.PENDING) {
+                        order.cancel();
+                    } else if(order.getStatus() == OrderStatus.PAID) {
+                        order.refund();
+                    }
+                });
+
 
         String productCode = "RES-" + reservation.getId();
 
@@ -365,7 +382,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .toList();
         ReservationResponseDto updatedReservation = ReservationResponseDto.fromWithPayment(reservation, menuDtos);
 
-        return ResponseDto.success("예약 수정 성공적으로 변경되었습니다.", updatedReservation);
+        return ResponseDto.success("예약이 성공적으로 변경되었습니다.", updatedReservation);
     }
 
     private Map<String, PaymentStatus> getPaymentStatus(List<Reservation> reservations) {
@@ -383,5 +400,32 @@ public class ReservationServiceImpl implements ReservationService {
                         Payment::getStatus,
                         (existing, replacement) -> replacement
                 ));
+    }
+
+    private void createOrderFromReservation(Reservation reservation) {
+        boolean exist = orderRepository.existsByReservation(reservation);
+        if(exist) return;
+
+        Order order = Order.builder()
+                .reservation(reservation)
+                .user(reservation.getUser())
+                .schedule(reservation.getSchedule())
+                .status(OrderStatus.PENDING)
+                .source(OrderSource.RESERVATION)
+                .amount(reservation.getTotalAmount())
+                .build();
+
+        for(ReservationItem item: reservation.getMenuItems()) {
+
+            OrderItem orderItem = OrderItem.create(
+                    item.getMenuItemId(),
+                    item.getMenuName(),
+                    item.getPrice(),
+                    item.getQty()
+            );
+            order.addOrderItem(orderItem);
+        }
+
+        orderRepository.save(order);
     }
 }

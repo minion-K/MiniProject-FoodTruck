@@ -6,20 +6,20 @@ import ReservationDetailModal from "./ReservationDetailModal";
 import { type TruckDetailResponse, type TruckListResponse } from "@/types/truck/truck.dto";
 import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
-import { DateAndHour, formatDateTime } from "@/utils/date";
+import { formatDateTime } from "@/utils/date";
 
 
 function OwnerReservationPage() {
   const [activeTab, setActiveTab] = useState<"reservation" | "order">("reservation");
-  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
   const [trucks, setTrucks] = useState<TruckListResponse>([]);
   const [selectedTruckId, setSelectTruckId] = useState<number | null>(null);
   const [truckDetail, setTruckDetail] = useState<TruckDetailResponse | null>(null);
   const [selectedScheduleId, setSelectScheduleId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const fetchTrucks = async () => {
+  const fetchTrucks = async () => {
       try {
         setLoading(true);
 
@@ -36,6 +36,7 @@ function OwnerReservationPage() {
       }
     };
 
+  useEffect(() => {
     fetchTrucks();
   }, []);
 
@@ -84,7 +85,7 @@ function OwnerReservationPage() {
               key={schedule.scheduleId}
               value={schedule.scheduleId}
             >
-              {formatDateTime(schedule.startTime)} ~{""} 
+              {formatDateTime(schedule.startTime)} ~ {""} 
               {formatDateTime(schedule.endTime)}
             </option>
           ))}
@@ -108,8 +109,9 @@ function OwnerReservationPage() {
 
       {activeTab === "reservation" && selectedScheduleId && (
         <ReservationTab
+          key={refreshKey}
           scheduleId={selectedScheduleId}
-          onSelect={setSelectedReservation}
+          onSelect={id =>setSelectedReservationId(id)}
         />
       )}
 
@@ -119,10 +121,11 @@ function OwnerReservationPage() {
         />
       )}
 
-      {selectedReservation && (
+      {selectedReservationId !== null && (
         <ReservationDetailModal 
-          data={selectedReservation}
-          onClose={() => setSelectedReservation(null)}
+          reservationId={selectedReservationId}
+          onClose={() => setSelectedReservationId(null)}
+          onUpdated={() => setRefreshKey(prev => prev + 1)}
         />
       )}
     </Container>
@@ -157,53 +160,11 @@ const Tab = styled.button<{active?: boolean}>`
   font-size: 14px;
   cursor: pointer;
   border: none;
-  background: ${({active}) => active ? "#555" : "#eee"};
-  color: ${({active}) => active ? "white" : "black"};
+  background: ${({active}) => active ? "var(--primary)" : "#f3f4f6"};
+  color: ${({active}) => active ? "white" : "#374151"};
   border-radius: 4px;
 
   &:hover {
-    background: ${({active}) => active ? "#555" : "#ddd"};
+    background: ${({active}) => active ? "#4338ca" : "#e5e7eb"};
   }
-`;
-
-const Table = styled.table`
-  width: 100%;
-`;
-
-const Th = styled.th`
-  border-bottom: 2px solid #ccc;
-  text-align: left;
-  padding: 8px;
-`;
-
-const Td = styled.td`
-  border-bottom: 1px solid #eee;
-  padding: 8px;
-`;
-
-const ActionButton = styled.button`
-  padding: 4px 8px;
-  margin-right: 5px;
-  font-size: 12px;
-  cursor: pointer;
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5) ;
-`;
-
-const ModalContent = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 400px;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  transform: translate(-50%, -50%);
 `;
