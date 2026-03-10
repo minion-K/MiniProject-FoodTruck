@@ -92,7 +92,7 @@ function ReservationDetail({ reservationId }: Props) {
 
         displayInfo: {
           pickupTime: reservation.pickupTime,
-          menus: reservation.menuItems.map((menu) => ({
+          menus: reservation.menus.map((menu) => ({
             name: menu.name,
             quantity: menu.quantity,
           })),
@@ -222,8 +222,8 @@ function ReservationDetail({ reservationId }: Props) {
       <Section>
         <SectionTitle>주문 메뉴</SectionTitle>
 
-        {reservation.menuItems?.length > 0 &&
-          reservation.menuItems.map((menu) => (
+        {reservation.menus?.length > 0 &&
+          reservation.menus.map((menu) => (
             <MenuRow key={menu.menuItemId}>
               <span>{menu.name}</span>
               <span>
@@ -280,12 +280,12 @@ function ReservationDetail({ reservationId }: Props) {
           reservationId={reservation.id}
           schedule={reservation.schedule}
           initialPickupTime={reservation.pickupTime}
-          initialMenuItems={reservation.menuItems.map((item) => ({
+          initialMenuItems={reservation.menus.map((item) => ({
             menuItemId: item.menuItemId,
             quantity: item.quantity,
           }))}
           initialNote={reservation.note}
-          menus={reservation.menuItems.map((item) => ({
+          menus={reservation.menus.map((item) => ({
             id: item.menuItemId,
             name: item.name,
             price: item.price,

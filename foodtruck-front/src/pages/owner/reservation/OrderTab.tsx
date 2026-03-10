@@ -6,14 +6,19 @@ import { getOrderStatus } from '@/utils/orderStatus';
 import { getPaymentStatus } from '@/utils/paymentStatus';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
+import OrderCreateModal from './OrderCreateModal';
+import type { MenuListItemResponse } from '@/types/menu/menu.dto';
+import toast from 'react-hot-toast';
 
 interface Props {
   scheduleId: number;
+  menus: MenuListItemResponse[];
 }
 
-function OrderTab({scheduleId}: Props) {
+function OrderTab({scheduleId, menus}: Props) {
   const [orders, setOrders] = useState<OwnerOrderListResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -35,120 +40,146 @@ function OrderTab({scheduleId}: Props) {
   }, [scheduleId]);
 
   const handleCancel = async (id: number) => {
+    if(!window.confirm("주문을 취소하시겠습니까?")) return;
+
     try {
       await orderApi.cancelOrder(id);
 
       fetchOrders();
+      toast.success("주문이 취소되었습니다.")
     } catch (e) {
       alert(getErrorMsg(e));
     }
   };
 
   const handleRefund = async (id: number) => {
+    if(!window.confirm("환불하시겠습니까?")) return;
     try {
       await orderApi.refundOrder(id);
 
       fetchOrders();
+      toast.success("성공적으로 환불되었습니다.")
     } catch (e) {
       alert(getErrorMsg(e));
     }
   };
 
   if(loading) return <Loading>로딩 중...</Loading>
-  if(orders.length === 0) return <EmptyText>주문 내역이 없습니다.</EmptyText>
 
   return (
-    <TableWrapper>
-      <StyledTable>
-        <thead>
-          <tr>
-            <th style={{width: "8%"}}>주문 번호</th>
-            <th style={{width: "10%"}}>주문 유형</th>
-            <th style={{width: "12%"}}>주문자</th>
-            <th style={{width: "20%"}}>메뉴</th>
-            <th style={{width: "10%"}}>금액</th>
-            <th style={{width: "8%"}}>주문 상태</th>
-            <th style={{width: "8%"}}>결제 상태</th>
-            <th style={{width: "17%"}}>주문일</th>
-            <th style={{width: "7%"}}>관리</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map(order => {
-            const status = getOrderStatus(order.status);
-            const paymentStatus = getPaymentStatus(order.paymentStatus);
-            const menuItems = order.menus ?? [];
+    <>
+      <Header>
+        <Title>주문 관리</Title>
+        <Button primary onClick={() => setCreateOpen(true)}>
+          주문 등록
+        </Button>
+      </Header>
 
-            const totalAmount = menuItems.reduce(
-              (sum, item) => sum + item.unitPrice * item.qty,
-              0
-            );
-
-            const totalQuantity = menuItems.reduce(
-              (sum, item) => sum + item.qty,
-              0
-            );
-
-            const menuSummary = menuItems.length === 0
-              ? "메뉴 정보 없음"
-              : menuItems.length === 1
-              ? `${menuItems[0].menuItemName} ${menuItems[0].qty}개`
-              : `${menuItems[0].menuItemName} 외 ${menuItems.length - 1}건`
-
-            const menuText = menuItems.length === 0
-              ? "메뉴 정보 없음"
-              : menuItems
-                .map(item => `${item.menuItemName} ${item.qty}개`)
-                .join(", ");
-
-            return (
-              <tr key={order.id}>
-                <td>{order.id}</td>
-                <td>{getOrderSource(order.source)}</td>
-                <td>{order.username || "-"}</td>
-                <td title={menuText}>{menuSummary}</td>
-                <td>
-                  {order.amount.toLocaleString()}{order.currency}
-                </td>
-                <td>
-                  <Status style={{background: status.color}}>
-                    {status.label}
-                  </Status>
-                </td>
-                <td>
-                  <Status style={{background: paymentStatus.color}}>
-                    {status.label}
-                  </Status>
-                </td>
-                <td>
-                  {new Date(order.createdAt).toLocaleString()}
-                </td>
-                <td>
-                  <ButtonWrapper>
-                    {order.status === "PENDING" && (
-                      <Button danger onClick={() => handleCancel(order.id)}>
-                        취소
-                      </Button>
-                    )}
-
-                    {order.status === "PAID" && (
-                      <Button primary onClick={() => handleRefund(order.id)}>
-                        환불
-                      </Button>
-                    )}
-                  </ButtonWrapper>
-                </td>
+      {orders.length === 0 ? (
+        <EmptyText>주문 내역이 없습니다.</EmptyText>
+      ) : (
+        <TableWrapper>
+          <StyledTable>
+            <thead>
+              <tr>
+                <th style={{width: "8%"}}>주문 번호</th>
+                <th style={{width: "10%"}}>주문 유형</th>
+                <th style={{width: "12%"}}>주문자</th>
+                <th style={{width: "20%"}}>메뉴</th>
+                <th style={{width: "10%"}}>금액</th>
+                <th style={{width: "8%"}}>주문 상태</th>
+                <th style={{width: "8%"}}>결제 상태</th>
+                <th style={{width: "17%"}}>주문일</th>
+                <th style={{width: "7%"}}>관리</th>
               </tr>
-            )
-          })}
-        </tbody>
-      </StyledTable>
+            </thead>
+            <tbody>
+              {orders.map(order => {
+                const status = getOrderStatus(order.status);
+                const paymentStatus = getPaymentStatus(order.paymentStatus);
+                const menuItems = order.menus ?? [];
 
-    </TableWrapper>
+                const menuSummary = menuItems.length === 0
+                  ? "메뉴 정보 없음"
+                  : menuItems.length === 1
+                  ? `${menuItems[0].menuItemName} ${menuItems[0].qty}개`
+                  : `${menuItems[0].menuItemName} 외 ${menuItems.length - 1}건`
+
+                const menuText = menuItems.length === 0
+                  ? "메뉴 정보 없음"
+                  : menuItems
+                    .map(item => `${item.menuItemName} ${item.qty}개`)
+                    .join(", ");
+
+                return (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>{getOrderSource(order.source)}</td>
+                    <td>{order.username || "-"}</td>
+                    <td title={menuText}>{menuSummary}</td>
+                    <td>
+                      {order.amount.toLocaleString()}{order.currency}
+                    </td>
+                    <td>
+                      <Status style={{background: status.color}}>
+                        {status.label}
+                      </Status>
+                    </td>
+                    <td>
+                      <Status style={{background: paymentStatus.color}}>
+                        {paymentStatus.label}
+                      </Status>
+                    </td>
+                    <td>
+                      {new Date(order.createdAt).toLocaleString()}
+                    </td>
+                    <td>
+                      <ButtonWrapper>
+                        {order.status === "PENDING" && (
+                          <Button danger onClick={() => handleCancel(order.id)}>
+                            취소
+                          </Button>
+                        )}
+
+                        {order.status === "PAID" && (
+                          <Button primary onClick={() => handleRefund(order.id)}>
+                            환불
+                          </Button>
+                        )}
+                      </ButtonWrapper>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </StyledTable>
+        </TableWrapper>
+      )}
+
+      <OrderCreateModal
+        open={createOpen}
+        scheduleId={scheduleId}
+        menus={menus}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={fetchOrders}
+      />
+    </>
   )
 }
 
 export default OrderTab
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+const Title = styled.h3`
+  font-size: 16px;
+  font-weight: 600;
+`;
 
 const TableWrapper = styled.div`
   margin-top: 20px;

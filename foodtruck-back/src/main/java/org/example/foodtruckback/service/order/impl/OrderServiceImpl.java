@@ -185,8 +185,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication) " +
-                    "or @userOrderAuthz.canChangeOrder(#orderId, authentication)"
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication) "
     )
     public ResponseDto<OrderDetailResponseDto> updateOrder(
             Long orderId, OrderUpdateRequestDto request
@@ -254,8 +253,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication)" +
-                    "or @userOrderAuthz.canChangeOrder(#orderId, authentication)"
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication)"
     )
     public ResponseDto<Void> cancelOrder(Long orderId, UserPrincipal principal) {
         Order order = orderRepository.findById(orderId)

@@ -1,7 +1,6 @@
 package org.example.foodtruckback.security.util;
 
 import lombok.RequiredArgsConstructor;
-import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.repository.order.OrderRepository;
 import org.springframework.security.core.Authentication;

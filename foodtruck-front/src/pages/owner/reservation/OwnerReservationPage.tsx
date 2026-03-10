@@ -115,9 +115,10 @@ function OwnerReservationPage() {
         />
       )}
 
-      {activeTab === "order" && selectedScheduleId && (
+      {activeTab === "order" && selectedScheduleId && truckDetail && (
         <OrderTab 
           scheduleId={selectedScheduleId}
+          menus={truckDetail.menu}
         />
       )}
 

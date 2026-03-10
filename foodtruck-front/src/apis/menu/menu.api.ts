@@ -1,4 +1,4 @@
-import { privateApi, publicApi } from "../common/axiosInstance";
+import { privateApi } from "../common/axiosInstance";
 import { MENU_PATH } from "./menu.path";
 import type { ApiResponse } from "@/types/common/ApiResponse";
 
@@ -6,7 +6,6 @@ import type {
   MenuCreateRequest,
   MenuUpdateRequest,
   MenuDetailResponse,
-  MenuListResponse,
 } from "@/types/menu/menu.dto";
 
 export const menuApi = {

@@ -17,7 +17,6 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     @NonNull
-    @EntityGraph(attributePaths = {"orderItems", "orderItems.menuItem", "user", "reservation"})
     Optional<Order> findById(@NonNull Long orderId);
 
     boolean existsByReservation(Reservation reservation);
@@ -51,7 +50,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         FROM Order o
         LEFT JOIN FETCH o.orderItems
         LEFT JOIN FETCH o.user
-        LEFT JOIN FETCH o.schedule
+        LEFT JOIN FETCH o.schedule s
         LEFT JOIN FETCH o.reservation
         ORDER BY o.createdAt DESC
     """)
