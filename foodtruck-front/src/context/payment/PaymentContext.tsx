@@ -21,6 +21,7 @@ export interface PaymentContextValue {
   displayInfo?: PaymentDisplayInfo;
 
   method: PaymentMethod;
+  onsiteType?: "CARD" | "CASH"
   setMethod: (method: PaymentMethod) => void;
 }
 

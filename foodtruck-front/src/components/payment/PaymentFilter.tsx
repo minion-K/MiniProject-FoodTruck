@@ -1,4 +1,3 @@
-import type { PaymentStatus } from "@/types/payment/payment.type";
 import styled from "@emotion/styled";
 import React from "react";
 

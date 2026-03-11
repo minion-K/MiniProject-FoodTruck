@@ -3,11 +3,19 @@ import useCreatePayment from "@/hooks/useCreatePayment";
 import styled from "@emotion/styled";
 import React from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
-function OwnerOnsitePaySection() {
+interface Props {
+  selectedTruckId: number | null;
+  selectedScheduleId: number | null;
+  activeTab: "reservation" | "order";
+}
+
+function OwnerOnsitePaySection({selectedTruckId, selectedScheduleId, activeTab}: Props) {
   const { amount, productName, productCode } = usePaymentContext();
   const { mutate, isPending } = useCreatePayment();
-
+  const navigate = useNavigate();
+  
   const handleMockPay = () => {
     mutate(
       {
@@ -19,6 +27,14 @@ function OwnerOnsitePaySection() {
       {
         onSuccess: () => {
           toast.success("결제가 완료되었습니다.");
+
+          navigate("/owner/reservations", {
+            state: {
+              selectedTruckId,
+              selectedScheduleId,
+              activeTab
+            }
+          });
         },
       },
     );
@@ -28,7 +44,7 @@ function OwnerOnsitePaySection() {
     <Section>
       <SectionTitle>현장 결제</SectionTitle>
       <Button onClick={handleMockPay} disabled={isPending}>
-        {isPending ? "결제 처리 중..." : "현장 결제 완료"}
+        {isPending ? "결제 처리 중..." : "결제하기"}
       </Button>
     </Section>
   );

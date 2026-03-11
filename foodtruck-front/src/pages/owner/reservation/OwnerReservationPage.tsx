@@ -7,15 +7,19 @@ import { type TruckDetailResponse, type TruckListResponse } from "@/types/truck/
 import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
+import { useLocation } from "react-router-dom";
 
 
 function OwnerReservationPage() {
-  const [activeTab, setActiveTab] = useState<"reservation" | "order">("reservation");
+  const location = useLocation();
+  const {selectedTruckId: initTruckId, selectedScheduleId: initScheduleId, activeTab: initTab} = location.state || {};
+
+  const [activeTab, setActiveTab] = useState<"reservation" | "order">(initTab ?? "reservation");
   const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
   const [trucks, setTrucks] = useState<TruckListResponse>([]);
-  const [selectedTruckId, setSelectTruckId] = useState<number | null>(null);
+  const [selectedTruckId, setSelectTruckId] = useState<number | null>(initTruckId ?? null);
   const [truckDetail, setTruckDetail] = useState<TruckDetailResponse | null>(null);
-  const [selectedScheduleId, setSelectScheduleId] = useState<number | null>(null);
+  const [selectedScheduleId, setSelectScheduleId] = useState<number | null>(initScheduleId ?? null);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -26,9 +30,14 @@ function OwnerReservationPage() {
         const res = await truckApi.getOwnerTruckList();
         setTrucks(res);
 
-        if(res.length > 0) {
-          setSelectTruckId(res[0].id);
-        }
+        const truckIdSelect = 
+          initTruckId && res.some(t => t.id === initTruckId)
+            ? initTruckId
+            : res.length > 0
+            ? res[0].id
+            : null;
+        
+        setSelectTruckId(truckIdSelect);
       } catch (e) {
         alert(getErrorMsg(e));
       } finally {
@@ -50,9 +59,14 @@ function OwnerReservationPage() {
         const res = await truckApi.getTruckById(selectedTruckId);
         setTruckDetail(res);
 
-        if(res.schedules.length > 0) {
-          setSelectScheduleId(res.schedules[0].scheduleId);
-        }
+        const scheduleSelect = 
+          initScheduleId && res.schedules.some(s => s.scheduleId === initScheduleId)
+            ? initScheduleId
+            : res.schedules.length > 0
+            ? res.schedules[0].scheduleId
+            : null;
+
+        setSelectScheduleId(scheduleSelect);
       } catch (e) {
         alert(getErrorMsg(e));
       } finally {
@@ -62,6 +76,10 @@ function OwnerReservationPage() {
 
     fetchDetail();
   }, [selectedTruckId])
+
+  if(loading || !truckDetail || !selectedScheduleId) {
+    return <Container>로딩 중...</Container>
+  }
 
   return (
     <Container>
@@ -107,7 +125,7 @@ function OwnerReservationPage() {
         </Tab>
       </Tabs>
 
-      {activeTab === "reservation" && selectedScheduleId && (
+      {activeTab === "reservation" && truckDetail && selectedScheduleId && (
         <ReservationTab
           key={refreshKey}
           scheduleId={selectedScheduleId}
@@ -115,10 +133,12 @@ function OwnerReservationPage() {
         />
       )}
 
-      {activeTab === "order" && selectedScheduleId && truckDetail && (
+      {activeTab === "order" && truckDetail && selectedScheduleId && (
         <OrderTab 
           scheduleId={selectedScheduleId}
           menus={truckDetail.menu}
+          truckName={truckDetail.name}
+          truckId={selectedTruckId}
         />
       )}
 

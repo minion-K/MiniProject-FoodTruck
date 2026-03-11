@@ -2,7 +2,6 @@ import OwnerOnsitePaySection from "@/components/payment/OwnerOnsitePaySection";
 import PaymentSummary from "@/components/payment/PaymentSummary";
 import PaymentProvider from "@/context/payment/PaymentProvider";
 import styled from "@emotion/styled";
-import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 function OwnerOnsitePaymentPage() {
@@ -16,8 +15,12 @@ function OwnerOnsitePaymentPage() {
   return (
     <PaymentProvider value={state}>
       <Container>
-        <PaymentSummary />
-        <OwnerOnsitePaySection />
+        <PaymentSummary/>
+        <OwnerOnsitePaySection
+          selectedTruckId={state.selectedTruckId}
+          selectedScheduleId={state.selectedScheduleId}
+          activeTab={state.activeTab}
+        />
       </Container>
     </PaymentProvider>
   );

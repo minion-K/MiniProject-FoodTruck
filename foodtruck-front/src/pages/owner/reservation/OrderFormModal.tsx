@@ -1,24 +1,42 @@
 import { orderApi } from '@/apis/order/order.api';
-import type { MenuListItemResponse, MenuListResponse } from '@/types/menu/menu.dto';
-import { type OrderItemResponse } from '@/types/order/order.dto';
+import type { MenuListItemResponse } from '@/types/menu/menu.dto';
+import { type OrderItemResponse, type OwnerOrderListResponse } from '@/types/order/order.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 
 interface Props {
   open: boolean;
   scheduleId: number;
   menus: MenuListItemResponse[];
+  initialOrder?: OwnerOrderListResponse | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 
 
-function OrderCreateModal({open, scheduleId, menus, onClose, onSuccess}: Props) {
+function OrderFormModal({open, scheduleId, menus, initialOrder, onClose, onSuccess}: Props) {
   const [items, setItems] = useState<OrderItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const isEdit = !!initialOrder;
+
+  useEffect(() => {
+    if(!initialOrder) {
+      setItems([]);
+      return;
+    }
+
+    setItems(
+      initialOrder.menus.map(menu => ({
+        menuItemId: menu.menuItemId,
+        menuItemName: menu.menuItemName,
+        unitPrice: menu.unitPrice,
+        qty: menu.qty
+      }))
+    );
+  }, [initialOrder])
 
   if(!open) return null;
 
@@ -61,7 +79,7 @@ function OrderCreateModal({open, scheduleId, menus, onClose, onSuccess}: Props) 
     0
   );
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     if(items.length === 0) {
       alert("메뉴를 선택하세요.");
       return;
@@ -70,18 +88,31 @@ function OrderCreateModal({open, scheduleId, menus, onClose, onSuccess}: Props) 
     try {
       setLoading(true);
 
-      await orderApi.createOrder({
-        scheduleId,
-        source: "ONSITE",
-        menus: items.map(item => ({
-          menuItemId: item.menuItemId,
-          qty: item.qty
-        }))
-      });
+      if(isEdit) {
+        await orderApi.updateOrder(initialOrder.id, {
+          items :items.map(item => ({
+            menuItemId: item.menuItemId,
+            qty: item.qty
+          }))
+        });
 
-      onSuccess();
-      onClose();
-      toast.success("주문이 등록되었습니다.")
+        onSuccess();
+        onClose();
+        toast.success("주문이 수정되었습니다.");
+      } else {
+        await orderApi.createOrder({
+          scheduleId,
+          source: "ONSITE",
+          menus: items.map(item => ({
+            menuItemId: item.menuItemId,
+            qty: item.qty
+          }))
+        });
+  
+        onSuccess();
+        onClose();
+        toast.success("주문이 등록되었습니다.")
+      }
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {
@@ -92,7 +123,7 @@ function OrderCreateModal({open, scheduleId, menus, onClose, onSuccess}: Props) 
   return (
     <Overlay>
       <Modal>
-        <Header>현장 주문 생성</Header>
+        <Header>{isEdit ? "주문 수정" : "현장 주문 등록"}</Header>
 
         <MenuList>
           {menus.map(menu => {
@@ -146,9 +177,9 @@ function OrderCreateModal({open, scheduleId, menus, onClose, onSuccess}: Props) 
 
           <CreateButton
             disabled={loading || items.length === 0}
-            onClick={handleCreate}
+            onClick={handleSubmit}
           >
-            주문 생성
+            {isEdit ? "주문 수정" : "주문 등록"}
           </CreateButton>
         </ButtonRow>
       </Modal>
@@ -156,7 +187,7 @@ function OrderCreateModal({open, scheduleId, menus, onClose, onSuccess}: Props) 
   )
 }
 
-export default OrderCreateModal
+export default OrderFormModal
 
 const Overlay = styled.div`
   position: fixed;

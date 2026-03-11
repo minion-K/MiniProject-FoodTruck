@@ -13,8 +13,6 @@ function TossSuccessPage() {
   useEffect(() => {
     if (approveRef.current) return;
 
-    console.log("🔥 [TOSS SUCCESS PAGE] mounted");
-
     const paymentKey = params.get("paymentKey");
     const orderId = params.get("orderId");
     const amount = params.get("amount");

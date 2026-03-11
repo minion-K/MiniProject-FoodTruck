@@ -1,10 +1,10 @@
 import { usePaymentContext } from "@/context/payment/PaymentContext";
-import { formatPickupRange, formatTime } from "@/utils/date";
+import { formatPickupRange } from "@/utils/date";
 import styled from "@emotion/styled";
 import React from "react";
 
 function PaymentSummary() {
-  const { productName, amount, targetType, displayInfo } = usePaymentContext();
+  const { productName, amount, targetType, displayInfo, onsiteType } = usePaymentContext();
 
   return (
     <SummaryCard>
@@ -19,6 +19,12 @@ function PaymentSummary() {
           {targetType === "RESERVATION" ? "예약 결제" : "현장 결제"}
         </Value>
       </Item>
+      {targetType === "ONSITE" && onsiteType && (
+        <Item>
+          <Label>결제 수단</Label>
+          <Value>{onsiteType === "CARD" ? "카드결제" : "현금결제"}</Value>
+        </Item>
+      )}
 
       {displayInfo?.pickupTime && (
         <Item>

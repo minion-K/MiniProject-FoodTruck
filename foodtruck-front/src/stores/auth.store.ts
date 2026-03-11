@@ -1,17 +1,17 @@
 
-import type { MeReponse } from "@/types/user/user.dto";
+import type { UserDetailResponse } from "@/types/user/user.dto";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type AuthState = {
   accessToken: string | null;
-  user: MeReponse | null;
+  user: UserDetailResponse | null;
   isInitialized: boolean;
 }
 
 type AuthActions = {
   setAccessToken: (token: string | null) => void;
-  setUser: (user: MeReponse | null) => void;
+  setUser: (user: UserDetailResponse | null) => void;
   clearAuth: () => void;
 
   hydrateFromStorage: () => void;
