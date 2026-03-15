@@ -44,7 +44,8 @@ CREATE TABLE users (
 CREATE TABLE payments (
 	id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NULL,
-    order_id VARCHAR(100) NOT NULL COMMENT '내부 주문 번호',
+    payment_order_id VARCHAR(100) NOT NULL COMMENT '내부 주문 번호',
+    order_id BIGINT NOT NULL,
     payment_key VARCHAR(100) NOT NULL,
     amount BIGINT NOT NULL,
     method VARCHAR(30) NOT NULL,
@@ -59,11 +60,13 @@ CREATE TABLE payments (
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     CONSTRAINT `fk_payments_user` FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT `fk_payments_order` FOREIGN KEY (order_id) REFERENCES orders(id),
     CONSTRAINT `uk_payments_payment_key` UNIQUE (payment_key),
     CONSTRAINT `chk_payments_method` CHECK (method IN ('MOCK', 'TOSS_PAY')),
     CONSTRAINT `chk_payments_status` CHECK (status IN ('READY', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED')),
     INDEX `idx_payments_user_id` (user_id),
-    INDEX `idx_payments_order_id` (order_id)
+    INDEX `idx_payments_order_id` (order_id),
+    INDEX `idx_payments_payment_order_id` (payment_order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE payment_refunds (

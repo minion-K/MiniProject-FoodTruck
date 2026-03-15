@@ -7,19 +7,20 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 function TossSuccessPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-
   const approveRef = useRef(false);
 
   useEffect(() => {
     if (approveRef.current) return;
 
     const paymentKey = params.get("paymentKey");
-    const orderId = params.get("orderId");
+    const tossOrderId = params.get("orderId");
+    const orderId = params.get("targetId");
+    const targetId = Number (orderId);
     const amount = params.get("amount");
     const productCode = params.get("productCode");
     const productName = params.get("productName");
 
-    if (!paymentKey || !orderId || !amount || !productCode || !productName) {
+    if (!paymentKey || !orderId || !targetId || !amount || !productCode || !productName) {
       alert("필수 파라미터가 누락되었습니다.");
 
       navigate("/pay/toss");
@@ -32,7 +33,8 @@ function TossSuccessPage() {
       try {
         const res = await paymentApi.approvePayment({
           paymentKey,
-          orderId,
+          tossOrderId,
+          orderId: null,
           amount: Number(amount),
           method: "TOSS_PAY",
           productCode,

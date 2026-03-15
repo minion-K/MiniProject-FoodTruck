@@ -26,14 +26,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findTopByProductCodeOrderByCreatedAt(String productCode);
 
-    boolean existsByProductCodeAndStatus(@NotBlank(message = "상품 코드는 필수입니다.") String s, PaymentStatus paymentStatus);
+    Optional<Payment> findFirstByProductCodeAndStatus(String productCode, PaymentStatus paymentStatus);
 
     List<Payment> findByProductCodeAndStatus(String productCode, PaymentStatus paymentStatus);
 
-    Optional<Payment> findByPaymentKey(String s);
-
-
-    Optional<Payment> findByOrderId(String s);
+    Optional<Payment> findByOrderId(Long orderId);
 
     List<Payment> findByProductCodeIn(Collection<String> productCodes);
+
+    boolean existsByOrderIdAndStatus(Long orderId, PaymentStatus paymentStatus);
+
+    boolean existsByProductCodeAndStatus(String productCode, PaymentStatus paymentStatus);
 }

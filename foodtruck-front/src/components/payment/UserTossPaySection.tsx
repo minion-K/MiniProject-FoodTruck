@@ -1,12 +1,11 @@
 import { usePaymentContext } from "@/context/payment/PaymentContext";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useEffect, useRef } from "react";
 
 const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY as string;
 
 function UserTossPaySection() {
-  const { productCode, productName, amount } = usePaymentContext();
+  const { targetId, productCode, productName, amount } = usePaymentContext();
 
   const handleTossPay = async () => {
     if (!(window as any).TossPayments) {
@@ -16,11 +15,12 @@ function UserTossPaySection() {
     }
 
     const tossPayments = (window as any).TossPayments(TOSS_CLIENT_KEY);
-    const orderId = crypto.randomUUID();
+    const orderId = `RES-${targetId}-${crypto.randomUUID()}`;
     const origin = window.location.origin;
 
     const successUrl = new URL("/pay/toss/success", origin);
     successUrl.searchParams.set("orderId", orderId);
+    successUrl.searchParams.set("targetId", String (targetId));
     successUrl.searchParams.set("amount", String(amount));
     successUrl.searchParams.set("productCode", productCode);
     successUrl.searchParams.set("productName", productName);

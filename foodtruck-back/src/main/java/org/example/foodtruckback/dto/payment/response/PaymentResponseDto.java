@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 
 public record PaymentResponseDto(
         Long id,
-        String orderId,
+        Long orderId,
+        String paymentOrderId,
         String paymentKey,
         Long amount,
         PaymentMethod method,
@@ -22,6 +23,7 @@ public record PaymentResponseDto(
         return new PaymentResponseDto(
                 payment.getId(),
                 payment.getOrderId(),
+                payment.getPaymentOrderId(),
                 payment.getPaymentKey(),
                 payment.getAmount(),
                 payment.getMethod(),

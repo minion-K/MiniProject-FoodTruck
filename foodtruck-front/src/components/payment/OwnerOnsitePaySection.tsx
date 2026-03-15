@@ -12,13 +12,14 @@ interface Props {
 }
 
 function OwnerOnsitePaySection({selectedTruckId, selectedScheduleId, activeTab}: Props) {
-  const { amount, productName, productCode } = usePaymentContext();
+  const { targetId, amount, productName, productCode } = usePaymentContext();
   const { mutate, isPending } = useCreatePayment();
   const navigate = useNavigate();
   
   const handleMockPay = () => {
     mutate(
       {
+        orderId: targetId,
         productCode,
         productName,
         amount,

@@ -37,7 +37,7 @@ public class TossPayGateway implements PaymentGateway{
 
             Map<String, Object> body = Map.of(
                     "paymentKey", request.paymentKey(),
-                    "orderId", request.orderId(),
+                    "orderId", request.tossOrderId(),
                     "amount", request.amount()
             );
 

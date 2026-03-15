@@ -2,12 +2,16 @@ USE `mini-foodtruck-db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+TRUNCATE TABLE order_items;
+TRUNCATE TABLE orders;
 TRUNCATE TABLE reservation_items;
 TRUNCATE TABLE reservations;
 TRUNCATE TABLE truck_schedules;
 TRUNCATE TABLE menu_items;
 TRUNCATE TABLE trucks;
 TRUNCATE TABLE locations;
+TRUNCATE TABLE payments;
+TRUNCATE TABLE payment_refunds;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

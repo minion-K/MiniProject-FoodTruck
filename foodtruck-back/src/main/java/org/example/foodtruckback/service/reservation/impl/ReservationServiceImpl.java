@@ -269,10 +269,6 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        if(reservation.getPickupTime().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
-        }
-
         boolean isReservationOwner = reservation.getUser().getId().equals(principal.getId());
 
         if(isReservationOwner) {
@@ -289,7 +285,6 @@ public class ReservationServiceImpl implements ReservationService {
                         order.refund();
                     }
                 });
-
 
         String productCode = "RES-" + reservation.getId();
 
@@ -406,11 +401,20 @@ public class ReservationServiceImpl implements ReservationService {
         boolean exist = orderRepository.existsByReservation(reservation);
         if(exist) return;
 
+        Payment payment = paymentRepository.findFirstByProductCodeAndStatus("RES-" + reservation.getId(), PaymentStatus.SUCCESS)
+                .orElse(null);
+
+        OrderStatus status = OrderStatus.PENDING;
+
+        if(payment != null) {
+            status = OrderStatus.PAID;
+        }
+
         Order order = Order.builder()
                 .reservation(reservation)
                 .user(reservation.getUser())
                 .schedule(reservation.getSchedule())
-                .status(OrderStatus.PENDING)
+                .status(status)
                 .source(OrderSource.RESERVATION)
                 .amount(reservation.getTotalAmount())
                 .build();
@@ -427,5 +431,9 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         orderRepository.save(order);
+
+        if(payment != null) {
+            payment.setOrderId(order.getId());
+        }
     }
 }

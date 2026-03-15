@@ -1,6 +1,7 @@
 package org.example.foodtruckback.service.payment;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.buf.ByteChunk;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.PaymentMethod;
 import org.example.foodtruckback.common.enums.PaymentStatus;
@@ -10,10 +11,12 @@ import org.example.foodtruckback.dto.payment.request.PaymentApproveRequestDto;
 import org.example.foodtruckback.dto.payment.request.PaymentCreateRequestDto;
 import org.example.foodtruckback.dto.payment.request.PaymentRefundRequestDto;
 import org.example.foodtruckback.dto.payment.response.PaymentResponseDto;
+import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.payment.PaymentRefund;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
+import org.example.foodtruckback.repository.order.OrderRepository;
 import org.example.foodtruckback.repository.payment.PaymentRefundRepository;
 import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
@@ -35,6 +38,7 @@ public class PaymentService {
     private final PaymentRefundRepository paymentRefundRepository;
     private final PaymentGatewayResolver gatewayResolver;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
 
     private User getUser(UserPrincipal principal) {
         Long userId = principal.getId();
@@ -59,7 +63,8 @@ public class PaymentService {
     private PaymentResponseDto processMockPayment(User user, PaymentCreateRequestDto request) {
         Payment payment = Payment.builder()
                 .user(user)
-                .orderId("ORD_" + UUID.randomUUID())
+                .orderId(request.orderId())
+                .paymentOrderId("ORD-" + UUID.randomUUID())
                 .paymentKey("MOCK-" + UUID.randomUUID())
                 .amount(request.amount())
                 .method(PaymentMethod.MOCK)
@@ -69,6 +74,11 @@ public class PaymentService {
                 .build();
 
         payment.markSuccess();
+
+        Order order = orderRepository.findById(request.orderId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        order.paid();
         paymentRepository.save(payment);
 
         return toDto(payment);
@@ -81,12 +91,43 @@ public class PaymentService {
     ) {
         User user = getUser(principal);
 
+        Order order = null;
+        Long orderId = request.orderId();
+
+        if(orderId != null) {
+            order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+            Long totalAmount = order.getOrderItems().stream()
+                    .mapToLong(item -> item.getPrice() * item.getQty())
+                    .sum();
+
+            if(!totalAmount.equals(request.amount())) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT);
+            }
+
+            if(paymentRepository.existsByOrderIdAndStatus(
+                    request.orderId(), PaymentStatus.SUCCESS
+            )) {
+                throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PROCESSED);
+            }
+        }
+
+        if(orderId == null) {
+            if(paymentRepository.existsByProductCodeAndStatus(
+                    request.productCode(), PaymentStatus.SUCCESS
+            )) {
+                throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PROCESSED);
+            }
+        }
+
         PaymentGateway gateway = gatewayResolver.resolve(request.method());
         PaymentResult result = gateway.approve(request, principal.getId().toString());
 
         Payment payment = Payment.builder()
                 .user(user)
                 .orderId(request.orderId())
+                .paymentOrderId("PAY-" + UUID.randomUUID())
                 .paymentKey(result.paymentKey())
                 .amount(request.amount())
                 .method(request.method())
@@ -97,7 +138,14 @@ public class PaymentService {
                 .failureMessage(result.failureMessage())
                 .build();
 
-        if(result.success()) payment.markSuccess();
+        if(result.success()) {
+            payment.markSuccess();
+
+            if(order != null) {
+                order.paid();
+            }
+        }
+
         paymentRepository.save(payment);
 
         return ResponseDto.success(toDto(payment));
@@ -131,27 +179,11 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.INVALID_INPUT);
         }
 
-        if(payment.getStatus() != PaymentStatus.SUCCESS) {
-            throw new BusinessException(ErrorCode.PAYMENT_REFUNDED_NOT_ALLOWED);
-        }
-
         if(request.amount() <= 0 || request.amount() > payment.getAmount()) {
             throw new BusinessException(ErrorCode.PAYMENT_REFUNDED_AMOUNT_INVALID);
         }
 
-        PaymentRefund refund = PaymentRefund.builder()
-                .payment(payment)
-                .amount(request.amount())
-                .reason(request.reason())
-                .status(RefundStatus.REQUESTED)
-                .requestedAt(LocalDateTime.now())
-                .build();
-
-        refund.markCompleted();
-        payment.markRefunded();
-
-        paymentRefundRepository.save(refund);
-        paymentRepository.save(payment);
+        refundCore(payment, request.amount(), request.reason());
 
         return ResponseDto.success(null);
     }
@@ -162,7 +194,9 @@ public class PaymentService {
             Long amount,
             String reason
     ) {
-        if(payment.getStatus() != PaymentStatus.SUCCESS) return;
+        if(payment.getStatus() != PaymentStatus.SUCCESS) {
+            throw new BusinessException(ErrorCode.PAYMENT_REFUNDED_NOT_ALLOWED);
+        }
 
         refundCore(payment, amount, reason);
     }
@@ -191,6 +225,7 @@ public class PaymentService {
         return new PaymentResponseDto(
                 payment.getId(),
                 payment.getOrderId(),
+                payment.getPaymentOrderId(),
                 payment.getPaymentKey(),
                 payment.getAmount(),
                 payment.getMethod(),

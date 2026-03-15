@@ -29,6 +29,7 @@ import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.order.OrderService;
+import org.example.foodtruckback.service.payment.PaymentService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ public class OrderServiceImpl implements OrderService {
     private final MenuItemRepository menuItemRepository;
     private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
@@ -130,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<UserOrderListResponseDto> response = orders.stream()
                 .map(order -> {
-                    String productCode = "ORD-" + order.getId();
+                    String productCode = getProductCode(order);
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return UserOrderListResponseDto.from(order, paymentStatus);
@@ -151,7 +153,8 @@ public class OrderServiceImpl implements OrderService {
 
         List<OwnerOrderListResponseDto> response = orders.stream()
                 .map(order -> {
-                    String productCode = "ORD-" + order.getId();
+                    String productCode = getProductCode(order);
+
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return OwnerOrderListResponseDto.from(order, paymentStatus);
@@ -170,7 +173,8 @@ public class OrderServiceImpl implements OrderService {
 
         List<AdminOrderListResponseDto> response = orders.stream()
                 .map(order -> {
-                    String productCode = "ORD-" + order.getId();
+                    String productCode = getProductCode(order);
+
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return AdminOrderListResponseDto.from(order, paymentStatus);
@@ -274,6 +278,14 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        paymentService.refundInternal(
+                payment,
+                payment.getAmount(),
+                "운영자 취소"
+        );
         order.refund();
 
         return ResponseDto.success("주문 환불 완료", null);
@@ -284,9 +296,15 @@ public class OrderServiceImpl implements OrderService {
             return Collections.emptyMap();
         }
 
-        List<String> productCodes = orders.stream()
-                .map(order -> "ORD-" + order.getId())
-                .toList();
+        List<String> productCodes = new ArrayList<>();
+
+        for(Order order: orders) {
+            if(order.getSource() == OrderSource.RESERVATION && order.getReservation() != null) {
+                productCodes.add("RES-" + order.getReservation().getId());
+            } else {
+                productCodes.add("ORD-" + order.getId());
+            }
+        }
 
         return paymentRepository.findByProductCodeIn(productCodes).stream()
                 .collect(Collectors.toMap(
@@ -296,4 +314,15 @@ public class OrderServiceImpl implements OrderService {
                 ));
     }
 
+    private String getProductCode(Order order) {
+        String productCode;
+
+        if(order.getSource() == OrderSource.RESERVATION && order.getReservation() != null) {
+            productCode = "RES-" + order.getReservation().getId();
+        } else {
+            productCode = "ORD-" + order.getId();
+        }
+
+        return productCode;
+    }
 }

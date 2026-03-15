@@ -98,10 +98,11 @@ public enum ErrorCode {
     PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "P007", "결제 대행사와 통신 중 오류가 발생했습니다.", "Payment gateway error"),
 
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "주문을 찾을 수 없습니다.", "Order not found"),
-    ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "O002", "현재 주문 상태로는 수행할 수 없습니다.", "Invalid order status"),
-    ORDER_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "O003", "이미 취소된 주문입니다.", "Order already canceled"),
-    ORDER_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O004", "해당 주문은 취소할 수 없습니다.", "Order cancel not allowed"),
-    ORDER_REFUND_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O005", "해당 주문은 환불할 수 없습니다.", "Order refund not allowed");
+    ORDER_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "O002", "이미 처리된 주문입니다.", "Order already processed"),
+    ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "O003", "현재 주문 상태로는 수행할 수 없습니다.", "Invalid order status"),
+    ORDER_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "O004", "이미 취소된 주문입니다.", "Order already canceled"),
+    ORDER_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O005", "해당 주문은 취소할 수 없습니다.", "Order cancel not allowed"),
+    ORDER_REFUND_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O006", "해당 주문은 환불할 수 없습니다.", "Order refund not allowed");
 
 
     private final HttpStatus status;

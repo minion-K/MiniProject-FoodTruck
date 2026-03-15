@@ -117,4 +117,12 @@ public class Order extends BaseTimeEntity {
 
         this.status = OrderStatus.REFUNDED;
     }
+
+    public void paid() {
+        if(this.status != OrderStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ORDER_ALREADY_PROCESSED);
+        }
+
+        this.status = OrderStatus.PAID;
+    }
 }

@@ -2,7 +2,8 @@ import type { PaymentMethod, PaymentStatus } from "./payment.type";
 
 export interface PaymentApproveRequest {
   paymentKey: string;
-  orderId: string;
+  tossOrderId: string | null;
+  orderId: number | null;
   amount: number;
   method: PaymentMethod;
   productCode?: string;
@@ -10,6 +11,7 @@ export interface PaymentApproveRequest {
 }
 
 export interface PaymentCreateRequest {
+  orderId: number;
   productCode: string;
   productName: string;
   amount: number;
@@ -23,7 +25,8 @@ export interface PaymentRefundRequest {
 
 export interface PaymentResponse {
   id: number;
-  orderId: string;
+  orderId: number;
+  paymentOrderId: string;
   paymentKey: string;
   amount: number;
   method: PaymentMethod;

@@ -17,7 +17,8 @@ import java.time.LocalDateTime;
         name = "payments",
         indexes = {
                 @Index(name = "idx_payments_user_id", columnList = "user_id"),
-                @Index(name = "idx_payments_order_id", columnList = "order_id")
+                @Index(name = "idx_payments_order_id", columnList = "order_id"),
+                @Index(name = "idx_payments_payment_order_id", columnList = "payment_order_id")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_payments_payment_key", columnNames = "payment_key"),
@@ -37,8 +38,11 @@ public class Payment extends BaseTimeEntity {
             foreignKey = @ForeignKey(name = "fk_payments_user"))
     private User user;
 
-    @Column(name = "order_id", nullable = false, length = 100)
-    private String orderId;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
+
+    @Column(name = "payment_order_id", nullable = false, length = 100)
+    private String paymentOrderId;
 
     @Column(name = "payment_key", nullable = false, length = 100)
     private String paymentKey;
@@ -94,11 +98,15 @@ public class Payment extends BaseTimeEntity {
     }
 
     public void markRefunded() {
+        if(this.status != PaymentStatus.SUCCESS) {
+            throw new BusinessException(ErrorCode.PAYMENT_REFUNDED_NOT_ALLOWED);
+        }
+
         this.status = PaymentStatus.REFUNDED;
         this.cancelledAt = LocalDateTime.now();
     }
 
-    public void updatePaymentKey(String paymentKey) {
-        this.paymentKey = paymentKey;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
     }
 }

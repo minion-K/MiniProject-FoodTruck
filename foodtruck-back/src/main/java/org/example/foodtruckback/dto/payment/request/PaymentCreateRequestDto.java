@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import org.example.foodtruckback.common.enums.PaymentMethod;
 
 public record PaymentCreateRequestDto(
+        @NotNull
+        Long orderId,
+
         @NotBlank(message = "상품 코드는 필수입니다.")
         String productCode,
 

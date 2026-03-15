@@ -5,7 +5,8 @@ import org.example.foodtruckback.common.enums.PaymentMethod;
 
 public record PaymentApproveRequestDto(
         String paymentKey,
-        String orderId,
+        String tossOrderId,
+        Long orderId,
         Long amount,
 
         @NotNull(message = "결제 수단은 필수입니다.")

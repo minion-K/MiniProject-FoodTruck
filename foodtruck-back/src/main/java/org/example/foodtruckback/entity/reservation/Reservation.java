@@ -81,9 +81,27 @@ public class Reservation extends BaseTimeEntity {
                 }
         }
 
+        public void cancelByUser() {
+                if(this.status == ReservationStatus.CANCELED) {
+                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                if(this.pickupTime.isBefore(LocalDateTime.now())) {
+                        throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
+                }
+
+                this.status = ReservationStatus.CANCELED;
+                this.note = "사용자 취소";
+        }
+
+
         public void cancel() {
                 if(this.status == ReservationStatus.CANCELED) {
                         throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
+                }
+
+                if(this.pickupTime.isBefore(LocalDateTime.now())) {
+                        throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
                 }
 
                 this.status = ReservationStatus.CANCELED;
@@ -93,15 +111,6 @@ public class Reservation extends BaseTimeEntity {
         public void addMenuItem(ReservationItem item) {
                 this.menuItems.add(item);
                 item.setReservation(this);
-        }
-
-        public void cancelByUser() {
-                if(this.status != ReservationStatus.PENDING) {
-                        throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
-                }
-
-                this.status = ReservationStatus.CANCELED;
-                this.note = "사용자 취소";
         }
 
         public void updateContent(
