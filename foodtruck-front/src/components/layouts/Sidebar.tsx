@@ -16,7 +16,6 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
       <nav className="items">
         <Link to="/owner/trucks">내 트럭</Link>
         <Link to="/owner/reservations">예약 / 주문 관리</Link>
-        <Link to="/owner/payments">결제 관리</Link>
         <Link to="/owner/statistics">통계 / 매출</Link>
       </nav>
     </SidebarContainer>

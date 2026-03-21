@@ -10,6 +10,7 @@ import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
+import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,6 +25,7 @@ public class AuthorizationChecker {
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
     private final TruckRepository truckRepository;
+    private final ScheduleRepository scheduleRepository;
 
     public boolean isUserAuthor(String loginId, Authentication principal) {
         if (loginId == null || principal == null) return false;
@@ -80,5 +82,10 @@ public class AuthorizationChecker {
         Long truckId = reservation.getSchedule().getTruck().getId();
 
         return isTruckOwner(truckId);
+    }
+
+//    본인 트럭 스케줄 확인
+    public boolean isScheduleOwner(Long ScheduleId, Long ownerId) {
+        return scheduleRepository.existsByIdAndTruckOwnerId(ScheduleId, ownerId);
     }
 }

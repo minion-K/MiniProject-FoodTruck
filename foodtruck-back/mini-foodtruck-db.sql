@@ -6,8 +6,10 @@ USE `mini-foodtruck-db`;
 -- 드랍 순서(FK 역순)
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS order_items;
-DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS reservation_items;
+DROP TABLE IF EXISTS payment_refunds;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS reservations;
 DROP TABLE IF EXISTS menu_items;
 DROP TABLE IF EXISTS truck_schedules;
@@ -16,8 +18,6 @@ DROP TABLE IF EXISTS trucks;
 DROP TABLE IF EXISTS refresh_tokens;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS payment_refunds;
-DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS users;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -39,50 +39,6 @@ CREATE TABLE users (
   CONSTRAINT `chk_users_status` CHECK (status IN ('TEMP', 'ACTIVE')),
   CONSTRAINT `uk_users_login_id` UNIQUE(login_id),
   CONSTRAINT `uk_users_email` UNIQUE(email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE payments (
-	id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NULL,
-    payment_order_id VARCHAR(100) NOT NULL COMMENT '내부 주문 번호',
-    order_id BIGINT NOT NULL,
-    payment_key VARCHAR(100) NOT NULL,
-    amount BIGINT NOT NULL,
-    method VARCHAR(30) NOT NULL,
-    status VARCHAR(30) NOT NULL,
-    product_code VARCHAR(50) NOT NULL,
-    product_name VARCHAR(100) NOT NULL,
-    failure_code VARCHAR(50) NULL,
-    failure_message VARCHAR(255) NULL,
-    requested_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    approved_at DATETIME(6) NULL,
-    cancelled_at DATETIME(6) NULL,
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    CONSTRAINT `fk_payments_user` FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT `fk_payments_order` FOREIGN KEY (order_id) REFERENCES orders(id),
-    CONSTRAINT `uk_payments_payment_key` UNIQUE (payment_key),
-    CONSTRAINT `chk_payments_method` CHECK (method IN ('MOCK', 'TOSS_PAY')),
-    CONSTRAINT `chk_payments_status` CHECK (status IN ('READY', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED')),
-    INDEX `idx_payments_user_id` (user_id),
-    INDEX `idx_payments_order_id` (order_id),
-    INDEX `idx_payments_payment_order_id` (payment_order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE payment_refunds (
-	id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    payment_id BIGINT NOT NULL,
-    amount BIGINT NOT NULL,
-    reason VARCHAR(255) NOT NULL,
-    status VARCHAR(30) NOT NULL,
-    failure_code VARCHAR(50) NULL,
-    failure_message VARCHAR(255) NULL,
-    requested_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    completed_at DATETIME(6),
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    CONSTRAINT `fk_payment_refunds_payment` FOREIGN KEY (payment_id) REFERENCES payments(id),
-    CONSTRAINT `chk_payment_refunds_status` CHECK (status IN ('REQUESTED', 'COMPLETED', 'FAILED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE roles (
@@ -235,6 +191,50 @@ CREATE TABLE order_items (
   CONSTRAINT `fk_order_item_order` FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   INDEX `idx_order_items_order` (order_id),
   INDEX `idx_order_items_menu_items_id` (menu_item_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE payments (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NULL,
+    payment_order_id VARCHAR(100) NOT NULL COMMENT '내부 주문 번호',
+    order_id BIGINT NULL,
+    payment_key VARCHAR(100) NOT NULL,
+    amount BIGINT NOT NULL,
+    method VARCHAR(30) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    product_code VARCHAR(50) NOT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    failure_code VARCHAR(50) NULL,
+    failure_message VARCHAR(255) NULL,
+    requested_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    approved_at DATETIME(6) NULL,
+    cancelled_at DATETIME(6) NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    CONSTRAINT `fk_payments_user` FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT `fk_payments_order` FOREIGN KEY (order_id) REFERENCES orders(id),
+    CONSTRAINT `uk_payments_payment_key` UNIQUE (payment_key),
+    CONSTRAINT `chk_payments_method` CHECK (method IN ('MOCK', 'TOSS_PAY')),
+    CONSTRAINT `chk_payments_status` CHECK (status IN ('READY', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED')),
+    INDEX `idx_payments_user_id` (user_id),
+    INDEX `idx_payments_order_id` (order_id),
+    INDEX `idx_payments_payment_order_id` (payment_order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE payment_refunds (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    payment_id BIGINT NOT NULL,
+    amount BIGINT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    failure_code VARCHAR(50) NULL,
+    failure_message VARCHAR(255) NULL,
+    requested_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    completed_at DATETIME(6),
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    CONSTRAINT `fk_payment_refunds_payment` FOREIGN KEY (payment_id) REFERENCES payments(id),
+    CONSTRAINT `chk_payment_refunds_status` CHECK (status IN ('REQUESTED', 'COMPLETED', 'FAILED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 테스트----------------------------------------------- 

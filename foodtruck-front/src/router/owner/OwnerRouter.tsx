@@ -1,6 +1,5 @@
 import Layout from "@/components/layouts/Layout";
 import OwnerPage from "@/pages/owner/truck/OwnerPage";
-import OwnerPaymentPage from "@/pages/owner/payment/OwnerPaymentPage";
 import OwnerReservationPage from "@/pages/owner/reservation/OwnerReservationPage";
 import OwnerStatisticspage from "@/pages/owner/ststistics/OwnerStatisticspage";
 import OwnerTruckDetail from "@/pages/owner/truck/OwnerTruckDetailPage";
@@ -45,14 +44,6 @@ function OwnerRouter() {
         element={
           <Layout showSidebar={true}>
             <OwnerReservationPage />
-          </Layout>
-        }
-      />
-      <Route
-        path="/payments"
-        element={
-          <Layout showSidebar={true}>
-            <OwnerPaymentPage />
           </Layout>
         }
       />
