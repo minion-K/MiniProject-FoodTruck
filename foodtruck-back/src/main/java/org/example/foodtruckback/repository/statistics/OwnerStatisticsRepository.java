@@ -216,4 +216,20 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
             AND (:truckId IS NULL OR t.id = :truckId)
     """)
     RefundResponseDto getRefundCount(Long ownerId, Long truckId);
+
+
+    @Query("""
+        SELECT new org.example.foodtruckback.dto.statistics.response.OrderTypeResponseDto(
+            CASE
+                WHEN o.source = org.example.foodtruckback.common.enums.OrderSource.RESERVATION THEN 'RESERVATION'
+                ELSE 'ONSITE'
+            END,
+            COUNT(o)
+            )
+        FROM Order o
+        WHERE (:truckId IS NULL OR o.schedule.truck.id = :truckId)
+            AND o.status != org.example.foodtruckback.common.enums.OrderStatus.CANCELED
+        GROUP BY o.source
+    """)
+    List<OrderTypeResponseDto> getOrderTypeCounts(Long truckId);
 }

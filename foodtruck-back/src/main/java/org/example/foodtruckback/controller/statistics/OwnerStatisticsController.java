@@ -84,4 +84,14 @@ public class OwnerStatisticsController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping(StatisticsApi.ORDER_TYPES)
+    public ResponseEntity<ResponseDto<List<OrderTypeResponseDto>>> getOrderTypes(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) Long truckId
+    ) {
+        ResponseDto<List<OrderTypeResponseDto>> response = ownerStatisticsService.getOrderTypes(principal.getId(), truckId);
+
+        return ResponseEntity.ok(response);
+    }
 }

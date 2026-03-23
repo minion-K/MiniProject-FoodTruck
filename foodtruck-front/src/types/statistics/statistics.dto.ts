@@ -1,3 +1,5 @@
+import type { OrderSource } from "../order/order.type";
+
 export interface DashboardResponse {
   todaySales: number;
   todayOrders: number;
@@ -42,3 +44,10 @@ export interface ScheduleDetailResponse {
 export interface RefundResponse {
   refundCount: number;
 }
+
+export interface OrderTypeResponse {
+  type: OrderSource
+  count: number;
+}
+
+export type OrderTypeListResponse = OrderTypeResponse[];

@@ -13,4 +13,5 @@ public class StatisticsApi {
     public static final String SCHEDULES = "/schedules";
     public static final String SCHEDULE_DETAIL = SCHEDULES + "/{scheduleId}";
     public static final String REFUND = "/refund";
+    public static final String ORDER_TYPES = "/order-types";
 }

@@ -20,4 +20,5 @@ public interface OwnerStatisticsService {
 
     ResponseDto<RefundResponseDto> getRefundCount(Long id, Long truckId);
 
+    ResponseDto<List<OrderTypeResponseDto>> getOrderTypes(Long id, Long truckId);
 }

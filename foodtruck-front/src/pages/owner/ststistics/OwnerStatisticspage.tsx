@@ -1,13 +1,13 @@
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
 import ScheduleStatisticsModal from "./ScheduleStatisticsModal";
-import type { DashboardResponse, RefundResponse, ScheduleSalesResponse, TopMenuResponse, WeeklySalesResponse } from "@/types/statistics/statistics.dto";
+import type { DashboardResponse, OrderTypeResponse, RefundResponse, ScheduleSalesResponse, TopMenuResponse, WeeklySalesResponse } from "@/types/statistics/statistics.dto";
 import { statisticsApi } from "@/apis/statistics/statistics.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
 import { truckApi } from "@/apis/truck/truck.api";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface ScheduleItem {
   id: number;
@@ -24,6 +24,7 @@ function OwnerStatisticspage() {
   const [topMenus, setTopMenus] = useState<TopMenuResponse[]>([]);
   const [scheduleSales, setScheduleSales] = useState<ScheduleSalesResponse[]>([]);
   const [refundCount, setRefundCount] = useState<RefundResponse | null>(null);
+  const [orderTypes, setOrderTypes] = useState<OrderTypeResponse[]>([]);
 
   const [truckList, setTruckList] = useState<TruckListItemResponse[]>([]);
   const [selectedTruckId, setSelectedTruckId] = useState<number | null>(null);
@@ -89,6 +90,11 @@ function OwnerStatisticspage() {
           selectedTruckId ?? undefined
         );
         setRefundCount(refundResponse);
+
+        const orderTypeResponse = await statisticsApi.getOrderTypes(
+          selectedTruckId ?? undefined
+        );
+        setOrderTypes(orderTypeResponse);
       } catch(e) {
         alert(getErrorMsg(e));
       }
@@ -99,7 +105,11 @@ function OwnerStatisticspage() {
     fetchStatistics();
   }, [selectedTruckId]);
 
-  
+  const orderTypesWithColor = orderTypes.map(item => ({
+    ...item,
+    count: Number (item.count),
+    fill: item.type === "RESERVATION" ? "#3b82f6" : "#f97316"
+  }))
 
   return (
     <Container>
@@ -276,7 +286,43 @@ function OwnerStatisticspage() {
 
         <OrderTypeCard>
           <CardTitle>주문 유형</CardTitle>
-          <PiePlaceholder>파이 차트 영역</PiePlaceholder>
+          
+          {orderTypes.length === 0 ? (
+            <PiePlaceholder>데이터 없음</PiePlaceholder>
+          ) : (
+            <ChartWrapper>
+              <ResponsiveContainer
+                width="100%"
+                height={300}
+              >
+                <PieChart>
+                  <Pie
+                    data={orderTypesWithColor}
+                    dataKey="count"
+                    nameKey="type"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    innerRadius={50}
+                    labelLine={false}
+                    label={({payload, percent}) => {
+                      const labelText = payload === "RESERVATION" ? "예약 주문" : "현장 주문";
+                      return `${labelText} ${((percent ?? 0) * 100).toFixed(0)}%`
+                    }
+                    }
+                  />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      const type = (props?.payload as {type?: string})?.type;
+                      const labelText = type === "RESERVATION" ? "예약 주문" : "현장 주문";
+
+                      return [`${Number (value)} 건`, labelText];
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartWrapper>
+          )}
         </OrderTypeCard>
       </Row>
 
@@ -449,6 +495,18 @@ const Sales = styled.div`
   font-weight: 600;
 `;
 
-const OrderTypeCard = styled(ChartCard)``;
+const ChartWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 320px;
+`;
+
+const OrderTypeCard = styled(ChartCard)`
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+`;
 
 const PiePlaceholder = styled(ChartPlaceholder)``;

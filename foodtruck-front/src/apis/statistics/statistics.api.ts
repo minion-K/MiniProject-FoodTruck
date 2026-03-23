@@ -1,4 +1,4 @@
-import type { DashboardResponse, RefundResponse, ScheduleDetailResponse, ScheduleSalesResponseList, TopMenuResponseList, WeeklySalesResponseList,  } from "@/types/statistics/statistics.dto";
+import type { DashboardResponse, OrderTypeListResponse, OrderTypeResponse, RefundResponse, ScheduleDetailResponse, ScheduleSalesResponseList, TopMenuResponseList, WeeklySalesResponseList,  } from "@/types/statistics/statistics.dto";
 import { privateApi } from "../common/axiosInstance";
 import { type ApiResponse } from "@/types/common/ApiResponse";
 import { STATISTICS_PATH } from "./statistics.path";
@@ -59,5 +59,14 @@ export const statisticsApi = {
     );
 
     return res.data.data;
+  },
+
+  getOrderTypes: async (truckId?: number):Promise<OrderTypeListResponse> => {
+    const res = await privateApi.get<ApiResponse<OrderTypeListResponse>>(
+      STATISTICS_PATH.ORDER_TYPES,
+      {params: {truckId}}
+    );
+
+    return res.data.data ?? []
   }
 }

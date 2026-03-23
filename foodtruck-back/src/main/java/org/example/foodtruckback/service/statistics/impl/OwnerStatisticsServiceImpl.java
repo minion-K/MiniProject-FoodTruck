@@ -3,6 +3,7 @@ package org.example.foodtruckback.service.statistics.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.statistics.response.*;
+import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.repository.statistics.OwnerStatisticsRepository;
 import org.example.foodtruckback.service.statistics.OwnerStatisticsService;
 import org.springframework.data.domain.Page;
@@ -74,6 +75,13 @@ public class OwnerStatisticsServiceImpl implements OwnerStatisticsService {
     @Override
     public ResponseDto<RefundResponseDto> getRefundCount(Long ownerId, Long truckId) {
         RefundResponseDto response = ownerStatisticsRepository.getRefundCount(ownerId, truckId);
+
+        return ResponseDto.success(response);
+    }
+
+    @Override
+    public ResponseDto<List<OrderTypeResponseDto>> getOrderTypes(Long id, Long truckId) {
+        List<OrderTypeResponseDto> response = ownerStatisticsRepository.getOrderTypeCounts(truckId);
 
         return ResponseDto.success(response);
     }

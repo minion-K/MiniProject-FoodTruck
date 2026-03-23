@@ -10,5 +10,6 @@ export const STATISTICS_PATH = {
   TOP_MENUS: `${STATISTICS_PREFIX}/top-menus`,
   SCHEDULES: `${STATISTICS_PREFIX}/schedules`,
   SCHEDULES_DETAIL: `${STATISTICS_PREFIX}/schedules/{scheduleId}`,
-  REFUNDCOUNT: `${STATISTICS_PREFIX}/refund`
+  REFUNDCOUNT: `${STATISTICS_PREFIX}/refund`,
+  ORDER_TYPES: `${STATISTICS_PREFIX}/order-types`
 };
