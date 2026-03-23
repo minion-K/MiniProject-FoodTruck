@@ -2,6 +2,8 @@ package org.example.foodtruckback.repository.statistics;
 
 import org.example.foodtruckback.dto.statistics.response.*;
 import org.example.foodtruckback.entity.truck.Schedule;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -133,7 +135,7 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
     """, nativeQuery = true)
     List<Object[]> getTopMenus(Long ownerId, Long truckId);
 
-    @Query("""
+    @Query(value = """
         SELECT new org.example.foodtruckback.dto.statistics.response.ScheduleSalesResponseDto(
             s.id, s.location.name, s.startTime,
             COALESCE(SUM
@@ -158,9 +160,17 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
             AND t.owner.id = :ownerId
             AND (:truckId IS NULL OR t.id = :truckId)
         GROUP BY s.id, s.location.name, s.startTime
-        ORDER BY s.startTime DESC
+        ORDER BY s.startTime
+    """,
+    countQuery = """
+        SELECT COUNT(s.id)
+        FROM Schedule s
+        LEFT JOIN Truck t
+            ON t.id = s.truck.id
+        WHERE t.owner.id = :ownerId
+            AND (:truckId IS NULL OR t.id = :truckId)
     """)
-    List<ScheduleSalesResponseDto> getSchedules(Long ownerId, Long truckId);
+    Page<ScheduleSalesResponseDto> getSchedules(Long ownerId, Long truckId, Pageable pageable);
 
     @Query("""
         SELECT new org.example.foodtruckback.dto.statistics.response.ScheduleDetailResponseDto(

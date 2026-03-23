@@ -25,7 +25,13 @@ export interface ScheduleSalesResponse {
   sales: number;
 }
 
-export type ScheduleSalesResponseList = ScheduleSalesResponse[];
+export interface ScheduleSalesResponseList {
+  content: ScheduleSalesResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
 
 export interface ScheduleDetailResponse {
   orderCount: number;

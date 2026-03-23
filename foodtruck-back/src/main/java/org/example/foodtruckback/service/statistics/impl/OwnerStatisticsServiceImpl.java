@@ -5,6 +5,8 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.statistics.response.*;
 import org.example.foodtruckback.repository.statistics.OwnerStatisticsRepository;
 import org.example.foodtruckback.service.statistics.OwnerStatisticsService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,8 +57,8 @@ public class OwnerStatisticsServiceImpl implements OwnerStatisticsService {
     }
 
     @Override
-    public ResponseDto<List<ScheduleSalesResponseDto>> getSchedules(Long ownerId, Long truckId) {
-        List<ScheduleSalesResponseDto> response = ownerStatisticsRepository.getSchedules(ownerId, truckId);
+    public ResponseDto<Page<ScheduleSalesResponseDto>> getSchedules(Long ownerId, Long truckId, Pageable pageable) {
+        Page<ScheduleSalesResponseDto> response = ownerStatisticsRepository.getSchedules(ownerId, truckId, pageable);
 
         return ResponseDto.success(response);
     }

@@ -7,6 +7,7 @@ import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
 import { truckApi } from "@/apis/truck/truck.api";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface ScheduleItem {
   id: number;
@@ -26,6 +27,9 @@ function OwnerStatisticspage() {
 
   const [truckList, setTruckList] = useState<TruckListItemResponse[]>([]);
   const [selectedTruckId, setSelectedTruckId] = useState<number | null>(null);
+  const [schedulePage, setSchedulePage] = useState(0);
+  const [scheduleHasMore, setScheduleHasMore] = useState(true);
+  const schedulePageSize = 10;
 
   useEffect(() => {
     const fetchTrucks = async () => {
@@ -39,6 +43,27 @@ function OwnerStatisticspage() {
 
     fetchTrucks();
   }, []);
+
+  const fetchSchedules = async(page: number) => {
+      try {
+        const schedules = await statisticsApi.getSchedules(
+          selectedTruckId ?? undefined,
+          page,
+          schedulePageSize
+        );
+        
+        if(page === 0) {
+          setScheduleSales(schedules.content ?? []);
+        } else {
+          setScheduleSales(prev => [...prev, ...schedules.content ?? []]);
+        }
+
+        setSchedulePage(schedules.page ?? page);
+        setScheduleHasMore((schedules.content?.length ?? 0) === schedulePageSize);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    };
 
   useEffect(() => {
     const fetchStatistics = async () => {
@@ -58,10 +83,7 @@ function OwnerStatisticspage() {
         );
         setTopMenus(topMenusResponse);
 
-        const scheduleResponse = await statisticsApi.getSchedules(
-          selectedTruckId ?? undefined
-        );
-        setScheduleSales(scheduleResponse);
+        await fetchSchedules(0);
 
         const refundResponse = await statisticsApi.getRefundCount(
           selectedTruckId ?? undefined
@@ -116,7 +138,7 @@ function OwnerStatisticspage() {
       <CardGrid>
         <StatCard>
           <span>오늘 매출</span>
-          <strong>{dashboard?.todaySales?.toLocaleString() ?? 0}KRW</strong>
+          <strong>{dashboard?.todaySales?.toLocaleString() ?? 0} KRW</strong>
         </StatCard>
 
         <StatCard>
@@ -138,7 +160,75 @@ function OwnerStatisticspage() {
       <Row>
         <ChartCard>
           <CardTitle>주간 매출 현황</CardTitle>
-          <ChartPlaceholder>그래프 영역</ChartPlaceholder>
+          
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart 
+              data={weeklySales}
+              margin={{top: 10, right: 10, left: 0, bottom: 0}}
+            >
+              <CartesianGrid 
+                strokeDasharray="3 3"
+                stroke="#eee"
+              />
+              <XAxis 
+                dataKey="date"
+                padding={{left: 10}}
+                tick={{fontSize: 14}}
+                tickMargin={5}
+                tickFormatter={value => {
+                  const d = new Date(value);
+                  const month = d.getMonth() + 1;
+                  const date = d.getDate();
+                  const days = ["일", "월", "화", "수", "목", "금", "토"]
+
+                  return `${month}-${date} (${days[d.getDay()]})`;
+                }}
+              />
+              <YAxis 
+                width={60}
+                tickCount={5}
+                tickMargin={10}
+                domain={[
+                  (min: number) => min * 0.9,
+                  (max: number) => max * 1.1
+                ]}
+                tick={({x, y, payload, index}) => {
+                  if(index === 0) return null;
+
+                  return (
+                    <text 
+                      x={x}
+                      y={y} 
+                      dy={6}
+                      textAnchor="end" 
+                      fill="#666" 
+                      fontSize={14}
+                    >
+                      {`${Math.round(payload.value / 10000)}만`}
+                    </text>
+                  )
+                }}
+              />
+              <Tooltip 
+                cursor={{strokeDasharray: "3 3"}}
+                formatter={value => `${Number (value).toLocaleString()} KRW`}
+                labelFormatter={value => {
+                  const d = new Date(value);
+                  const days = ["일", "월", "화", "수", "목", "금", "토"]
+
+                  return `날짜: ${d.getMonth() + 1}-${d.getDate()} (${days[d.getDay()]})`
+                }}
+              />
+              <Line 
+                type="monotone"
+                dataKey="sales"
+                name="금액"
+                strokeWidth={1.3}
+                dot={false}
+                activeDot={{r: 6}}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartCard>
 
         <MenuCard>
@@ -176,6 +266,12 @@ function OwnerStatisticspage() {
               <Sales>{schedule.sales.toLocaleString()} KRW</Sales>
             </ScheduleItemWrapper>
           ))}
+
+          {scheduleHasMore && (
+            <LoadMoreButton onClick={() => fetchSchedules(schedulePage + 1)}>
+              더보기
+            </LoadMoreButton>
+          )}
         </ScheduleCard>
 
         <OrderTypeCard>
@@ -307,7 +403,10 @@ const MenuList = styled.ul`
   }
 `;
 
-const ScheduleCard = styled(ChartCard)``;
+const ScheduleCard = styled(ChartCard)`
+  max-height: 400px;
+  overflow-y: auto;
+`;
 
 const ScheduleItemWrapper = styled.div`
   display: flex;
@@ -328,6 +427,21 @@ const ScheduleItemWrapper = styled.div`
   span {
     font-size: 12px;
     color: #6b7280;
+  }
+`;
+
+const LoadMoreButton = styled.button`
+  margin: 12px auto 0;
+  display: block;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: #2563eb;
   }
 `;
 

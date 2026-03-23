@@ -6,6 +6,10 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.statistics.response.*;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.statistics.OwnerStatisticsService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -49,11 +53,14 @@ public class OwnerStatisticsController {
     }
 
     @GetMapping(StatisticsApi.SCHEDULES)
-    public ResponseEntity<ResponseDto<List<ScheduleSalesResponseDto>>> getSchedules(
+    public ResponseEntity<ResponseDto<Page<ScheduleSalesResponseDto>>> getSchedules(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long truckId
+            @RequestParam(required = false) Long truckId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        ResponseDto<List<ScheduleSalesResponseDto>> response = ownerStatisticsService.getSchedules(principal.getId(), truckId);
+        Pageable pageable = PageRequest.of(page, size);
+        ResponseDto<Page<ScheduleSalesResponseDto>> response = ownerStatisticsService.getSchedules(principal.getId(), truckId, pageable);
 
         return ResponseEntity.ok(response);
     }

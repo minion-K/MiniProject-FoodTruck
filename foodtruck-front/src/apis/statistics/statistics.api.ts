@@ -31,10 +31,14 @@ export const statisticsApi = {
     return res.data.data ?? [];
   },
 
-  getSchedules: async (truckId?: number): Promise<ScheduleSalesResponseList> => {
+  getSchedules: async (
+    truckId?: number, 
+    page: number = 0, 
+    size: number = 10
+  ): Promise<ScheduleSalesResponseList> => {
     const res = await privateApi.get<ApiResponse<ScheduleSalesResponseList>>(
       STATISTICS_PATH.SCHEDULES,
-      {params: {truckId}}
+      {params: {truckId, page, size}}
     );
 
     return res.data.data ?? [];
