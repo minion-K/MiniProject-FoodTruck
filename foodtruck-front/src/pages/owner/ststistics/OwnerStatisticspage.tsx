@@ -41,6 +41,10 @@ function OwnerStatisticspage() {
 
   useEffect(() => {
     const now = new Date();
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
     let start: Date;
     let end: Date;
     let wStart: Date;
@@ -51,13 +55,12 @@ function OwnerStatisticspage() {
         start = new Date();
         start.setHours(0, 0, 0, 0);
         
-        end = new Date();
-        end.setHours(23, 59, 59, 999);
+        end = today;
 
         wStart = new Date();
         wStart.setDate(now.getDate() - 6);
         wStart.setHours(0, 0, 0, 0);
-        wEnd = end;
+        wEnd = today;
         break;
       case "WEEK":
         const dayOfWeek = now.getDay();
@@ -69,16 +72,16 @@ function OwnerStatisticspage() {
         end.setHours(23, 59, 59, 999);
 
         wStart = start;
-        wEnd = end;
+        wEnd = today;
         break;
       case "MONTH":
         start = new Date(now.getFullYear(), now.getMonth(), 1);
         start.setHours(0, 0, 0, 0);
-        end = new Date(now.getFullYear(), now.getMonth() , 0);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         end.setHours(23, 59, 59, 999);
 
         wStart = start;
-        wEnd = end;
+        wEnd = today;
         break;
     }
 
@@ -92,6 +95,43 @@ function OwnerStatisticspage() {
     setSchedulePage(0);
     setScheduleHasMore(true);
   }, [selectedPeriod]);
+
+  const generateDateRange = (start: string, end: string) => {
+    const result = [];
+    const current = new Date(start);
+    const last = new Date(end);
+
+    while(current <= last) {
+      result.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    return result;
+  }
+
+  const fillEmptyDates = (
+    start: string,
+    end: string,
+    data: WeeklySalesResponse[]
+  ) => {
+    const dateRange = generateDateRange(start, end);
+
+    const map = new Map(
+      data.map(item => [
+        new Date(item.date).toDateString(),
+        item.sales
+      ])
+    );
+
+    return dateRange.map(date => {
+      const key = date.toDateString();
+
+      return {
+        date: toKstString(date),
+        sales: map.get(key) ?? 0
+      };
+    });
+  };
 
   useEffect(() => {
     const fetchTrucks = async () => {
@@ -148,7 +188,13 @@ function OwnerStatisticspage() {
           weeklyEnd,
           selectedTruckId ?? undefined
         );
-        setWeeklySales(weeklySalesResponse);
+
+        const filledWeeklySales = fillEmptyDates(
+          weeklyStart,
+          weeklyEnd,
+          weeklySalesResponse
+        );
+        setWeeklySales(filledWeeklySales);
 
         const topMenusResponse = await statisticsApi.getTopMenus(
           periodStart,
@@ -347,14 +393,19 @@ function OwnerStatisticspage() {
 
         <MenuCard>
           <CardTitle>인기 메뉴 TOP 5</CardTitle>
-          <MenuList>
-            {topMenus.map((menu, idx) => (
-              <MenuListItem key={idx}>
-                <MenuName>{idx + 1}. {menu.menuName}</MenuName>
-                <MenuQty>{menu.totalQty}</MenuQty>
-              </MenuListItem>
+          {topMenus.length === 0 ? (
+            <EmptyState>데이터 없음</EmptyState>
+          ) : (
+            <MenuList>
+              {topMenus.map((menu, idx) => (
+                <MenuListItem key={idx}>
+                  <MenuName>{idx + 1}. {menu.menuName}</MenuName>
+                  <MenuQty>{menu.totalQty}</MenuQty>
+                </MenuListItem>
             ))}
-          </MenuList>
+          </MenuList>  
+          )}
+          
         </MenuCard>
       </Row>
 
@@ -368,29 +419,35 @@ function OwnerStatisticspage() {
               : "이번 달 스케줄 매출"}
           </CardTitle>
 
-          {scheduleSales.map(schedule => (
-            <ScheduleItemWrapper
-              key={schedule.scheduleId}
-              onClick={() => setSelectedSchedule({
-                id: schedule.scheduleId,
-                location: schedule.locationName,
-                time: formatDateTime(schedule.startTime),
-                sales: schedule.sales
-              })}
-            >
-              <ScheduleInfoWrapper>
-                <ScheduleLocation>{schedule.locationName}</ScheduleLocation>
-                <ScheduleTime>{formatDateTime(schedule.startTime)}</ScheduleTime>
-              </ScheduleInfoWrapper>
+          {scheduleSales.length === 0 ? (
+            <EmptyState>데이터 없음</EmptyState>
+          ) : (
+            <>
+              {scheduleSales.map(schedule => (
+                <ScheduleItemWrapper
+                  key={schedule.scheduleId}
+                  onClick={() => setSelectedSchedule({
+                    id: schedule.scheduleId,
+                    location: schedule.locationName,
+                    time: formatDateTime(schedule.startTime),
+                    sales: schedule.sales
+                  })}
+                >
+                  <ScheduleInfoWrapper>
+                    <ScheduleLocation>{schedule.locationName}</ScheduleLocation>
+                    <ScheduleTime>{formatDateTime(schedule.startTime)}</ScheduleTime>
+                  </ScheduleInfoWrapper>
 
-              <Sales>{schedule.sales.toLocaleString()} KRW</Sales>
-            </ScheduleItemWrapper>
-          ))}
+                  <Sales>{schedule.sales.toLocaleString()} KRW</Sales>
+                </ScheduleItemWrapper>
+              ))}
 
           {scheduleHasMore && (
             <LoadMoreButton onClick={() => fetchSchedules(schedulePage + 1)}>
               더보기
             </LoadMoreButton>
+          )}
+            </>
           )}
         </ScheduleCard>
 
@@ -653,3 +710,5 @@ const OrderTypeCard = styled(ChartCard)`
 `;
 
 const PiePlaceholder = styled(ChartPlaceholder)``;
+
+const EmptyState = styled(ChartPlaceholder)``;
