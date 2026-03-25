@@ -9,7 +9,7 @@ export const STATISTICS_PATH = {
   WEEKLY_SALES: `${STATISTICS_PREFIX}/weekly-sales`,
   TOP_MENUS: `${STATISTICS_PREFIX}/top-menus`,
   SCHEDULES: `${STATISTICS_PREFIX}/schedules`,
-  SCHEDULES_DETAIL: `${STATISTICS_PREFIX}/schedules/{scheduleId}`,
+  SCHEDULES_DETAIL: (scheduleId: number) => `${STATISTICS_PREFIX}/schedules/${scheduleId}`,
   REFUNDCOUNT: `${STATISTICS_PREFIX}/refund`,
   ORDER_TYPES: `${STATISTICS_PREFIX}/order-types`
 };

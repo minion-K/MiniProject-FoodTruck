@@ -36,7 +36,7 @@ INSERT INTO locations (id, name, address, latitude, longitude) VALUES
 (5,'카페거리','부산 서면',35.161,129.063);
 
 -- -------------------------------
--- 3. 메뉴 (가격 상승)
+-- 3. 메뉴
 -- -------------------------------
 INSERT INTO menu_items (truck_id, name, price) VALUES
 (1,'타코A',12000),(1,'타코B',14000),(1,'타코C',16000),
@@ -46,7 +46,7 @@ INSERT INTO menu_items (truck_id, name, price) VALUES
 (5,'와플',9000),(5,'크레페',11000),(5,'케이크',13000);
 
 -- -------------------------------
--- 4. 스케줄 (트럭별 7일)
+-- 4. 스케줄 (7일)
 -- -------------------------------
 INSERT INTO truck_schedules (id, truck_id, location_id, start_time, end_time, status)
 SELECT 
@@ -58,22 +58,24 @@ SELECT
   'OPEN'
 FROM trucks t
 CROSS JOIN (
-  SELECT 0 as day UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+  SELECT 0 as day UNION SELECT 1 UNION SELECT 2 
+  UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
 ) d;
 
 -- -------------------------------
--- 5. 예약 (트럭별 7일)
+-- 5. 예약 (시간 완전 랜덤)
 -- -------------------------------
-INSERT INTO reservations (id, schedule_id, user_id, pickup_time, total_amount, status)
+INSERT INTO reservations (schedule_id, user_id, pickup_time, total_amount, status)
 SELECT 
   s.id,
-  s.id,
   4 + FLOOR(RAND()*6),
-  s.start_time + INTERVAL 2 HOUR,
-  50000 + FLOOR(RAND()*150000),
+  DATE_ADD(DATE(s.start_time), INTERVAL FLOOR(RAND()*24) HOUR),
+  30000 + FLOOR(RAND()*150000),
   'CONFIRMED'
 FROM truck_schedules s
-WHERE s.truck_id <=5;
+JOIN (
+  SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+) t;
 
 -- -------------------------------
 -- 6. reservation_items
@@ -84,25 +86,28 @@ SELECT
   m.id,
   m.name,
   m.price,
-  1 + FLOOR(RAND()*3)
+  1 + FLOOR(RAND()*4)
 FROM reservations r
 JOIN truck_schedules s ON r.schedule_id = s.id
 JOIN menu_items m ON m.truck_id = s.truck_id
-WHERE RAND() < 0.6;
+WHERE RAND() < 0.8;
 
 -- -------------------------------
--- 7. 주문 (예약 기반 + 현장 주문 섞기)
+-- 7. 주문 (시간 완전 랜덤)
 -- -------------------------------
-INSERT INTO orders (id, schedule_id, user_id, source, amount, status, paid_at)
+INSERT INTO orders (schedule_id, user_id, source, amount, status, paid_at)
 SELECT 
-  s.id,
   s.id,
   4 + FLOOR(RAND()*6),
   IF(RAND() > 0.5, 'ONSITE', 'RESERVATION'),
-  50000 + FLOOR(RAND()*200000),
+  30000 + FLOOR(RAND()*200000),
   'PAID',
-  s.start_time + INTERVAL FLOOR(RAND()*6) HOUR
-FROM truck_schedules s;
+  DATE_ADD(DATE(s.start_time), INTERVAL FLOOR(RAND()*24) HOUR)
+FROM truck_schedules s
+JOIN (
+  SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+  UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
+) t;
 
 -- -------------------------------
 -- 8. order_items
@@ -113,11 +118,11 @@ SELECT
   m.id,
   m.name,
   m.price,
-  1 + FLOOR(RAND()*3)
+  1 + FLOOR(RAND()*5)
 FROM orders o
 JOIN truck_schedules s ON o.schedule_id = s.id
 JOIN menu_items m ON m.truck_id = s.truck_id
-WHERE RAND() < 0.6;
+WHERE RAND() < 0.8;
 
 -- -------------------------------
 -- 9. 결제
@@ -137,7 +142,7 @@ SELECT
 FROM orders o;
 
 -- -------------------------------
--- 10. 환불 일부
+-- 10. 일부 환불
 -- -------------------------------
 INSERT INTO payment_refunds (payment_id, amount, reason, status, completed_at)
 SELECT

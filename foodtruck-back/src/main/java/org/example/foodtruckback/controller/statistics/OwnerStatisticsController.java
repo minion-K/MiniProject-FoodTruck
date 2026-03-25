@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -25,9 +26,11 @@ public class OwnerStatisticsController {
     @GetMapping(StatisticsApi.DASHBOARD)
     public ResponseEntity<ResponseDto<DashboardResponseDto>> getDashboard(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long truckId
+            @RequestParam(required = false) Long truckId,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate
     ) {
-        ResponseDto<DashboardResponseDto> response = ownerStatisticsService.getDashboard(principal.getId(), truckId);
+        ResponseDto<DashboardResponseDto> response = ownerStatisticsService.getDashboard(principal.getId(), truckId, fromDate, toDate);
 
         return ResponseEntity.ok(response);
     }
@@ -35,9 +38,11 @@ public class OwnerStatisticsController {
     @GetMapping(StatisticsApi.WEEKLY_SALES)
     public ResponseEntity<ResponseDto<List<WeeklySalesResponseDto>>> getWeeklySales(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long truckId
+            @RequestParam(required = false) Long truckId,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate
     ) {
-        ResponseDto<List<WeeklySalesResponseDto>> response = ownerStatisticsService.getWeeklySales(principal.getId(), truckId);
+        ResponseDto<List<WeeklySalesResponseDto>> response = ownerStatisticsService.getWeeklySales(principal.getId(), truckId, fromDate, toDate);
 
         return ResponseEntity.ok(response);
     }
@@ -45,9 +50,11 @@ public class OwnerStatisticsController {
     @GetMapping(StatisticsApi.TOP_MENUS)
     public ResponseEntity<ResponseDto<List<TopMenuResponseDto>>> getTopMenu(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long truckId
+            @RequestParam(required = false) Long truckId,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate
     ) {
-        ResponseDto<List<TopMenuResponseDto>> response = ownerStatisticsService.getTopMenu(principal.getId(), truckId);
+        ResponseDto<List<TopMenuResponseDto>> response = ownerStatisticsService.getTopMenu(principal.getId(), truckId, fromDate, toDate);
 
         return ResponseEntity.ok(response);
     }
@@ -56,11 +63,13 @@ public class OwnerStatisticsController {
     public ResponseEntity<ResponseDto<Page<ScheduleSalesResponseDto>>> getSchedules(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) Long truckId,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        ResponseDto<Page<ScheduleSalesResponseDto>> response = ownerStatisticsService.getSchedules(principal.getId(), truckId, pageable);
+        ResponseDto<Page<ScheduleSalesResponseDto>> response = ownerStatisticsService.getSchedules(principal.getId(), truckId, fromDate, toDate, pageable);
 
         return ResponseEntity.ok(response);
     }
@@ -78,9 +87,11 @@ public class OwnerStatisticsController {
     @GetMapping(StatisticsApi.REFUND)
     public ResponseEntity<ResponseDto<RefundResponseDto>> getRefundCount(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long truckId
+            @RequestParam(required = false) Long truckId,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate
     ) {
-        ResponseDto<RefundResponseDto> response = ownerStatisticsService.getRefundCount(principal.getId(), truckId);
+        ResponseDto<RefundResponseDto> response = ownerStatisticsService.getRefundCount(principal.getId(), truckId, fromDate, toDate);
 
         return ResponseEntity.ok(response);
     }
@@ -88,9 +99,11 @@ public class OwnerStatisticsController {
     @GetMapping(StatisticsApi.ORDER_TYPES)
     public ResponseEntity<ResponseDto<List<OrderTypeResponseDto>>> getOrderTypes(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long truckId
+            @RequestParam(required = false) Long truckId,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate
     ) {
-        ResponseDto<List<OrderTypeResponseDto>> response = ownerStatisticsService.getOrderTypes(principal.getId(), truckId);
+        ResponseDto<List<OrderTypeResponseDto>> response = ownerStatisticsService.getOrderTypes(principal.getId(), truckId, fromDate, toDate);
 
         return ResponseEntity.ok(response);
     }

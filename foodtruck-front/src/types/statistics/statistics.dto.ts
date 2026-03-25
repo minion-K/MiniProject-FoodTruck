@@ -1,9 +1,9 @@
 import type { OrderSource } from "../order/order.type";
 
 export interface DashboardResponse {
-  todaySales: number;
-  todayOrders: number;
-  todayReservations: number;
+  totalSales: number;
+  orderCount: number;
+  reservationCount: number;
 }
 
 export interface WeeklySalesResponse {
@@ -18,7 +18,7 @@ export interface TopMenuResponse {
   totalQty: number;
 }
 
-export type TopMenuResponseList = TopMenuResponse[];
+export type TopMenuListResponse = TopMenuResponse[];
 
 export interface ScheduleSalesResponse {
   scheduleId: number;
@@ -36,9 +36,9 @@ export interface ScheduleSalesResponseList {
 }
 
 export interface ScheduleDetailResponse {
-  orderCount: number;
-  reservationCount: number;
-  totalSales: number;
+  orderType: OrderTypeListResponse;
+  topMenu: TopMenuListResponse;
+  timeSlot: TimeSlotListResponse;
 }
 
 export interface RefundResponse {
@@ -46,8 +46,15 @@ export interface RefundResponse {
 }
 
 export interface OrderTypeResponse {
-  type: OrderSource
+  type: OrderSource;
   count: number;
 }
 
 export type OrderTypeListResponse = OrderTypeResponse[];
+
+export interface TimeSlotResponse {
+  timeSlot: string
+  count: number;
+}
+
+export type TimeSlotListResponse = TimeSlotResponse[];

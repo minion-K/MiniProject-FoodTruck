@@ -4,7 +4,7 @@ import ScheduleStatisticsModal from "./ScheduleStatisticsModal";
 import type { DashboardResponse, OrderTypeResponse, RefundResponse, ScheduleSalesResponse, TopMenuResponse, WeeklySalesResponse } from "@/types/statistics/statistics.dto";
 import { statisticsApi } from "@/apis/statistics/statistics.api";
 import { getErrorMsg } from "@/utils/error";
-import { formatDateTime } from "@/utils/date";
+import { formatDateTime, toKstString } from "@/utils/date";
 import { truckApi } from "@/apis/truck/truck.api";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
 import { CartesianGrid, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -17,7 +17,13 @@ interface ScheduleItem {
 }
 
 function OwnerStatisticspage() {
-  const [selectedSchdule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<"TODAY" | "WEEK" | "MONTH">("TODAY");
+
+  const [periodStart, setPeriodStart] = useState<string | null>(null);
+  const [periodEnd, setPeriodEnd] = useState<string | null>(null);
+  const [weeklyStart, setWeeklyStart] = useState<string | null>(null);
+  const [weeklyEnd, setWeeklyEnd] = useState<string | null>(null);
 
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [weeklySales, setWeeklySales] = useState<WeeklySalesResponse[]>([]);
@@ -28,9 +34,64 @@ function OwnerStatisticspage() {
 
   const [truckList, setTruckList] = useState<TruckListItemResponse[]>([]);
   const [selectedTruckId, setSelectedTruckId] = useState<number | null>(null);
+
   const [schedulePage, setSchedulePage] = useState(0);
   const [scheduleHasMore, setScheduleHasMore] = useState(true);
   const schedulePageSize = 10;
+
+  useEffect(() => {
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+    let wStart: Date;
+    let wEnd: Date;
+
+    switch(selectedPeriod) {
+      case "TODAY":
+        start = new Date();
+        start.setHours(0, 0, 0, 0);
+        
+        end = new Date();
+        end.setHours(23, 59, 59, 999);
+
+        wStart = new Date();
+        wStart.setDate(now.getDate() - 6);
+        wStart.setHours(0, 0, 0, 0);
+        wEnd = end;
+        break;
+      case "WEEK":
+        const dayOfWeek = now.getDay();
+        start = new Date(now);
+        start.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        start.setHours(0, 0, 0, 0);
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+
+        wStart = start;
+        wEnd = end;
+        break;
+      case "MONTH":
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        start.setHours(0, 0, 0, 0);
+        end = new Date(now.getFullYear(), now.getMonth() , 0);
+        end.setHours(23, 59, 59, 999);
+
+        wStart = start;
+        wEnd = end;
+        break;
+    }
+
+    setPeriodStart(toKstString(start));
+    setPeriodEnd(toKstString(end));
+
+    setWeeklyStart(toKstString(wStart));
+    setWeeklyEnd(toKstString(wEnd));
+
+    setScheduleSales([]);
+    setSchedulePage(0);
+    setScheduleHasMore(true);
+  }, [selectedPeriod]);
 
   useEffect(() => {
     const fetchTrucks = async () => {
@@ -46,40 +107,52 @@ function OwnerStatisticspage() {
   }, []);
 
   const fetchSchedules = async(page: number) => {
-      try {
-        const schedules = await statisticsApi.getSchedules(
-          selectedTruckId ?? undefined,
-          page,
-          schedulePageSize
-        );
-        
-        if(page === 0) {
-          setScheduleSales(schedules.content ?? []);
-        } else {
-          setScheduleSales(prev => [...prev, ...schedules.content ?? []]);
-        }
+    if(!periodStart || !periodEnd) return;
 
-        setSchedulePage(schedules.page ?? page);
-        setScheduleHasMore((schedules.content?.length ?? 0) === schedulePageSize);
-      } catch (e) {
-        alert(getErrorMsg(e));
+    try {
+      const schedules = await statisticsApi.getSchedules(
+        periodStart,
+        periodEnd,
+        selectedTruckId ?? undefined,
+        page,
+        schedulePageSize
+      );
+      
+      if(page === 0) {
+        setScheduleSales(schedules.content ?? []);
+      } else {
+        setScheduleSales(prev => [...prev, ...schedules.content ?? []]);
       }
-    };
+
+      setSchedulePage(schedules.page ?? page);
+      setScheduleHasMore((schedules.content?.length ?? 0) === schedulePageSize);
+    } catch (e) {
+      alert(getErrorMsg(e));
+    }
+  };
 
   useEffect(() => {
+    if(!periodStart || !periodEnd || !weeklyStart || !weeklyEnd) return;
+
     const fetchStatistics = async () => {
       try {
         const dashboardResponse = await statisticsApi.getDashboard(
+          periodStart,
+          periodEnd,
           selectedTruckId ?? undefined
         );
         setDashboard(dashboardResponse);
 
         const weeklySalesResponse = await statisticsApi.getWeeklySales(
+          weeklyStart,
+          weeklyEnd,
           selectedTruckId ?? undefined
         );
         setWeeklySales(weeklySalesResponse);
 
         const topMenusResponse = await statisticsApi.getTopMenus(
+          periodStart,
+          periodEnd,
           selectedTruckId ?? undefined
         );
         setTopMenus(topMenusResponse);
@@ -87,11 +160,15 @@ function OwnerStatisticspage() {
         await fetchSchedules(0);
 
         const refundResponse = await statisticsApi.getRefundCount(
+          periodStart,
+          periodEnd,
           selectedTruckId ?? undefined
         );
         setRefundCount(refundResponse);
 
         const orderTypeResponse = await statisticsApi.getOrderTypes(
+          periodStart,
+          periodEnd,
           selectedTruckId ?? undefined
         );
         setOrderTypes(orderTypeResponse);
@@ -103,7 +180,7 @@ function OwnerStatisticspage() {
     
 
     fetchStatistics();
-  }, [selectedTruckId]);
+  }, [selectedTruckId, periodStart, periodEnd, weeklyStart, weeklyEnd]);
 
   const orderTypesWithColor = orderTypes.map(item => ({
     ...item,
@@ -138,38 +215,65 @@ function OwnerStatisticspage() {
         </TruckSelect>
         
         <PeriodTabs>
-          <PeriodButton active>오늘</PeriodButton>
-          <PeriodButton>이번 주</PeriodButton>
-          <PeriodButton>이번 달</PeriodButton>
+          <PeriodButton 
+            active={selectedPeriod === "TODAY"}
+            onClick={() => setSelectedPeriod("TODAY")}
+          >
+            오늘
+          </PeriodButton>
+          <PeriodButton
+            active={selectedPeriod === "WEEK"}
+            onClick={() => setSelectedPeriod("WEEK")}
+          >
+            이번 주
+          </PeriodButton>
+          <PeriodButton
+            active={selectedPeriod === "MONTH"}
+            onClick={() => setSelectedPeriod("MONTH")}
+          >
+            이번 달
+          </PeriodButton>
         </PeriodTabs>
       </HeaderRight>
 
 
       <CardGrid>
         <StatCard>
-          <span>오늘 매출</span>
-          <strong>{dashboard?.todaySales?.toLocaleString() ?? 0} KRW</strong>
+          <StatLabel>
+            {selectedPeriod === "TODAY"
+              ? "오늘 매출"
+              : selectedPeriod === "WEEK"
+              ? "이번 주 매출"
+              : "이번 달 매출"}
+          </StatLabel>
+          <StatValue>{dashboard?.totalSales?.toLocaleString() ?? 0} KRW</StatValue>
         </StatCard>
 
         <StatCard>
-          <span>총 주문</span>
-          <strong>{dashboard?.todayOrders ?? 0}</strong>
+          <StatLabel>총 주문</StatLabel>
+          <StatValue>{dashboard?.orderCount ?? 0}</StatValue>
         </StatCard>
 
         <StatCard>
-          <span>예약 수</span>
-          <strong>{dashboard?.todayReservations ?? 0}</strong>
+          <StatLabel>예약 수</StatLabel>
+          <StatValue>{dashboard?.reservationCount ?? 0}</StatValue>
         </StatCard>
 
         <StatCard>
-          <span>환불</span>
-          <strong>{refundCount?.refundCount ?? 0}</strong>
+          <StatLabel>환불</StatLabel>
+          <StatValue>{refundCount?.refundCount ?? 0}</StatValue>
         </StatCard>
       </CardGrid>
       
       <Row>
         <ChartCard>
-          <CardTitle>주간 매출 현황</CardTitle>
+          <CardTitle>
+            {selectedPeriod === "TODAY"
+              ? "주간 매출 현황"
+              : selectedPeriod === "WEEK"
+              ? "이번 주 매출 현황"
+              : "이번 달 매출 현황"}
+          </CardTitle>
           
           <ResponsiveContainer width="100%" height={250}>
             <LineChart 
@@ -245,10 +349,10 @@ function OwnerStatisticspage() {
           <CardTitle>인기 메뉴 TOP 5</CardTitle>
           <MenuList>
             {topMenus.map((menu, idx) => (
-              <li key={idx}>
-                {idx + 1}. {menu.menuName}
-                <span>{menu.totalQty}</span>
-              </li>
+              <MenuListItem key={idx}>
+                <MenuName>{idx + 1}. {menu.menuName}</MenuName>
+                <MenuQty>{menu.totalQty}</MenuQty>
+              </MenuListItem>
             ))}
           </MenuList>
         </MenuCard>
@@ -256,7 +360,13 @@ function OwnerStatisticspage() {
 
       <Row>
         <ScheduleCard>
-          <CardTitle>오늘 스케줄 매출</CardTitle>
+          <CardTitle>
+            {selectedPeriod === "TODAY"
+              ? "오늘 스케줄 매출"
+              : selectedPeriod === "WEEK"
+              ? "이번 주 스케줄 매출"
+              : "이번 달 스케줄 매출"}
+          </CardTitle>
 
           {scheduleSales.map(schedule => (
             <ScheduleItemWrapper
@@ -268,10 +378,10 @@ function OwnerStatisticspage() {
                 sales: schedule.sales
               })}
             >
-              <div>
-                <strong>{schedule.locationName}</strong>
-                <span>{formatDateTime(schedule.startTime)}</span>
-              </div>
+              <ScheduleInfoWrapper>
+                <ScheduleLocation>{schedule.locationName}</ScheduleLocation>
+                <ScheduleTime>{formatDateTime(schedule.startTime)}</ScheduleTime>
+              </ScheduleInfoWrapper>
 
               <Sales>{schedule.sales.toLocaleString()} KRW</Sales>
             </ScheduleItemWrapper>
@@ -306,7 +416,7 @@ function OwnerStatisticspage() {
                     innerRadius={50}
                     labelLine={false}
                     label={({payload, percent}) => {
-                      const labelText = payload === "RESERVATION" ? "예약 주문" : "현장 주문";
+                      const labelText = payload.type === "RESERVATION" ? "예약 주문" : "현장 주문";
                       return `${labelText} ${((percent ?? 0) * 100).toFixed(0)}%`
                     }
                     }
@@ -326,9 +436,9 @@ function OwnerStatisticspage() {
         </OrderTypeCard>
       </Row>
 
-      {selectedSchdule && (
+      {selectedSchedule && (
         <ScheduleStatisticsModal 
-          schedule={selectedSchdule}
+          schedule={selectedSchedule}
           onClose={() => setSelectedSchedule(null)}
         />
       )}
@@ -398,16 +508,17 @@ const StatCard = styled.div`
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 20px;
+`;
 
-  span {
-    color: #6b7280;
-  }
+const StatLabel = styled.strong`
+  color: #6b7280;
+`;
 
-  strong {
-    font-size: 22px;
-    display: block;
-    margin-top: 6px;
-  }
+const StatValue = styled.span`
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 6px;
 `;
 
 const Row = styled.div`
@@ -431,22 +542,49 @@ const ChartPlaceholder = styled.div`
   color: #9ca3af;
 `;
 
-const MenuCard = styled(ChartCard)``;
+const MenuCard = styled(ChartCard)`
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+`;
 
 const CardTitle = styled.h3`
   font-size: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 `;
 
 const MenuList = styled.ul`
   list-style: none;
-  padding: 0;
+  padding-top: 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+`;
 
-  li {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
+const MenuListItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 16px;
+  font-weight: 500;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    border-bottom: none;
   }
+`;
+
+const MenuName = styled.span`
+  font-weight: 500;
+  color: #374151;
+`;
+
+const MenuQty = styled.span`
+  font-weight: 600;
+  color: #374151;
 `;
 
 const ScheduleCard = styled(ChartCard)`
@@ -464,17 +602,26 @@ const ScheduleItemWrapper = styled.div`
   &:hover {
     background: #f3f4f6;
   }
-
-  div {
-    display: flex;
-    flex-direction: column;
-  }
-
-  span {
-    font-size: 12px;
-    color: #6b7280;
-  }
 `;
+
+const ScheduleInfoWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ScheduleLocation = styled.span`
+  font-weight: 700;
+  font-size: 14px;
+`;
+
+const ScheduleTime = styled.span`
+  font-size: 12px;
+  color: #6b7280;
+`;
+
+const Sales = styled.div`
+    font-weight: 600;
+  `;
 
 const LoadMoreButton = styled.button`
   margin: 12px auto 0;
@@ -489,11 +636,7 @@ const LoadMoreButton = styled.button`
   &:hover {
     background: #2563eb;
   }
-`;
-
-const Sales = styled.div`
-  font-weight: 600;
-`;
+  `;
 
 const ChartWrapper = styled.div`
   display: flex;

@@ -1,5 +1,8 @@
+import { statisticsApi } from '@/apis/statistics/statistics.api';
+import { type ScheduleDetailResponse } from '@/types/statistics/statistics.dto';
+import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface Props {
   schedule: {
@@ -13,6 +16,21 @@ interface Props {
 }
 
 function ScheduleStatisticsModal({schedule, onClose}: Props) {
+  const [detail, setDetail] = useState<ScheduleDetailResponse | null>(null);
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const data = await statisticsApi.getSchedulesDetail(schedule.id)
+        setDetail(data);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    };
+
+    fetchDetail();
+  }, [schedule.id])
+
   return (
     <Overlay>
       <Modal>
@@ -53,18 +71,24 @@ function ScheduleStatisticsModal({schedule, onClose}: Props) {
             <Section>
               <SectionTitle>인기 메뉴</SectionTitle>
               <MenuList>
-                <li>1.떡볶이 <span>45</span></li>
-                <li>2.핫도그 <span>30</span></li>
-                <li>3.순대 <span>18</span></li>
+                {detail?.topMenu.map((menu, idx) => (
+                  <li key={menu.menuName}>
+                    {idx + 1}. {menu.menuName}
+                    <span>{menu.totalQty}</span>
+                  </li>
+                ))}
               </MenuList>
             </Section>
 
             <Section>
               <SectionTitle>시간대 주문</SectionTitle>
               <TimeList>
-                <li>18~19 <span>5</span></li>
-                <li>19~20 <span>18</span></li>
-                <li>20~21 <span>9</span></li>
+                {detail?.timeSlot.map(time => (
+                  <li key={time.timeSlot}>
+                    {time.timeSlot}
+                    <span>{time.count}</span>
+                  </li>
+                ))}
               </TimeList>
             </Section>
           </RightSection>

@@ -1,8 +1,10 @@
 package org.example.foodtruckback.dto.statistics.response;
 
+import java.util.List;
+
 public record ScheduleDetailResponseDto(
-        long orderCount,
-        long reservationCount,
-        long totalSales
+        List<OrderTypeResponseDto> orderType,
+        List<TopMenuResponseDto> topMenu,
+        List<TimeSlotResponseDto> timeSlot
 ) {
 }
