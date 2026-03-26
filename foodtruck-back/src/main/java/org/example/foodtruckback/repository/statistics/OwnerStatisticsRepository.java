@@ -232,7 +232,10 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
             )
         FROM Order o
         WHERE o.schedule.id = :scheduleId
-            AND o.status != org.example.foodtruckback.common.enums.OrderStatus.CANCELED
+            AND o.status NOT IN (
+                    org.example.foodtruckback.common.enums.OrderStatus.CANCELED,
+                    org.example.foodtruckback.common.enums.OrderStatus.REFUNDED
+                )
         GROUP BY o.source        
     """)
     List<OrderTypeResponseDto> getOrderTypeBySchedule(Long scheduleId);
@@ -241,22 +244,36 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
         SELECT menu_name AS menuName, SUM(qty) AS totalQty
         FROM (
              SELECT oi.menu_name, oi.qty
-             FROM order_items oi
-             JOIN orders o
+             FROM orders o
+             JOIN order_items oi
                  ON oi.order_id = o.id
+             JOIN payments p
+                 ON p.order_id = o.id
+                 AND p.status = 'SUCCESS'
+             LEFT JOIN payment_refunds pr
+                 ON pr.payment_id = p.id
+                 AND pr.status = 'COMPLETED'
              WHERE o.schedule_id = :scheduleId
-                 AND o.status != 'CANCELED'
+                 AND o.status NOT IN ('CANCELED', 'REFUNDED')
+                 AND pr.id IS NULL
         
              UNION ALL
         
              SELECT ri.menu_name, ri.qty
-             FROM reservation_items ri
-             JOIN reservations r
+             FROM reservations r
+             JOIN reservation_items ri
                  ON ri.reservation_id = r.id
+             JOIN payments p 
+                 ON p.product_code = CONCAT('RES-', r.id)
+                 AND p.status = 'SUCCESS'
+             LEFT JOIN payment_refunds pr
+                 ON pr.payment_id = p.id
+                 AND pr.status = 'COMPLETED'
              WHERE r.schedule_id = :scheduleId
                  AND r.status != 'CANCELED'
+                 AND pr.id IS NULL
         ) tmp
-        GROUP BY menu_name
+        GROUP BY menuName
         ORDER BY SUM(qty) DESC
         LIMIT 5
     """, nativeQuery = true)
@@ -268,13 +285,19 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
         FROM (
             SELECT HOUR(o.paid_at) AS hour_val
             FROM orders o
+            JOIN truck_schedules s
+                ON o.schedule_id = s.id
             WHERE o.schedule_id = :scheduleId
-                AND o.status != 'CANCELED'
+                AND o.status NOT IN ('CANCELED', 'REFUNDED')
+                AND o.paid_at BETWEEN s.start_time AND s.end_time
             UNION ALL
             SELECT HOUR(r.pickup_time) AS hour_val
             FROM reservations r
+            JOIN truck_schedules s
+                ON r.schedule_id = s.id
             WHERE r.schedule_id = :scheduleId
                 AND r.status != 'CANCELED'
+                AND r.pickup_time BETWEEN s.start_time AND s.end_time
         ) tmp
         GROUP BY hour_val
         ORDER BY hour_val

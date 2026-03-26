@@ -234,6 +234,8 @@ function OwnerStatisticspage() {
     fill: item.type === "RESERVATION" ? "#3b82f6" : "#f97316"
   }))
 
+  const total = orderTypes.reduce((sum, e) => sum + e.count, 0);
+
   return (
     <Container>
       <Header>
@@ -396,7 +398,7 @@ function OwnerStatisticspage() {
           {topMenus.length === 0 ? (
             <EmptyState>데이터 없음</EmptyState>
           ) : (
-            <MenuList>
+            <MenuList itemCount={topMenus.length}>
               {topMenus.map((menu, idx) => (
                 <MenuListItem key={idx}>
                   <MenuName>{idx + 1}. {menu.menuName}</MenuName>
@@ -471,12 +473,8 @@ function OwnerStatisticspage() {
                     cy="50%"
                     outerRadius={100}
                     innerRadius={50}
+                    paddingAngle={2}
                     labelLine={false}
-                    label={({payload, percent}) => {
-                      const labelText = payload.type === "RESERVATION" ? "예약 주문" : "현장 주문";
-                      return `${labelText} ${((percent ?? 0) * 100).toFixed(0)}%`
-                    }
-                    }
                   />
                   <Tooltip 
                     formatter={(value, name, props) => {
@@ -488,6 +486,23 @@ function OwnerStatisticspage() {
                   />
                 </PieChart>
               </ResponsiveContainer>
+
+              <OrderTypeLegend>
+                {orderTypes.map(
+                  item => {
+                    const percent = total > 0 ? ((item.count / total) * 100).toFixed(0) : 0
+
+                    const color = item.type === "RESERVATION" ? "#3b82f6" : "#f97316";
+                    const type = item.type === "RESERVATION" ? "예약 주문" : "현장 주문";
+
+                    return (
+                      <LegendItem key={item.type}>
+                        <ColorDot color={color}/>
+                          {type} {percent}%
+                      </LegendItem>
+                    )}
+                )}
+              </OrderTypeLegend>
             </ChartWrapper>
           )}
         </OrderTypeCard>
@@ -610,14 +625,15 @@ const CardTitle = styled.h3`
   margin-bottom: 20px;
 `;
 
-const MenuList = styled.ul`
+const MenuList = styled.ul<{itemCount: number}>`
   list-style: none;
   padding-top: 10px;
   margin: 0;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  justify-content: space-between;
+  gap: 10px;
+  justify-content: ${({itemCount}) => itemCount >= 5 ? "space-between" : "flex-start"};
+  min-height: 220px;
 `;
 
 const MenuListItem = styled.li`
@@ -697,9 +713,32 @@ const LoadMoreButton = styled.button`
 
 const ChartWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 320px;
+`;
+
+const OrderTypeLegend = styled.div`
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+`;
+
+const LegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+`;
+
+const ColorDot = styled.div<{color: string}>`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({color}) => color};
 `;
 
 const OrderTypeCard = styled(ChartCard)`

@@ -3,6 +3,7 @@ import { type ScheduleDetailResponse } from '@/types/statistics/statistics.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
+import { Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 interface Props {
   schedule: {
@@ -31,66 +32,105 @@ function ScheduleStatisticsModal({schedule, onClose}: Props) {
     fetchDetail();
   }, [schedule.id])
 
+  const orderTypesWithColor = detail?.orderType.map(item => ({
+    ...item,
+    count: Number (item.count),
+    fill: item.type === "RESERVATION" ? "#3b82f6" : "#f97316"
+  }))
+
+  const total = detail?.orderType.reduce(
+    (sum, e) => sum + e.count, 0) ?? 0;
+
   return (
     <Overlay>
       <Modal>
         <Header>
-          <h3>스케줄 매출 상세</h3>
-          <button onClick={onClose}>X</button>
+          <ModalTitle>스케줄 매출 상세</ModalTitle>
+          <Close onClick={onClose}>X</Close>
         </Header>
 
         <Info>
-          <strong>{schedule.location}</strong>
-          <span>{schedule.time}</span>
+          <Location>{schedule.location}</Location>
+          <Time>{schedule.time}</Time>
         </Info>
 
         <Sales>{schedule.sales.toLocaleString()} KRW</Sales>
 
         <ContentRow>
           <LeftSection>
-            <SectionTitle>주문 유형</SectionTitle>
+            <SectionCard>
+              <SectionTitle>주문 유형</SectionTitle>
+              {detail?.orderType.length === 0 ? (
+                <PieChartPlaceholder>데이터 없음</PieChartPlaceholder>
+              ) : (
+                <ChartWrapper>
+                  <PieWrapper>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={140}              
+                    >
+                      <PieChart>
+                        <Pie
+                          data={orderTypesWithColor}
+                          dataKey="count"
+                          nameKey="type"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={30}
+                          outerRadius={70}
+                          paddingAngle={2}
+                          labelLine={false}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </PieWrapper>
 
-            <PieChartPlaceholder>
-              파이 차트 영역
-            </PieChartPlaceholder>
+                  <OrderTypeLegend>
+                    {detail?.orderType.map(
+                      item => {
+                        const percent = total > 0 ? ((item.count / total) * 100).toFixed(0) : 0
 
-            <OrderTypeLegend>
-              <LegendItem>
-                <ColorDot color="#3b82f6"/>
-                예약 주문 40%
-              </LegendItem>
+                        const color = item.type === "RESERVATION" ? "#3b82f6" : "#f97316";
+                        const type = item.type === "RESERVATION" ? "예약 주문" : "현장 주문";
 
-              <LegendItem>
-                <ColorDot color="#f97316"/>
-                현장 주문 60%
-              </LegendItem>
-            </OrderTypeLegend>
+                        return (
+                          <LegendItem key={item.type}>
+                            <ColorDot color={color}/>
+                              {type} {percent}%
+                          </LegendItem>
+                        )
+                      }
+                    )}
+                  </OrderTypeLegend>
+                </ChartWrapper>
+              )}
+            </SectionCard>
           </LeftSection>
 
           <RightSection>
-            <Section>
+            <SectionCard>
               <SectionTitle>인기 메뉴</SectionTitle>
               <MenuList>
                 {detail?.topMenu.map((menu, idx) => (
-                  <li key={menu.menuName}>
+                  <MenuItem key={menu.menuName}>
                     {idx + 1}. {menu.menuName}
-                    <span>{menu.totalQty}</span>
-                  </li>
+                    <MenuQty>{menu.totalQty}</MenuQty>
+                  </MenuItem>
                 ))}
               </MenuList>
-            </Section>
+            </SectionCard>
 
-            <Section>
+            <SectionCard>
               <SectionTitle>시간대 주문</SectionTitle>
               <TimeList>
                 {detail?.timeSlot.map(time => (
-                  <li key={time.timeSlot}>
+                  <TimeItem key={time.timeSlot}>
                     {time.timeSlot}
-                    <span>{time.count}</span>
-                  </li>
+                    <OrderQty>{time.count}</OrderQty>
+                  </TimeItem>
                 ))}
               </TimeList>
-            </Section>
+            </SectionCard>
           </RightSection>
         </ContentRow>
       </Modal>
@@ -110,7 +150,8 @@ const Overlay = styled.div`
 `;
 
 const Modal = styled.div`
-  width: 420px;
+  width: 90%;
+  max-width: 420px;
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -131,9 +172,31 @@ const Header = styled.div`
   }
 `;
 
+const ModalTitle = styled.h3`
+  font-size: 16px;
+  font-weight: 600;
+`;
+
+const Close = styled.button`
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+`;
+
 const Info = styled.div`
   display: flex;
   justify-content: space-between;
+`;
+
+const Location = styled.strong`
+  font-weight: 600;
+  color: #111827;
+`;
+
+const Time = styled.span`
+  font-size: 13px;
+  color: #6b7280;
 `;
 
 const Sales = styled.div`
@@ -147,6 +210,16 @@ const ContentRow = styled.div`
   gap: 24px;
 `;
 
+const SectionCard = styled.div`
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+`;
+
 const LeftSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -157,12 +230,6 @@ const RightSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 `;
 
 const SectionTitle = styled.h4`
@@ -185,12 +252,24 @@ const OrderTypeLegend = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  align-items: flex-start;
+`;
+
+const PieWrapper = styled.div`
+  width: 100%;
+`;
+
+const ChartWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `;
 
 const LegendItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   font-size: 13px;
 `;
 
@@ -204,31 +283,34 @@ const ColorDot = styled.div<{color: string}>`
 const MenuList = styled.ul`
   list-style: none;
   padding: 0;
-
-  li {
-    display: flex;
-    justify-content: space-between;
-  }
-`;
-
-const TimeList = styled(MenuList)``;
-
-const OrderTypeWrapper = styled.div`
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  font-size: 13px;
 `;
 
-const OrderTypeItem = styled.div`
+const MenuItem = styled.li`
   display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
+    justify-content: space-between;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: default;
+    transition: background 0.1s;
 
-  span {
-    color: #6b7280;
-  }
+    &:hover {
+      background: #f3f4f6;
+    }
 
-  strong {
-    color: #111827;
-  }
+    &:last-child {
+      border-bottom: none;
+    }
 `;
+
+const MenuQty = styled.strong`
+  color: #3b82f6;
+`;
+const TimeList = styled(MenuList)``;
+
+const TimeItem = styled(MenuItem)``;
+
+const OrderQty = styled(MenuQty)``;
