@@ -1,8 +1,12 @@
 import Layout from '@/components/layouts/Layout';
-import AdminPage from '@/pages/admin/AdminPage';
+import AdminReservationPage from '@/pages/admin/reservation/AdminReservationPage';
+import AdminStatisticsPage from '@/pages/admin/statistics/AdminStatisticsPage';
+import AdminTruckPage from '@/pages/admin/AdminTruckPage';
+import AdminUserPage from '@/pages/admin/AdminUserPage';
+import AdminPage from '@/pages/admin/AdminUserPage';
 import { useAuthStore } from '@/stores/auth.store'
 import React, { useEffect } from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
 function AdminRouter() {
   const {user} = useAuthStore();
@@ -26,11 +30,40 @@ function AdminRouter() {
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/admin/users" replace />} />
+
       <Route 
-        path="/"
+        path="/users"
         element={
-          <Layout showSidebar={true}>
-            <AdminPage />
+          <Layout showSidebar={true} role="ADMIN">
+            <AdminUserPage />
+          </Layout>
+        }
+      />
+
+      <Route 
+        path="/trucks"
+        element={
+          <Layout showSidebar={true} role="ADMIN">
+            <AdminTruckPage />
+          </Layout>
+        }
+      />
+
+      <Route 
+        path="/reservations"
+        element={
+          <Layout showSidebar={true} role="ADMIN">
+            <AdminReservationPage />
+          </Layout>
+        }
+      />
+
+      <Route 
+        path="/statistics"
+        element={
+          <Layout showSidebar={true} role="ADMIN">
+            <AdminStatisticsPage />
           </Layout>
         }
       />

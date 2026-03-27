@@ -34,7 +34,7 @@ function OwnerRouter() {
       <Route
         path="/trucks"
         element={
-          <Layout showSidebar={true}>
+          <Layout showSidebar={true} role="OWNER">
             <OwnerPage />
           </Layout>
         }
@@ -42,7 +42,7 @@ function OwnerRouter() {
       <Route
         path="/reservations"
         element={
-          <Layout showSidebar={true}>
+          <Layout showSidebar={true} role="OWNER">
             <OwnerReservationPage />
           </Layout>
         }
@@ -50,7 +50,7 @@ function OwnerRouter() {
       <Route
         path="/statistics"
         element={
-          <Layout showSidebar={true}>
+          <Layout showSidebar={true} role="OWNER">
             <OwnerStatisticspage />
           </Layout>
         }
@@ -59,7 +59,7 @@ function OwnerRouter() {
       <Route
         path="/trucks/:truckId"
         element={
-          <Layout showSidebar={true}>
+          <Layout showSidebar={true} role="OWNER">
             <OwnerTruckDetail />
           </Layout>
         }

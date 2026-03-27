@@ -5,9 +5,11 @@ export function getTruckStatus(status?: TruckStatus | null) {
 
   switch (status.toUpperCase()) {
     case "ACTIVE":
-      return { label: "OPEN", color: "#1a7f37" };
+      return { label: "OPEN", color: "#d1e7dd" };
     case "INACTIVE":
-      return { label: "CLOSE", color: "#d32f2f" };
+      return { label: "CLOSE", color: "#f8d7da" };
+    case "SUSPENDED":
+      return {label: "SUSPENDED", color: "#e2e3ff"}
     default:
       return { label: "미정", color: "#eee" };
   }

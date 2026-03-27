@@ -83,6 +83,10 @@ function OwnerReservationPage() {
 
   return (
     <Container>
+      <HeaderRow>
+        <Title>예약·주문관리</Title>
+      </HeaderRow>
+
       <DropdownContainer>
         <Select
           value={selectedTruckId ?? ""}
@@ -156,13 +160,26 @@ function OwnerReservationPage() {
 export default OwnerReservationPage;
 
 const Container = styled.div`
-  padding: 20px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const Title = styled.h2`
+  font-size: 22px;
+  font-weight: 700;
 `;
 
 const DropdownContainer = styled.div`
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
 `;
 
 const Select = styled.select`
@@ -173,19 +190,18 @@ const Select = styled.select`
 const Tabs = styled.div`
   display: flex;
   gap: 10px;
-  margin-bottom: 10px;
 `;
 
 const Tab = styled.button<{active?: boolean}>`
   padding: 8px 16px;
   font-size: 14px;
-  cursor: pointer;
-  border: none;
-  background: ${({active}) => active ? "var(--primary)" : "#f3f4f6"};
-  color: ${({active}) => active ? "white" : "#374151"};
   border-radius: 4px;
+  border: none;
+  background: ${({active}) => active ? "#3b82f6" : "#f3f4f6"};
+  color: ${({active}) => active ? "white" : "#374151"};
+  cursor: pointer;
 
   &:hover {
-    background: ${({active}) => active ? "#4338ca" : "#e5e7eb"};
+    background: ${({active}) => active ? "#2563eb" : "#f3f4f6"}
   }
 `;

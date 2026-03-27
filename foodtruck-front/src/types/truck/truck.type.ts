@@ -1,5 +1,5 @@
 export type TruckStatus =
-  "ACTIVE" | "INACTIVE";
+  "ACTIVE" | "INACTIVE" | "SUSPENDED";
 
   export interface TruckFormData {
     name: string;

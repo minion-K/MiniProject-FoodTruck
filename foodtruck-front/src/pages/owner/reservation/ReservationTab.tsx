@@ -36,87 +36,109 @@ function ReservationTab({scheduleId, onSelect}: Props) {
   }, [scheduleId]);
 
   if(loading) return <Loading>로딩 중...</Loading>
-  if(reservations.length === 0) return <EmptyText>예약 내역이 없습니다.</EmptyText>
 
   return (
-    <TableWrapper>
-      <StyledTable>
-        <thead>
-          <tr>
-            <th style={{width: "12%"}}>예약자</th>
-            <th style={{width: "18%"}}>픽업 시간</th>
-            <th style={{width: "22%"}}>주문 메뉴</th>
-            <th style={{width: "8%"}}>수량</th>
-            <th style={{width: "10%"}}>금액</th>
-            <th style={{width: "10%"}}>예약 상태</th>
-            <th style={{width: "10%"}}>결제 상태</th>
-            <th style={{width: "10%"}}>관리</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reservations.map(reservation => {
-            const reservationStatus = getReservationStatus(reservation.status);
-            const paymentStatus = getPaymentStatus(reservation.paymentStatus);
-            const menuItems = reservation.menus ?? [];
+    <>
+      <Header>
+        <Title>예약 관리</Title>
+      </Header>
+
+      {reservations.length === 0 ? (
+        <EmptyText>예약 내역이 없습니다.</EmptyText>
+      ) : (
+      <TableWrapper>
+        <StyledTable>
+          <thead>
+            <tr>
+              <th style={{width: "12%"}}>예약자</th>
+              <th style={{width: "18%"}}>픽업 시간</th>
+              <th style={{width: "22%"}}>주문 메뉴</th>
+              <th style={{width: "8%"}}>수량</th>
+              <th style={{width: "10%"}}>금액</th>
+              <th style={{width: "10%"}}>예약 상태</th>
+              <th style={{width: "10%"}}>결제 상태</th>
+              <th style={{width: "10%"}}>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reservations.map(reservation => {
+              const reservationStatus = getReservationStatus(reservation.status);
+              const paymentStatus = getPaymentStatus(reservation.paymentStatus);
+              const menuItems = reservation.menus ?? [];
 
 
-            const totalAmount = menuItems.reduce(
-              (sum, item) => sum + item.price * item.quantity,
-              0
-            );
+              const totalAmount = menuItems.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0
+              );
 
-            const totalQuantity = menuItems.reduce(
-              (sum, item) => sum + item.quantity,
-              0
-            );
+              const totalQuantity = menuItems.reduce(
+                (sum, item) => sum + item.quantity,
+                0
+              );
 
-            const menuSummary = menuItems.length === 0
-              ? "메뉴 정보 없음"
-              : menuItems.length === 1
-              ? `${menuItems[0].name} ${menuItems[0].quantity}개`
-              : `${menuItems[0].name} 외 ${menuItems.length - 1}건`
+              const menuSummary = menuItems.length === 0
+                ? "메뉴 정보 없음"
+                : menuItems.length === 1
+                ? `${menuItems[0].name} ${menuItems[0].quantity}개`
+                : `${menuItems[0].name} 외 ${menuItems.length - 1}건`
 
-            const menuText = menuItems.length === 0
-              ? "메뉴 정보 없음"
-              : menuItems
-                .map(item => `${item.name} ${item.quantity}개`)
-                .join(", ");
+              const menuText = menuItems.length === 0
+                ? "메뉴 정보 없음"
+                : menuItems
+                  .map(item => `${item.name} ${item.quantity}개`)
+                  .join(", ");
 
-            return (
-              <tr key={reservation.id}>
-                <td>{reservation.userName}</td>
-                <td>{formatPickupRange(reservation.pickupTime)}</td>
-                <td title={menuText}>{menuSummary}</td>
-                <td>{totalQuantity}개</td>
-                <td>{totalAmount.toLocaleString()}KRW</td>
-                <td>
-                  <Status style={{background: reservationStatus.color}}>
-                    {reservationStatus.label}
-                  </Status>
-                </td>
-                <td>
-                  <Status style={{background: paymentStatus.color}}>
-                    {paymentStatus.label}
-                  </Status>
-                </td>
-                <td>
-                  <ButtonWrapper>
-                    <Button onClick={() => onSelect(reservation.id)}>
-                      상세보기
-                    </Button>
-                  </ButtonWrapper>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </StyledTable>
-    </TableWrapper>
+              return (
+                <tr key={reservation.id}>
+                  <td>{reservation.userName}</td>
+                  <td>{formatPickupRange(reservation.pickupTime)}</td>
+                  <td title={menuText}>{menuSummary}</td>
+                  <td>{totalQuantity}개</td>
+                  <td>{totalAmount.toLocaleString()}KRW</td>
+                  <td>
+                    <Status style={{background: reservationStatus.color}}>
+                      {reservationStatus.label}
+                    </Status>
+                  </td>
+                  <td>
+                    <Status style={{background: paymentStatus.color}}>
+                      {paymentStatus.label}
+                    </Status>
+                  </td>
+                  <td>
+                    <ButtonWrapper>
+                      <Button onClick={() => onSelect(reservation.id)}>
+                        상세보기
+                      </Button>
+                    </ButtonWrapper>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </StyledTable>
+      </TableWrapper>
+      )}
+    </>
+
 
   )
 }
 
 export default ReservationTab
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+const Title = styled.h1`
+  font-size: 20px;
+  font-weight: 600;
+`;
 
 const TableWrapper = styled.div`
   margin-top: 20px;

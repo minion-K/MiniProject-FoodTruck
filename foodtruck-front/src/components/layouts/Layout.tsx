@@ -7,9 +7,10 @@ import styled from "@emotion/styled";
 interface LayoutProps {
   children: React.ReactNode;
   showSidebar?: boolean;
+  role?: "OWNER" | "ADMIN";
 }
 
-function Layout({ children, showSidebar =false}: LayoutProps) {
+function Layout({ children, showSidebar =false, role}: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   const handleToggleSidebar = () => {
@@ -24,9 +25,15 @@ function Layout({ children, showSidebar =false}: LayoutProps) {
   return (
     <Container>
       <Header onToggleSidebar={handleToggleSidebar} />
-      {/* <Navibar /> */}
       <MainContainer>
-        <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />
+        {showSidebar && (
+          <Sidebar 
+            isOpen={sidebarOpen} 
+            onClose={handleCloseSidebar} 
+            role={role}
+          />
+        )}
+        
         <Main>{children}</Main>
       </MainContainer>
     </Container>

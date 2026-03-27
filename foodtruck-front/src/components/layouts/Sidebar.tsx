@@ -5,18 +5,36 @@ import { Link } from "react-router-dom";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  role?: "OWNER" | "ADMIN"
 }
 
-function Sidebar({ isOpen, onClose }: SidebarProps) {
+const ownerMenus = [
+  {label: "내 트럭", path: "/owner/trucks"},
+  {label: "예약 / 주문 관리", path: "/owner/reservations"},
+  {label: "통계 / 매출", path: "/owner/statistics"},
+];
+
+const adminMenus = [
+  {label: "유저 관리", path: "/admin/users"},
+  {label: "전체 트럭 관리", path: "/admin/trucks"},
+  {label: "전체 예약 관리", path: "/admin/reservations"},
+  {label: "통계 대시보드", path: "/admin/statistics"},
+]
+
+function Sidebar({ isOpen, onClose, role }: SidebarProps) {
+  const menus = role === "ADMIN" ? adminMenus : ownerMenus
+  const title = role === "ADMIN" ? "관리자 메뉴" : "트럭 운영자 메뉴"
   return (
     <SidebarContainer isOpen={isOpen}>
       <div className="sidebar-header">
-        <span>트럭 운영자 메뉴</span>
+        <span>{title}</span>
       </div>
       <nav className="items">
-        <Link to="/owner/trucks">내 트럭</Link>
-        <Link to="/owner/reservations">예약 / 주문 관리</Link>
-        <Link to="/owner/statistics">통계 / 매출</Link>
+        {menus.map(menu => (
+          <Link key={menu.label} to={menu.path} onClick={onClose}>
+            {menu.label}
+          </Link>
+        ))}
       </nav>
     </SidebarContainer>
   );

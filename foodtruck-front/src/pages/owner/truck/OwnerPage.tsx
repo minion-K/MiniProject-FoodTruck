@@ -72,7 +72,6 @@ const Container = styled.div`
   flex-direction: column;
   gap: 20px;
   height: 100%;
-  background-color: #f5f5f5;
 `;
 
 const Header = styled.h1`

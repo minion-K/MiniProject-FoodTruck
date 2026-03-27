@@ -576,10 +576,19 @@ const CardGrid = styled.div`
 `;
 
 const StatCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   background: white;
-  border: 1px solid #e5e7eb;
+  border-radius: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+  }
 `;
 
 const StatLabel = styled.strong`
