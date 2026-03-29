@@ -15,13 +15,12 @@ function TruckModal({ open, onClose, initialValue, onSubmit }: Props) {
   const [cuisine, setCuisine] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (!open) return null;
   const isEdit = !!initialValue;
 
   useEffect(() => {
-    if(initialValue) {
-      setName(initialValue.name ?? "");
-      setCuisine(initialValue.cuisine ?? "");
+    if(open) {
+      setName(initialValue?.name ?? "");
+      setCuisine(initialValue?.cuisine ?? "");
     } else {
       setName("");
       setCuisine("");
@@ -44,6 +43,8 @@ function TruckModal({ open, onClose, initialValue, onSubmit }: Props) {
       setLoading(false);
     }
   };
+
+  if(!open) return null;
 
   return (
     <Overlay>

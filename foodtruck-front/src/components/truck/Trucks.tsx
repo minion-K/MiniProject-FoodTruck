@@ -1,10 +1,10 @@
-import type { TruckListResponse } from "@/types/truck/truck.dto";
+import type { TruckListItemResponse } from "@/types/truck/truck.dto";
 import styled from "@emotion/styled";
 import TruckCard from "./TruckCard";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
-  trucks: TruckListResponse;
+  trucks: TruckListItemResponse[];
   urlPrefix?: string;
 }
 
@@ -12,7 +12,7 @@ function Trucks({ trucks, urlPrefix = "" }: Props) {
   const navigate = useNavigate();
   return (
     <List>
-      {trucks.map((truck) => (
+      {trucks?.map((truck) => (
         <Item
           key={truck.id}
           onClick={() => navigate(`${urlPrefix}/trucks/${truck.id}`)}

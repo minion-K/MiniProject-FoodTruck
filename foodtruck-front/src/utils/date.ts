@@ -16,7 +16,7 @@ export function toKstString(date: string | Date) {
   const min = String(d.getMinutes()).padStart(2, "0");
   const sec = String(d.getSeconds()).padStart(2, "0");
 
-  return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
+  return `${year}-${month}-${day}T${hour}:${min}:${sec}`;
 }
 
 export const formatPickupRange = (pickupTime: string | Date) => {

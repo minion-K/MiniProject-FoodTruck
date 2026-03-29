@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
+import org.example.foodtruckback.exception.BusinessException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,5 +66,13 @@ public class Truck extends BaseTimeEntity {
 
     public void inactivate() {
         this.status = TruckStatus.INACTIVE;
+    }
+
+    public void changeStatus(TruckStatus newStatus) {
+        if(newStatus == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+
+        this.status = newStatus;
     }
 }

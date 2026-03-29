@@ -1,15 +1,14 @@
 import { truckApi } from "@/apis/truck/truck.api";
-import KakaoMap from "@/components/map/KakaoMap";
 import TruckModal from "@/components/truck/TruckModal";
 import Trucks from "@/components/truck/Trucks";
-import type { TruckCreateRequest, TruckListResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
-import type { TruckFormData, TruckStatus } from "@/types/truck/truck.type";
+import type { TruckListItemResponse } from "@/types/truck/truck.dto";
+import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
 
 function OwnerPage() {
-  const [trucks, setTrucks] = useState<TruckListResponse>([]);
+  const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -51,7 +50,7 @@ function OwnerPage() {
 
       <Content>
         <ListWrapper>
-          <Trucks trucks={trucks} urlPrefix="/owner" />
+          {trucks && <Trucks trucks={trucks} urlPrefix="/owner" />}
         </ListWrapper>
       </Content>
 

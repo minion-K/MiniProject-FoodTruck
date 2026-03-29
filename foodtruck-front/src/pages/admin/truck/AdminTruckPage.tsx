@@ -1,52 +1,76 @@
+import { truckApi } from '@/apis/truck/truck.api';
+import Pagination from '@/components/common/pagination';
 import SearchInput from '@/components/common/SearchInput';
+import { type TruckListItemResponse } from '@/types/truck/truck.dto';
 import type { TruckStatus } from '@/types/truck/truck.type';
+import { toKstString } from '@/utils/date';
+import { getErrorMsg } from '@/utils/error';
 import { getTruckStatus } from '@/utils/TruckStatus';
 import styled from '@emotion/styled';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast';
 
-interface Truck {
-  id: number;
-  name: string;
-  cuisine?: string;
-  ownerId: number;
-  status: TruckStatus;
-  createdAt: string;
-}
-
-const mockTrucks: Truck[] = [
-  {
-    id: 1,
-    name: "타코킹",
-    cuisine: "멕시칸",
-    ownerId: 2,
-    status: "ACTIVE",
-    createdAt: "2026-03-25",
-  },
-  {
-    id: 2,
-    name: "버거트럭",
-    cuisine: "패스트푸드",
-    ownerId: 5,
-    status: "INACTIVE",
-    createdAt: "2026-03-24",
-  },
-  {
-    id: 3,
-    name: "스시온휠",
-    cuisine: "일식",
-    ownerId: 7,
-    status: "SUSPENDED", // 미래 대비
-    createdAt: "2026-03-23",
-  },
-];
+type StatusFilter = "ALL" | TruckStatus;
 
 function AdminTruckPage() {
-  const [statusFilter, setStatusFilter] = useState("");
-  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [keyword, setKeyword] = useState<string>("");
+  const [page, setPage] = useState<number>(0);
+  const [totalPage, setTotalPage] = useState<number>(1);
+  const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const filtered = mockTrucks.filter((t) =>
-    statusFilter ? t.status === statusFilter : true
-  );
+  const fetchTrucks = async () => {
+    setLoading(true);
+
+    try {
+      const res = await truckApi.getTruckList({
+        page,
+        size: 10,
+        keyword: keyword || undefined,
+        status: statusFilter === "ALL" ? undefined : statusFilter
+      });
+
+      setTrucks(res.content);
+      setTotalPage(res.totalPages);
+    } catch (e) {
+      alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(()=> {
+    setPage(0);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchTrucks();
+  }, [page, statusFilter])
+
+  const handleChangeStatus = async (
+    truck: TruckListItemResponse, 
+    newStatus: TruckStatus
+  ) => {
+    const confirmMsg = 
+      newStatus === "ACTIVE"
+        ? `${truck.name}의 정지를 해제하시겠습니까?`
+        : `${truck.name}의 운영을 정지하시겠습니까?`;
+
+    if(!window.confirm(confirmMsg)) return ;
+    setLoading(true);
+
+    try {
+      await truckApi.updateTruckStatus(truck.id, {status: newStatus});
+
+      toast.success(`${truck.name}의 상태가 변경되었습니다.`)
+      fetchTrucks();
+    } catch (e) {
+      alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  } 
 
   return (
     <Container>
@@ -58,12 +82,12 @@ function AdminTruckPage() {
         <LeftWrapper>
           <Select 
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           >
             <option value="">전체</option>
-            <option value="ACTIVE">운영중</option>
-            <option value="INACTIVE">운영중지</option>
-            <option value="SUSPENDED">비활성화</option>
+            <option value="ACTIVE">OPEN</option>
+            <option value="INACTIVE">CLOSE</option>
+            <option value="SUSPENDED">운영 정지</option>
           </Select>
         </LeftWrapper>
 
@@ -71,8 +95,9 @@ function AdminTruckPage() {
           <SearchInput 
             value={keyword}
             onChange={setKeyword}
-            onSearch={() => {}}
-            placeholder="검색어를 입력하세요."
+            onSearch={() => {fetchTrucks()}}
+            onEnter={true}
+            placeholder="트럭명으로 검색하세요."
           />
         </RightWrapper>
       </FilterRow>
@@ -81,44 +106,78 @@ function AdminTruckPage() {
         <StyledTable>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>트럭명</th>
-              <th>음식</th>
-              <th>운영자ID</th>
-              <th>상태</th>
-              <th>생성일</th>
-              <th>관리</th>
+              <th style={{width: "5%"}}>ID</th>
+              <th style={{width: "10%"}}>트럭명</th>
+              <th style={{width: "10%"}}>음식 종류</th>
+              <th style={{width: "15%"}}>운영자 ID</th>
+              <th style={{width: "10%"}}>운영자 이름</th>
+              <th style={{width: "10%"}}>상태</th>
+              <th style={{width: "20%"}}>생성일</th>
+              <th style={{width: "10%"}}>관리</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(truck => {
-              const status = getTruckStatus(truck.status);
-
-              return (
-                <tr key={truck.id}>
-                  <td>{truck.id}</td>
-                  <td>{truck.name}</td>
-                  <td>{truck.cuisine || "-"}</td>
-                  <td>{truck.ownerId}</td>
-                  <td>
-                    <StatusBage style={{background: status.color}}>
-                      {status.label}
-                    </StatusBage>
-                  </td>
-                  <td>{truck.createdAt}</td>
-                  <td>
-                    {truck.status === "SUSPENDED" ? (
-                      <ActionButton>정지 해제</ActionButton>
-                    ) : (
-                      <DangerButton>비활성화</DangerButton>
-                    )}
+            {loading ? (
+              <tr>
+                <td colSpan={8}>
+                  <Loding>로딩 중...</Loding>
+                </td>
+              </tr>
+            ) : (
+              trucks.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>
+                    <EmptyText>데이터 없음</EmptyText>
                   </td>
                 </tr>
-              )
-            })}
+              ) : (
+                trucks.map(truck => {
+                  const status = getTruckStatus(truck.status);
+    
+                  return (
+                    <tr key={truck.id}>
+                      <td>{truck.id}</td>
+                      <td>{truck.name}</td>
+                      <td>{truck.cuisine || "-"}</td>
+                      <td>{truck.ownerLoginId}</td>
+                      <td>{truck.ownerName}</td>
+                      <td>
+                        <StatusBadge style={{background: status.color}}>
+                          {status.label}
+                        </StatusBadge>
+                      </td>
+                      <td>{toKstString(truck.createdAt)}</td>
+                      <td>
+                        {truck.status === "SUSPENDED" ? (
+                          <ActionButton
+                            disabled={loading}
+                            onClick={() => handleChangeStatus(truck, "INACTIVE")}
+                          >
+                            {loading ? "처리 중" : "정지 해제"}
+                          </ActionButton>
+                        ) : (
+                          <DangerButton 
+                            disabled={loading}
+                            onClick={() => handleChangeStatus(truck, "SUSPENDED")}
+                          >
+                            {loading ? "처리 중" : "운영 정지"}
+                          </DangerButton>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })
+              )  
+            )}
           </tbody>
         </StyledTable>
       </TableWrapper>
+
+      <Pagination 
+        page={page}
+        totalPage={totalPage}
+        onChange={setPage}
+      />
     </Container>
   )
 }
@@ -200,7 +259,7 @@ const StyledTable = styled.table`
   }
 `;
 
-const StatusBage = styled.span`
+const StatusBadge = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,17 +272,31 @@ const StatusBage = styled.span`
   white-space: nowrap;
 `;
 
-const ActionButton = styled.button`
+const ActionButton = styled.button<{disabled?: boolean}>`
   padding: 5px 10px;
   font-size: 12px;
   border-radius: 6px;
   border: none;
-  cursor: pointer;
+  cursor: ${({disabled}) => disabled ? "not-allowed" : "cursor"};
   background: #e0f2fe;
   color: #0284c7;
+  opacity: ${({disabled}) => disabled ? "0.6" : ''};
 `;
 
 const DangerButton = styled(ActionButton)`
   background: #fee2e2;
   color: #dc2626;
 `;
+
+const Loding = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+`;
+
+const EmptyText = styled(Loding)``;

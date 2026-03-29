@@ -1,13 +1,13 @@
 import { truckApi } from "@/apis/truck/truck.api";
 import KakaoMap from "@/components/map/KakaoMap";
 import Trucks from "@/components/truck/Trucks";
-import type { TruckListResponse } from "@/types/truck/truck.dto";
+import type { TruckListItemResponse } from "@/types/truck/truck.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
 
 function TruckList() {
-  const [trucks, setTrucks] = useState<TruckListResponse>([]);
+  const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,7 +15,8 @@ function TruckList() {
     const fetchTrucks = async () => {
       try {
         const res = await truckApi.getTruckList();
-        setTrucks(res);
+
+        setTrucks(res.content);
       } catch (e) {
         setError(getErrorMsg(e));
       } finally {
@@ -59,7 +60,7 @@ function TruckList() {
         </MapWrapper>
 
         <ListWrapper>
-          <Trucks trucks={trucks} />
+          {trucks && <Trucks trucks={trucks} />}
         </ListWrapper>
       </Content>
     </Container>

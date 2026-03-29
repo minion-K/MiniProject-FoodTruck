@@ -82,7 +82,7 @@ CREATE TABLE trucks (
   created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   CONSTRAINT `fk_trucks_owner_id` FOREIGN KEY (owner_id) REFERENCES users(id),
-  CONSTRAINT `chk_trucks_status` CHECK (status IN ('ACTIVE','INACTIVE')),
+  CONSTRAINT `chk_trucks_status` CHECK (status IN ('ACTIVE','INACTIVE','SUSPENDED')),
   UNIQUE KEY `uk_trucks_owner_name` (owner_id, name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

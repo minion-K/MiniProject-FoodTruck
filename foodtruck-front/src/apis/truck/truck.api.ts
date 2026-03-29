@@ -4,11 +4,13 @@ import type {
   TruckDetailResponse,
   TruckUpdateRequest,
   TruckStatusUpdateRequest,
+  TruckListItemResponse,
 } from "@/types/truck/truck.dto";
 
 import { privateApi, publicApi } from "../common/axiosInstance";
 import { TRUCK_PATH } from "./truck.path";
 import type { ApiResponse } from "@/types/common/ApiResponse";
+import type { TruckStatus } from "@/types/truck/truck.type";
 
 export const truckApi = {
   createTruck: async (
@@ -22,9 +24,15 @@ export const truckApi = {
     return res.data.data;
   },
 
-  getTruckList: async (): Promise<TruckListResponse> => {
+  getTruckList: async (params?:{
+    page: number,
+    size: number,
+    keyword?: string,
+    status?: TruckStatus
+  }
+  ): Promise<TruckListResponse> => {
     const res = await publicApi.get<ApiResponse<TruckListResponse>>(
-      TRUCK_PATH.LIST,
+      TRUCK_PATH.LIST, {params}
     );
 
     return res.data.data;
@@ -38,8 +46,8 @@ export const truckApi = {
     return res.data.data;
   },
 
-  getOwnerTruckList: async (): Promise<TruckListResponse> => {
-    const res = await privateApi.get<ApiResponse<TruckListResponse>>(
+  getOwnerTruckList: async (): Promise<TruckListItemResponse[]> => {
+    const res = await privateApi.get<ApiResponse<TruckListItemResponse[]>>(
       TRUCK_PATH.OWNER,
     );
 
@@ -66,9 +74,15 @@ export const truckApi = {
       TRUCK_PATH.STATUSUPDATE(truckId),
       request
     )
+
+    return res.data.data;
   },
 
   deleteTruck: async (truckId: number): Promise<void> => {
-    await privateApi.delete<ApiResponse<void>>(TRUCK_PATH.DELETE(truckId));
+    const res = await privateApi.delete<ApiResponse<void>>(
+      TRUCK_PATH.DELETE(truckId)
+    )
+
+    return res.data.data;
   },
 };

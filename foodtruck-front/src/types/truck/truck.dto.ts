@@ -26,9 +26,17 @@ export interface TruckListItemResponse {
   locationSummary: string;
   latitude: number | null;
   longitude: number | null;
+  ownerName: string;
+  ownerLoginId: string;
+  createdAt: string
 }
 
-export type TruckListResponse = TruckListItemResponse[];
+export interface TruckListResponse {
+  content: TruckListItemResponse[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+};
 
 export interface TruckDetailResponse {
   id: number;

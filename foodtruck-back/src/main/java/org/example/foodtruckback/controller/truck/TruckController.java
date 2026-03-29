@@ -10,8 +10,13 @@ import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
+import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.truck.TruckService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +30,10 @@ public class TruckController {
 
     @PostMapping
     public ResponseEntity<ResponseDto<TruckDetailResponseDto>> createTruck(
-            @Valid @RequestBody TruckCreateRequestDto request
+            @Valid @RequestBody TruckCreateRequestDto request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<TruckDetailResponseDto> response = truckService.createTruck(request);
+        ResponseDto<TruckDetailResponseDto> response = truckService.createTruck(request, principal.getId());
 
         return ResponseEntity.ok(response);
     }
@@ -42,15 +48,23 @@ public class TruckController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getAllTrucks() {
-        ResponseDto<List<TruckListItemResponseDto>> response = truckService.getAllTrucks();
+    public ResponseEntity<ResponseDto<Page<TruckListItemResponseDto>>> getAllTrucks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) TruckStatus status
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        ResponseDto<Page<TruckListItemResponseDto>> response = truckService.getAllTrucks(pageable, keyword, status);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(TruckApi.OWNER)
-    public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getOwnerTrucks() {
-        ResponseDto<List<TruckListItemResponseDto>> response = truckService.getOwnerTrucks();
+    public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getOwnerTrucks(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        ResponseDto<List<TruckListItemResponseDto>> response = truckService.getOwnerTrucks(principal.getId());
 
         return ResponseEntity.ok(response);
     }
@@ -58,9 +72,10 @@ public class TruckController {
     @PutMapping(TruckApi.BY_ID)
     public ResponseEntity<ResponseDto<TruckDetailResponseDto>> updateTruck(
             @PathVariable Long truckId,
-            @Valid @RequestBody TruckUpdateRequestDto request
+            @Valid @RequestBody TruckUpdateRequestDto request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<TruckDetailResponseDto> response = truckService.updateTruck(truckId, request);
+        ResponseDto<TruckDetailResponseDto> response = truckService.updateTruck(truckId, request, principal.getId());
 
         return ResponseEntity.ok(response);
     }
@@ -68,18 +83,20 @@ public class TruckController {
     @PutMapping(TruckApi.STATUS)
     public ResponseEntity<ResponseDto<Void>> updateTruckStatus(
             @PathVariable Long truckId,
-            @RequestBody TruckStatusUpdateRequestDto request
+            @RequestBody TruckStatusUpdateRequestDto request,
+            @AuthenticationPrincipal UserPrincipal principal
             ) {
-        ResponseDto<Void> response = truckService.updateTruckStatus(truckId, request);
+        ResponseDto<Void> response = truckService.updateTruckStatus(truckId, request, principal);
 
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping(TruckApi.BY_ID)
     public ResponseEntity<ResponseDto<Void>> deleteTruck(
-            @PathVariable Long truckId
+            @PathVariable Long truckId,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<Void> response = truckService.deleteTruck(truckId);
+        ResponseDto<Void> response = truckService.deleteTruck(truckId, principal.getId());
 
         return ResponseEntity.ok(response);
     }

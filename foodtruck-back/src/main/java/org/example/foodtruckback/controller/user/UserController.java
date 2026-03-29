@@ -111,7 +111,7 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
 
-    @PostMapping(UserApi.STATUS)
+    @PutMapping(UserApi.STATUS)
     public ResponseEntity<ResponseDto<UserStatusUpdateResponseDto>> toggleUserStatus(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long userId

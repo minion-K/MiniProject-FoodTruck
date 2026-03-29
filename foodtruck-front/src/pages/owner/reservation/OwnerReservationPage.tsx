@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import ReservationTab from "./ReservationTab";
 import OrderTab from "./OrderTab";
 import ReservationDetailModal from "./ReservationDetailModal";
-import { type TruckDetailResponse, type TruckListResponse } from "@/types/truck/truck.dto";
+import { type TruckDetailResponse, type TruckListItemResponse, type TruckListResponse } from "@/types/truck/truck.dto";
 import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
@@ -16,7 +16,7 @@ function OwnerReservationPage() {
 
   const [activeTab, setActiveTab] = useState<"reservation" | "order">(initTab ?? "reservation");
   const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
-  const [trucks, setTrucks] = useState<TruckListResponse>([]);
+  const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [selectedTruckId, setSelectTruckId] = useState<number | null>(initTruckId ?? null);
   const [truckDetail, setTruckDetail] = useState<TruckDetailResponse | null>(null);
   const [selectedScheduleId, setSelectScheduleId] = useState<number | null>(initScheduleId ?? null);

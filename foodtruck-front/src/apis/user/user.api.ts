@@ -83,7 +83,7 @@ export const userApi = {
   },
 
   toggleStatus: async (userId: number): Promise<UserStatusUpdateResponse> => {
-    const res = await privateApi.post<ApiResponse<UserStatusUpdateResponse>>(
+    const res = await privateApi.put<ApiResponse<UserStatusUpdateResponse>>(
       USER_PATH.TOGGLE_STATUS(userId)
     );
 

@@ -22,8 +22,11 @@ import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
+import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.truck.TruckService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +48,7 @@ public class TruckServiceImpl implements TruckService {
     @Transactional
     @PreAuthorize("@authz.isOwnerOrAdmin()")
     public ResponseDto<TruckDetailResponseDto> createTruck(
-            TruckCreateRequestDto request
+            TruckCreateRequestDto request, Long userId
     ) {
         User owner = authorizationChecker.getCurrentUser();
 
@@ -60,9 +63,9 @@ public class TruckServiceImpl implements TruckService {
         List<MenuItemDetailResponseDto> menuItems = List.of();
         List<ScheduleItemResponseDto> schedules = List.of();
 
-        return ResponseDto.success(
-                TruckDetailResponseDto.from(truck, schedules, menuItems)
-        );
+        TruckDetailResponseDto response = TruckDetailResponseDto.from(truck, schedules, menuItems);
+
+        return ResponseDto.success("트럭 생성 성공.", response);
     }
 
     @Override
@@ -70,34 +73,40 @@ public class TruckServiceImpl implements TruckService {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
-        return ResponseDto.success(toDetailDto(truck));
+        TruckDetailResponseDto response = toDetailDto(truck);
+
+        return ResponseDto.success("트럭 단건조회 성공", response);
     }
 
     @Override
-    public ResponseDto<List<TruckListItemResponseDto>> getAllTrucks() {
-        List<TruckListItemResponseDto> list = truckRepository.findAll().stream()
-                .map(TruckListItemResponseDto::from)
-                .toList();
+    public ResponseDto<Page<TruckListItemResponseDto>> getAllTrucks(
+            Pageable pageable, String keyword, TruckStatus status
+    ) {
+        Page<Truck> truckPage = truckRepository.findAllWithFilter(pageable, keyword, status);
 
-        return ResponseDto.success(list);
+        Page<TruckListItemResponseDto> response = truckPage.map(TruckListItemResponseDto::from);
+
+        return ResponseDto.success("트럭 조회 성공", response);
     }
 
     @Override
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks() {
+    public ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks(Long userId) {
         User owner = authorizationChecker.getCurrentUser();
 
-        List<TruckListItemResponseDto> list = truckRepository.findByOwnerIdOrderByIdDesc(owner.getId()).stream()
+        List<TruckListItemResponseDto> response = truckRepository.findByOwnerIdOrderByIdDesc(owner.getId()).stream()
                 .map(TruckListItemResponseDto::from)
                 .toList();
 
-        return ResponseDto.success(list);
+        return ResponseDto.success("운영자용 트럭조회 성공", response);
     }
 
     @Override
     @Transactional
     @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.isOwnerOrAdmin()")
-    public ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, TruckUpdateRequestDto request) {
+    public ResponseDto<TruckDetailResponseDto> updateTruck(
+            Long truckId, TruckUpdateRequestDto request, Long userId
+    ) {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
@@ -107,29 +116,46 @@ public class TruckServiceImpl implements TruckService {
                 null
         );
 
-        return ResponseDto.success(toDetailDto(truck));
+        TruckDetailResponseDto response = toDetailDto(truck);
+
+        return ResponseDto.success("트럭 정보수정 성공", response);
     }
 
     @Override
     @Transactional
     @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.isOwnerOrAdmin()")
     public ResponseDto<Void> updateTruckStatus(
-            Long truckId, TruckStatusUpdateRequestDto request
+            Long truckId, TruckStatusUpdateRequestDto request, UserPrincipal principal
     ) {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
-        if(request.status() == TruckStatus.ACTIVE) {
-            boolean hasMenu = menuItemRepository.existsByTruckId(truckId);
-            boolean hasSchedule = scheduleRepository.existsByTruckIdAndEndTimeAfter(truckId, LocalDateTime.now());
+        TruckStatus newStatus = request.status();
 
-            if(!hasMenu || !hasSchedule) {
-                throw new BusinessException(ErrorCode.TRUCK_ACTIVATION_INVALID);
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(user -> user.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isOwner = principal.getAuthorities().stream()
+                .anyMatch(user -> user.getAuthority().equals("ROLE_OWNER"));
+
+        if(isOwner && !isAdmin) {
+            if(newStatus == TruckStatus.SUSPENDED) {
+                throw new BusinessException(ErrorCode.ACCESS_DENIED);
             }
 
-            truck.activate();
+            if(newStatus == TruckStatus.ACTIVE) {
+                boolean hasMenu = menuItemRepository.existsByTruckId(truckId);
+                boolean hasSchedule = scheduleRepository.existsByTruckIdAndEndTimeAfter(truckId, LocalDateTime.now());
+
+                if(!hasMenu || !hasSchedule) {
+                    throw new BusinessException(ErrorCode.TRUCK_ACTIVATION_INVALID);
+                }
+            }
+            truck.changeStatus(newStatus);
+        } else if(isAdmin) {
+            truck.changeStatus(newStatus);
         } else {
-            truck.inactivate();
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
         return ResponseDto.success("트럭 상태 변경이 완료되었습니다.");
@@ -138,7 +164,7 @@ public class TruckServiceImpl implements TruckService {
     @Override
     @Transactional
     @PreAuthorize("@authz.isTruckOwner(#truckId) or @authz.isOwnerOrAdmin()")
-    public ResponseDto<Void> deleteTruck(Long truckId) {
+    public ResponseDto<Void> deleteTruck(Long truckId, Long userId) {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 

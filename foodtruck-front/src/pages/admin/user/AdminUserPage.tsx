@@ -22,10 +22,13 @@ function AdminUserPage() {
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
   const [users, setUsers] = useState<UserListItemResponse[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const roles: RoleType[] = ["USER" , "OWNER" , "ADMIN"];
 
   const fetchUsers = async () => {
+    setLoading(true)
+
     try {
       const res = await userApi.getUserList({
         role: activeTab,
@@ -40,6 +43,8 @@ function AdminUserPage() {
       setTotalPage(res.totalPages);
     } catch (e) {
       alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,48 +170,63 @@ function AdminUserPage() {
             </tr>
           </thead>
           <tbody>
-            {users
-              .map(user => {
-                const statusInfo = getUserStatus(user.status);
-                const primaryRole = user.roles?.[0] ?? "USER";
-                const roleInfo = getRoleInfo(primaryRole);
-
-                return (
-                  <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>{user.phone ?? "-"}</td>
-                    <td>
-                      <StatusButton 
-                        style={{background: statusInfo.color}}
-                        onClick={() => handleChangeStatus(user)}>
-                        {statusInfo.label}
-                      </StatusButton>
-                    </td>
-                    <td>
-                      <RoleSelect
-                        style={{background: roleInfo.color}}
-                        role={primaryRole}
-                        value={primaryRole}
-                        onChange={(e) => handleChangeRole(user, e.target.value as RoleType)}
-                      >
-                        {roles.map(role => {
-                          const info = getRoleInfo(role);
-
-                          return (
-                            <option key={role} value={role}>
-                              {info.label}
-                            </option>
-                          )
-                        })}
-                      </RoleSelect>
-                    </td>
-                    <td>{toKstString(user.createdAt)}</td>
-                  </tr>
-                )
-              })
-            }
+            {loading ? (
+              <tr>
+                <td colSpan={7}>
+                  <Loding>로딩 중...</Loding>
+                </td>
+              </tr>
+            ) : (
+              users.length === 0 ? (
+                <tr>
+                  <td colSpan={7}>
+                    <EmptyText>데이터 없음</EmptyText>
+                  </td>
+                </tr>
+              ) : (
+                users
+                  .map(user => {
+                    const statusInfo = getUserStatus(user.status);
+                    const primaryRole = user.roles?.[0] ?? "USER";
+                    const roleInfo = getRoleInfo(primaryRole);
+    
+                    return (
+                      <tr key={user.id}>
+                        <td>{user.id}</td>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.phone ?? "-"}</td>
+                        <td>
+                          <StatusButton 
+                            style={{background: statusInfo.color}}
+                            onClick={() => handleChangeStatus(user)}>
+                            {statusInfo.label}
+                          </StatusButton>
+                        </td>
+                        <td>
+                          <RoleSelect
+                            style={{background: roleInfo.color}}
+                            role={primaryRole}
+                            value={primaryRole}
+                            onChange={(e) => handleChangeRole(user, e.target.value as RoleType)}
+                          >
+                            {roles.map(role => {
+                              const info = getRoleInfo(role);
+    
+                              return (
+                                <option key={role} value={role}>
+                                  {info.label}
+                                </option>
+                              )
+                            })}
+                          </RoleSelect>
+                        </td>
+                        <td>{toKstString(user.createdAt)}</td>
+                      </tr>
+                    )
+                  })
+              )
+            )}
           </tbody>
         </StyledTable>
       </TableWrapper>
@@ -347,3 +367,16 @@ const RoleSelect = styled.select`
     color: black;
   }
 `;
+
+const Loding = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+`;
+
+const EmptyText = styled(Loding)``;
