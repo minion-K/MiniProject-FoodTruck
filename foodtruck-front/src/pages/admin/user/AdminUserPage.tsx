@@ -18,14 +18,14 @@ function AdminUserPage() {
   const [activeTab, setActiveTab] = useState<RoleType>("USER");
   const [keyword, setKeyword] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [sortKey, setsortKey] = useState<SortKey>("createdAt");
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
   const [users, setUsers] = useState<UserListItemResponse[]>([]);
 
   const roles: RoleType[] = ["USER" , "OWNER" , "ADMIN"];
 
-  const fetchUser = async () => {
+  const fetchUsers = async () => {
     try {
       const res = await userApi.getUserList({
         role: activeTab,
@@ -45,11 +45,11 @@ function AdminUserPage() {
 
   useEffect(() => {
     setPage(0);
-  }, [activeTab, keyword, statusFilter]);
+  }, [activeTab, statusFilter, sortKey]);
 
   useEffect(() => {
-    fetchUser();
-  }, [activeTab, page, keyword, statusFilter]);
+    fetchUsers();
+  }, [activeTab, page, statusFilter, sortKey]);
 
   const handleChangeStatus = async (user: UserListItemResponse) => {
     const newStatus = user.status === "ACTIVE" ? "TEMP" : "ACTIVE";
@@ -63,7 +63,7 @@ function AdminUserPage() {
       await userApi.toggleStatus(user.id);
 
       toast.success(`${user.name}님의 상태가 변경되었습니다.`);
-      fetchUser();
+      fetchUsers();
     } catch (e) {
         alert(getErrorMsg(e));
     }
@@ -86,7 +86,7 @@ function AdminUserPage() {
       await userApi.delete(user.id, user.roles[0]);
       await userApi.add(user.id, {roleName: newRole});
 
-      fetchUser();
+      fetchUsers();
       toast.success("권한이 변경되었습니다.");
     } catch (e) {
       alert(getErrorMsg(e));
@@ -133,7 +133,7 @@ function AdminUserPage() {
 
           <Select
             value={sortKey}
-            onChange={(e) => setsortKey(e.target.value as SortKey)}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
           >
             <option value="createdAt">가입일순</option>
             <option value="email">이메일순</option>
@@ -144,7 +144,8 @@ function AdminUserPage() {
           <SearchInput 
             value={keyword}
             onChange={setKeyword}
-            onSearch={() => fetchUser()}
+            onSearch={() => fetchUsers()}
+            onEnter={true}
             placeholder="이름 또는 이메일로 검색해주세요."
           />
         </RightWrapper>
