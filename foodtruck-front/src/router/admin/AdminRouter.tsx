@@ -1,9 +1,9 @@
 import Layout from '@/components/layouts/Layout';
 import AdminReservationPage from '@/pages/admin/reservation/AdminReservationPage';
 import AdminStatisticsPage from '@/pages/admin/statistics/AdminStatisticsPage';
-import AdminTruckPage from '@/pages/admin/AdminTruckPage';
-import AdminUserPage from '@/pages/admin/AdminUserPage';
-import AdminPage from '@/pages/admin/AdminUserPage';
+import AdminTruckPage from '@/pages/admin/truck/AdminTruckPage';
+import AdminUserPage from '@/pages/admin/user/AdminUserPage';
+import AdminPage from '@/pages/admin/user/AdminUserPage';
 import { useAuthStore } from '@/stores/auth.store'
 import React, { useEffect } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';

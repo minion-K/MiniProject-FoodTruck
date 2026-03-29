@@ -2,12 +2,15 @@ import type {
   AdminUserUpdateRequest,
   UserDetailResponse,
   UserListResponse,
+  UserStatusUpdateResponse,
   UserUpdateRequest
 } from "@/types/user/user.dto";
 import { privateApi } from "../common/axiosInstance";
 import { USER_PATH } from "./user.path";
 import type { ApiResponse } from "@/types/common/ApiResponse";
 import type { RoleCreateRequest, RoleCreateResponse } from "@/types/role/role.dto";
+import type { RoleType } from "@/types/role/role.type";
+import type { UserStatus } from "@/types/user/user.type";
 
 export const userApi = {
   // 마이 프로필
@@ -27,11 +30,18 @@ export const userApi = {
 
     return res.data.data;
   },
-
+  
   // 전체 조회
-  getUserList: async (): Promise<UserListResponse> => {
+  getUserList: async (params?: {
+    role?: RoleType;
+    page?: number;
+    size?: number;
+    keyword?: string;
+    status?: UserStatus
+    sortKey?: "createdAt" | "email"
+  }): Promise<UserListResponse> => {
     const res = await privateApi.get<ApiResponse<UserListResponse>>(
-      USER_PATH.LIST
+      USER_PATH.LIST, {params}
     );
 
     return res.data.data;
@@ -64,9 +74,17 @@ export const userApi = {
   },
 
   // 권한 제거
-  delete: async (userId: number, roleName: string): Promise<void> => {
+  delete: async (userId: number, role: RoleType): Promise<void> => {
     const res = await privateApi.delete<ApiResponse<void>>(
-      USER_PATH.ROLEDELETE(userId, roleName)
+      USER_PATH.ROLEDELETE(userId, role)
+    );
+
+    return res.data.data;
+  },
+
+  toggleStatus: async (userId: number): Promise<UserStatusUpdateResponse> => {
+    const res = await privateApi.post<ApiResponse<UserStatusUpdateResponse>>(
+      USER_PATH.TOGGLE_STATUS(userId)
     );
 
     return res.data.data;

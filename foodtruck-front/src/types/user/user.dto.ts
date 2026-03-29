@@ -1,5 +1,6 @@
 import type { AuthProvider } from "../auth/auth.type";
 import type { RoleType } from "../role/role.type";
+import type { UserStatus } from "./user.type";
 
 export interface UserDetailResponse {
   id: number;
@@ -16,9 +17,23 @@ export interface UserListItemResponse {
   name: string;
   loginId: string;
   email: string;
+  phone: string | null;
+  status: UserStatus;
+  roles: RoleType[];
+  createdAt: string;
 }
 
-export type UserListResponse = UserListItemResponse[];
+export interface UserListResponse {
+  content: UserListItemResponse[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+}
+
+export interface UserStatusUpdateResponse {
+  userId: number;
+  status: string;
+}
 
 export interface UserUpdateRequest {
   name?: string;

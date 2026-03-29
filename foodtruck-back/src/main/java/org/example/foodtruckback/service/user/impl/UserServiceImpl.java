@@ -3,6 +3,7 @@ package org.example.foodtruckback.service.user.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
+import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
@@ -10,6 +11,7 @@ import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
+import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
 import org.example.foodtruckback.entity.user.Role;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
@@ -17,11 +19,12 @@ import org.example.foodtruckback.repository.user.RoleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.user.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -43,7 +46,7 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("조회 성공", response);
     }
 
-    // 정보 수정
+    // 내 정보 수정
     @Override
     @Transactional
     @PreAuthorize("isAuthenticated()")
@@ -73,13 +76,21 @@ public class UserServiceImpl implements UserService {
     // 유저 리스트
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<List<UserListResponseDto>> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        List<UserListResponseDto> result = users.stream()
-                .map(UserListResponseDto::from)
-                .toList();
+    public ResponseDto<Page<UserListResponseDto>> getAllUsers(
+            RoleType role, Pageable pageable, String keyword,
+            UserStatus status, String sortKey
+    ) {
+        Page<User> userPage;
 
-        return ResponseDto.success("회원 목록", result);
+        if(role == null) {
+            throw new BusinessException(ErrorCode.INVALID_ROLE);
+        }
+
+        userPage = userRepository.findAllByRoleWithFilter(role, pageable, keyword, status, sortKey);
+
+        Page<UserListResponseDto> response = userPage.map(UserListResponseDto::from);
+
+        return ResponseDto.success("회원 목록", response);
     }
 
     //단건
@@ -136,19 +147,20 @@ public class UserServiceImpl implements UserService {
     //권한 추가
     @Override
     @Transactional
-    public ResponseDto<RoleAddResponseDto> addRoles(UserPrincipal principal, RoleAddRequestDto request) {
-        User user = userRepository.findByLoginId(principal.getLoginId())
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseDto<RoleAddResponseDto> addRoles(UserPrincipal principal, RoleAddRequestDto request, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         RoleType roleType;
 
         try {
-            roleType = RoleType.valueOf(request.name());
-        } catch (IllegalArgumentException e) {
+            roleType = request.roleName();
+        } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_AUTH);
         }
 
-        Role role = roleRepository.findByName(roleType)
+        Role role = roleRepository.findById(roleType)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_NOT_FOUND));
 
         if (user.getRoleTypes().contains(roleType)) {
@@ -156,8 +168,6 @@ public class UserServiceImpl implements UserService {
         }
 
         user.addRole(role);
-        userRepository.flush();
-
         RoleAddResponseDto response = new RoleAddResponseDto(
                 role.getName()
         );
@@ -168,17 +178,13 @@ public class UserServiceImpl implements UserService {
     // 권한 제거
     @Override
     @Transactional
-    public ResponseDto<Void> deleteRoles(UserPrincipal principal, RoleType roleName) {
-        User user = userRepository.findByLoginId(principal.getLoginId())
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseDto<Void> deleteRoles(UserPrincipal principal, RoleType roleName, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         RoleType roleType;
-
-        try {
-            roleType = RoleType.valueOf(roleName.name());
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.INVALID_AUTH);
-        }
+        roleType = RoleType.valueOf(roleName.name());
 
         Role role = roleRepository.findById(roleType)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_NOT_FOUND));
@@ -190,10 +196,21 @@ public class UserServiceImpl implements UserService {
         user.deleteRole(role);
         userRepository.flush();
 
-        if (user.getUserRoles().isEmpty()) {
-            user.addRole(roleRepository.getReferenceById(RoleType.USER));
-        }
-
         return ResponseDto.success("권한이 제거되었습니다.");
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseDto<UserStatusUpdateResponseDto> toggleUserStatus(Long id, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        UserStatus status = user.getStatus() == UserStatus.ACTIVE ? UserStatus.TEMP : UserStatus.ACTIVE;
+        user.setStatus(status);
+
+        UserStatusUpdateResponseDto response = new UserStatusUpdateResponseDto(user.getId(), status.name());
+
+        return ResponseDto.success("유저 상태가 변경되었습니다.", response);
     }
 }

@@ -12,4 +12,5 @@ public class UserApi {
 
     public static final String ROLES = "/roles";
     public static final String DELETE = BY_ID + ROLES + "/{roleName}";
+    public static final String STATUS = BY_ID + "/status";
 }

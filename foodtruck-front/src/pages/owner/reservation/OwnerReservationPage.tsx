@@ -84,7 +84,7 @@ function OwnerReservationPage() {
   return (
     <Container>
       <HeaderRow>
-        <Title>예약·주문관리</Title>
+        <Title>예약 · 주문관리</Title>
       </HeaderRow>
 
       <DropdownContainer>

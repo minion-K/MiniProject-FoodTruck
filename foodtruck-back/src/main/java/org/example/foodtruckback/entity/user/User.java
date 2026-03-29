@@ -123,15 +123,20 @@ public class User extends BaseTimeEntity {
     }
 
     public void addRole(Role role) {
-        boolean exists = userRoles.stream().anyMatch(ur -> ur.getRole().equals(role));
+        boolean exists = userRoles.stream()
+                .anyMatch(ur ->
+                        ur.getRole().getName().equals(role.getName()));
 
         if (!exists) {
-            userRoles.add(new UserRole(this, role));
+            UserRole userRole = new UserRole(this, role);
+            userRoles.add(userRole);
         }
     }
 
     public void deleteRole(Role role) {
-        userRoles.removeIf(ur -> ur.getRole().equals(role));
+        userRoles.removeIf(ur ->
+            ur.getRole().getName().equals(role.getName())
+        );
     }
 
     public Set<RoleType> getRoleTypes() {

@@ -9,7 +9,7 @@ import org.example.foodtruckback.entity.user.Role;
 import org.example.foodtruckback.security.user.UserPrincipal;
 
 public record RoleAddResponseDto(
-        RoleType Name
+        RoleType roleName
 ) {
     public static RoleAddResponseDto from(Role role) {
         return new RoleAddResponseDto(

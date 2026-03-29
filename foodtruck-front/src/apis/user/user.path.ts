@@ -12,5 +12,6 @@ export const USER_PATH = {
   USERUPDATE: (userId: number) => `${USER_PREFIX}/${userId}`,
   
   ROLEADD: (userId: number) => `${USER_PREFIX}/${userId}`,
-  ROLEDELETE: (userId: number, roleName: string) => `${USER_PREFIX}${userId}/roles/${roleName}`,
+  ROLEDELETE: (userId: number, roleName: string) => `${USER_PREFIX}/${userId}/roles/${roleName}`,
+  TOGGLE_STATUS: (userId: number) => `${USER_PREFIX}/${userId}/status`
 };
