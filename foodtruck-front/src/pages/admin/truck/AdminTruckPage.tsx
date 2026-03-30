@@ -3,7 +3,7 @@ import Pagination from '@/components/common/pagination';
 import SearchInput from '@/components/common/SearchInput';
 import { type TruckListItemResponse } from '@/types/truck/truck.dto';
 import type { TruckStatus } from '@/types/truck/truck.type';
-import { toKstString } from '@/utils/date';
+import { formatDateTime, toKstString } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getTruckStatus } from '@/utils/TruckStatus';
 import styled from '@emotion/styled';
@@ -120,7 +120,7 @@ function AdminTruckPage() {
             {loading ? (
               <tr>
                 <td colSpan={8}>
-                  <Loding>로딩 중...</Loding>
+                  <Loading>로딩 중...</Loading>
                 </td>
               </tr>
             ) : (
@@ -146,7 +146,7 @@ function AdminTruckPage() {
                           {status.label}
                         </StatusBadge>
                       </td>
-                      <td>{toKstString(truck.createdAt)}</td>
+                      <td>{formatDateTime(truck.createdAt)}</td>
                       <td>
                         {truck.status === "SUSPENDED" ? (
                           <ActionButton
@@ -277,18 +277,28 @@ const ActionButton = styled.button<{disabled?: boolean}>`
   font-size: 12px;
   border-radius: 6px;
   border: none;
-  cursor: ${({disabled}) => disabled ? "not-allowed" : "cursor"};
+  cursor: ${({disabled}) => disabled ? "not-allowed" : "pointer"};
   background: #e0f2fe;
   color: #0284c7;
   opacity: ${({disabled}) => disabled ? "0.6" : ''};
+
+  &:hover {
+    background: #bae6fd;
+    color: #0369a1;
+  }
 `;
 
 const DangerButton = styled(ActionButton)`
   background: #fee2e2;
   color: #dc2626;
+
+  &:hover {
+    background-color: #fca5a5;
+    color: #b91c1c;
+  }
 `;
 
-const Loding = styled.div`
+const Loading = styled.div`
   width: 100%;
   display: flex;
   justify-content: center;
@@ -299,4 +309,4 @@ const Loding = styled.div`
   color: #6b7280;
 `;
 
-const EmptyText = styled(Loding)``;
+const EmptyText = styled(Loading)``;

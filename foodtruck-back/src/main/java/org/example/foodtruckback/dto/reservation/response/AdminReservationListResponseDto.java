@@ -14,7 +14,8 @@ public record AdminReservationListResponseDto(
         LocalDateTime pickupTime,
         ReservationStatus status,
         PaymentStatus paymentStatus,
-        List<ReservationMenuItemResponseDto> menus
+        List<ReservationMenuItemResponseDto> menus,
+        LocalDateTime createdAt
 ) {
     public static AdminReservationListResponseDto from(
             Reservation reservation,
@@ -31,7 +32,8 @@ public record AdminReservationListResponseDto(
                 reservation.getPickupTime(),
                 reservation.getStatus(),
                 paymentStatus,
-                menus
+                menus,
+                reservation.getCreatedAt()
         );
     }
 }

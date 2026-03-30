@@ -5,10 +5,12 @@ import React from 'react'
 interface Props {
   keyword: string;
   dateRange: "ALL" | "TODAY" | "WEEK" | "MONTH";
-  status: OrderStatus;
+  status: "ALL" | OrderStatus;
 }
 
 function AdminOrderTab({keyword, dateRange, status}: Props) {
+  
+
   return (
     <>
       <HeaderRow>

@@ -27,12 +27,16 @@ import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.payment.PaymentService;
 import org.example.foodtruckback.service.reservation.ReservationService;
 import org.springframework.cglib.core.Local;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +63,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ResponseDto<ReservationResponseDto> createReservation(
-            @AuthenticationPrincipal UserPrincipal principal,
+            Long ownerId,
             ReservationCreateRequestDto request
     ) {
 
@@ -81,14 +85,14 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         boolean exist = reservationRepository.existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusIn(
-                principal.getId(), schedule.getId(),pickupTime, List.of(PENDING, CONFIRMED)
+                ownerId, schedule.getId(),pickupTime, List.of(PENDING, CONFIRMED)
         );
 
         if(exist) {
             throw new BusinessException(ErrorCode.DUPLICATE_RESERVATION);
         }
 
-        User user = userRepository.getReferenceById(principal.getId());
+        User user = userRepository.getReferenceById(ownerId);
 
         int totalAmount = 0;
 
@@ -139,7 +143,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> getReservationById(
-            @AuthenticationPrincipal UserPrincipal principal,
+            Long userId,
             Long reservationId
     ) {
         Reservation reservation = reservationRepository.findDetail(reservationId)
@@ -159,9 +163,9 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public ResponseDto<List<ReservationListResponseDto>> getMyReservations(
-            @AuthenticationPrincipal UserPrincipal principal
+            Long userId
     ) {
-        List<Reservation> reservations = reservationRepository.findForUserReservationList(principal.getId());
+        List<Reservation> reservations = reservationRepository.findForUserReservationList(userId);
 
         Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus((reservations));
 
@@ -181,12 +185,12 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @PreAuthorize("hasRole('OWNER')")
     public ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(
-            @AuthenticationPrincipal UserPrincipal principal, Long scheduleId
+            Long ownerId, Long scheduleId
     ) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
-        if(!schedule.getTruck().getOwner().getId().equals(principal.getId())) {
+        if(!schedule.getTruck().getOwner().getId().equals(ownerId)) {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
@@ -209,26 +213,26 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<List<AdminReservationListResponseDto>> getAdminReservations(Long scheduleId) {
-        List<Reservation> reservations;
+    public ResponseDto<Page<AdminReservationListResponseDto>> getAdminReservations(
+            Long adminId, Pageable pageable,
+            String dateRange, ReservationStatus status, String keyword
+    ) {
+        LocalDateTime startDate = getStartDate(dateRange);
+        LocalDateTime endDate = getEndDate();
 
-        if(scheduleId != null) {
-            reservations = reservationRepository.findByScheduleIdFetch(scheduleId);
-        } else {
-            reservations = reservationRepository.findForAdminReservationList();
-        }
+        Page<Reservation> reservationPage = reservationRepository.findAdminReservations(pageable, startDate, endDate, status, keyword);
 
-        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservations);
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservationPage.getContent());
 
-        List<AdminReservationListResponseDto> response = reservations.stream()
+        Page<AdminReservationListResponseDto> response = reservationPage
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return AdminReservationListResponseDto.from(reservation, paymentStatus);
-                })
-                .toList();
+                });
+
         return ResponseDto.success("조회 성공", response);
     }
 
@@ -236,7 +240,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> updateStatus(
-            @AuthenticationPrincipal UserPrincipal principal,
+            Long userId,
             Long reservationId,
             ReservationStatusUpdateRequestDto request
     ) {
@@ -263,18 +267,17 @@ public class ReservationServiceImpl implements ReservationService {
             "hasRole('ADMIN')"
     )
     public ResponseDto<Void> cancelReservation(
-            @AuthenticationPrincipal UserPrincipal principal,
-            Long reservationId
+            Long userId, Long reservationId
     ) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        boolean isReservationOwner = reservation.getUser().getId().equals(principal.getId());
+        boolean isReservationOwner = reservation.getUser().getId().equals(userId);
 
         if(isReservationOwner) {
             reservation.cancelByUser();
         } else {
-            reservation.cancel();
+            reservation.forceCancel();
         }
 
         orderRepository.findByReservation(reservation)
@@ -300,7 +303,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> updateReservation(
-            UserPrincipal principal,
+            Long userId,
             Long reservationId,
             ReservationUpdateRequestDto request
     ) {
@@ -435,5 +438,22 @@ public class ReservationServiceImpl implements ReservationService {
         if(payment != null) {
             payment.setOrderId(order.getId());
         }
+    }
+
+    private LocalDateTime getStartDate(String dateRange) {
+        if(dateRange == null || dateRange.equals("ALL")) return null;
+
+        LocalDate today = LocalDate.now();
+
+        return switch (dateRange) {
+            case "TODAY" -> today.atStartOfDay();
+            case "WEEK" -> today.with(DayOfWeek.MONDAY).atStartOfDay();
+            case "MONTH" -> today.withDayOfMonth(1).atStartOfDay();
+            default -> throw new BusinessException(ErrorCode.INVALID_INPUT);
+        };
+    }
+
+    private LocalDateTime getEndDate() {
+        return LocalDateTime.now();
     }
 }

@@ -45,7 +45,3 @@ export function formatDateTime(date: string | Date) {
 export function DateAndHour(date: string, hour: string) {
   return `${date}T${hour}:00`;
 }
-
-export function formatHour(date: Date) {
-  return `${date.getHours().toString().padStart(2, "0")}:00`;
-}

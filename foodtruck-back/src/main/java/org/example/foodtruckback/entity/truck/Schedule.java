@@ -149,6 +149,10 @@ public class Schedule extends BaseTimeEntity {
 
         LocalDateTime now = LocalDateTime.now();
 
+        if(now.isBefore(startTime) && newStatus == ScheduleStatus.OPEN) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+        }
+
         if((now.isAfter(endTime) || now.isEqual(endTime))
             && newStatus == ScheduleStatus.OPEN
         ) {

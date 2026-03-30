@@ -173,7 +173,7 @@ function AdminUserPage() {
             {loading ? (
               <tr>
                 <td colSpan={7}>
-                  <Loding>로딩 중...</Loding>
+                  <Loading>로딩 중...</Loading>
                 </td>
               </tr>
             ) : (
@@ -221,7 +221,7 @@ function AdminUserPage() {
                             })}
                           </RoleSelect>
                         </td>
-                        <td>{toKstString(user.createdAt)}</td>
+                        <td>{user.createdAt}</td>
                       </tr>
                     )
                   })
@@ -368,7 +368,7 @@ const RoleSelect = styled.select`
   }
 `;
 
-const Loding = styled.div`
+const Loading = styled.div`
   width: 100%;
   display: flex;
   justify-content: center;
@@ -379,4 +379,4 @@ const Loding = styled.div`
   color: #6b7280;
 `;
 
-const EmptyText = styled(Loding)``;
+const EmptyText = styled(Loading)``;

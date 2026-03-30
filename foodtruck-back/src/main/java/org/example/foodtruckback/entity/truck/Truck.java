@@ -60,14 +60,6 @@ public class Truck extends BaseTimeEntity {
         if (status != null) this.status = status;
     }
 
-    public void activate() {
-        this.status = TruckStatus.ACTIVE;
-    }
-
-    public void inactivate() {
-        this.status = TruckStatus.INACTIVE;
-    }
-
     public void changeStatus(TruckStatus newStatus) {
         if(newStatus == null) {
             throw new BusinessException(ErrorCode.INVALID_INPUT);

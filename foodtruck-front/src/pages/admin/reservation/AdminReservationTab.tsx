@@ -1,14 +1,66 @@
+import { reservationApi } from '@/apis/reservation/reservation.api';
+import Pagination from '@/components/common/pagination';
+import { type AdminReservationListItemResponse } from '@/types/reservation/reservation.dto';
 import type { ReservationStatus } from '@/types/reservation/reservation.type';
+import { formatDateTime, formatPickupRange } from '@/utils/date';
+import { getErrorMsg } from '@/utils/error';
+import { getPaymentStatus } from '@/utils/paymentStatus';
+import { getReservationStatus } from '@/utils/reservationStatus';
 import styled from '@emotion/styled';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast';
 
 interface Props {
   keyword: string;
   dateRange: "ALL" | "TODAY" | "WEEK" | "MONTH"
-  status: ReservationStatus
+  status: "ALL" | ReservationStatus
 }
 
 function AdminReservationTab({keyword, dateRange, status}: Props) {
+  const [reservations, setReservations] = useState<AdminReservationListItemResponse[]>([]);
+  const [page, setPage] = useState<number>(0);
+  const [totalPage, setTotalPage] = useState<number>(1);
+  const [loading, setLoading] = useState(false);
+
+  const fetchReservations = async () => {
+    setLoading(true);
+    try {
+      const res = await reservationApi.getAdminReservations({
+        page,
+        size: 10,
+        keyword: keyword || undefined,
+        dateRange,
+        status: status === "ALL" ? undefined : status
+      });
+  
+      setReservations(res.content);
+      setTotalPage(totalPage);
+    } catch (e) {
+      alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setPage(0);
+  }, [status, dateRange, keyword]);
+
+  useEffect(() => {
+    fetchReservations();
+  }, [page, status, dateRange, keyword]);
+
+  const handleForceCancel = async (reservationId: number) => {
+    if(!window.confirm("해당 예약을 강제취소 하시겠습니까?")) return ;
+
+    try {
+      await reservationApi.cancelReservation(reservationId);
+      toast.success("예약이 강제 취소 되었습니다.");
+    } catch (e) {
+      alert(getErrorMsg(e));
+    }
+  };
+
   return (
     <>
       <HeaderRow>
@@ -19,41 +71,99 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
         <StyledTable>
           <thead>
             <tr>
-              <th>예약정보</th>
-              <th>메뉴</th>
-              <th>금액</th>
-              <th>상태</th>
-              <th>예약일</th>
-              <th>액션</th>
+              <th style={{width: "15%"}}>예약정보</th>
+              <th style={{width: "15%"}}>메뉴</th>
+              <th style={{width: "15%"}}>금액</th>
+              <th style={{width: "15%"}}>상태</th>
+              <th style={{width: "20%"}}>예약일</th>
+              <th style={{width: "10%"}}>관리</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>
-                <InfoMain>김밥트럭</InfoMain>
-                <InfoSub>12:00~14:00</InfoSub>
-                <InfoSub>픽업: 12:30 / 홍길동</InfoSub>
-              </td>
-              <td>
-                <Menu>불고기 버거 외2개</Menu>
-              </td>
-              <td>
-                <Price>23000 KRW</Price>
-              </td>
-              <td>
-                <StatusWrapper>
-                  <StatusBadge>COMFIRM</StatusBadge>
-                  <PaymentBadge>PAID</PaymentBadge>
-                </StatusWrapper>
-              </td>
-              <td>2026-03-27</td>
-              <td>
-                <ActionButton>상세</ActionButton>
-              </td>
-            </tr>
+            {loading ? (
+              <tr>
+                <td colSpan={6}>
+                  <Loading>로딩 중...</Loading>
+                </td>
+              </tr>
+            ): (
+              reservations.length === 0 ? (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyText>데이터 없음</EmptyText>
+                  </td>
+                </tr>
+              ) : (
+                reservations.map(reservation => {
+                  const reservationStatus = getReservationStatus(reservation.status);
+                  const paymentStatus = getPaymentStatus(reservation.paymentStatus);
+                  const menuItems = reservation.menus ?? [];
+                  
+                  const totalAmount = menuItems.reduce(
+                    (sum, item) => sum + item.price * item.quantity,
+                    0
+                  );
+
+                  const menuSummary = menuItems.length === 0
+                    ? "메뉴 정보 없음"
+                    : menuItems.length === 1
+                    ? `${menuItems[0].name} ${menuItems[0].quantity}개`
+                    : `${menuItems[0].name} 외 ${menuItems.length - 1}건`
+
+                  const menuText = menuItems.length === 0
+                    ? "메뉴 정보 없음"
+                    : menuItems
+                      .map(item => `${item.name} ${item.quantity}개`)
+                      .join(", ");
+                  return (
+                    <tr key={reservation.id}>
+                      <td>
+                        <InfoMain>{reservation.truckName}</InfoMain>
+                        <InfoSub>픽업: {formatPickupRange(reservation.pickupTime)}</InfoSub>
+                        <InfoSub>예약자: {reservation.userName}</InfoSub>
+                      </td>
+                      <td>
+                        <Menu title={menuText}>{menuSummary}</Menu>
+                      </td>
+                      <td>
+                        <Price>{totalAmount} KRW</Price>
+                      </td>
+                      <td>
+                        <StatusWrapper>
+                          <StatusBadge style={{background: reservationStatus.color}}>
+                            {reservationStatus.label}
+                          </StatusBadge>
+                          <PaymentBadge style={{background: paymentStatus.color}}>
+                            {paymentStatus.label}
+                          </PaymentBadge>
+                        </StatusWrapper>
+                      </td>
+                      <td>{formatDateTime(reservation.createdAt)}</td>
+                      <td>
+                        {reservation.status !== "CANCELED" && (
+                          <CancelButton
+                            onClick={() => handleForceCancel(reservation.id)}
+                          >
+                            강제취소
+                          </CancelButton>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                  
+                })
+              )
+              )
+            }
           </tbody>
         </StyledTable>
       </TableWrapper>
+
+      <Pagination 
+        page={page}
+        totalPage={totalPage}
+        onChange={setPage}
+      />
     </>
   )
 }
@@ -137,31 +247,36 @@ const StatusWrapper = styled.div`
 const StatusBadge = styled.div`
   font-size: 11px;
   padding: 2px 6px;
-  background: #e0e7ff;
-  color: #3730a3;
   border-radius: 4px;
   width: fit-content;
 `;
 
-const PaymentBadge = styled.div`
-  font-size: 11px;
-  padding: 2px 6px;
-  background: #dcfce7;
-  color: #166534;
-  border-radius: 4px;
-  width: fit-content;
-`;
+const PaymentBadge = styled(StatusBadge)``;
 
-const ActionButton = styled.button`
+const CancelButton = styled.button<{disable?: boolean}>`
   padding: 5px 10px;
   font-size: 12px;
   border: none;
-  background: #111827;
-  color: white;
+  background: #fee2e2;
+  color: #dc2626;
   border-radius: 6px;
-  cursor: pointer;
+  cursor: ${({disabled}) => disabled ? "not-allowed" : "pointer"};
 
   &:hover {
-    background: #374151;
+    background: #fca5a5;
+    color: #b91c1c;
   }
 `;
+
+const Loading = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+`;
+
+const EmptyText = styled(Loading)``;

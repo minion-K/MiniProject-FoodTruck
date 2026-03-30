@@ -7,7 +7,7 @@ import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 import CreateLocation from '../map/CreateLocation';
 import LocationManageModal from '../map/LocationManageModal';
-import { DateAndHour, formatHour } from '@/utils/date';
+import { DateAndHour, formatTime } from '@/utils/date';
 
 interface Props {
   truckId: number;
@@ -52,8 +52,8 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
           const defaultMax = 100;
     
           setDate(start.toISOString().slice(0, 10));
-          setStartHour(formatHour(start));
-          setEndHour(formatHour(end));
+          setStartHour(formatTime(start));
+          setEndHour(formatTime(end));
           setLocationId(res.locationId);
           setMaxReservations(res.maxReservations ?? null);
           setIsAdviceOpen(res.maxReservations != null && res.maxReservations !== defaultMax);

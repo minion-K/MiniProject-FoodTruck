@@ -3,6 +3,7 @@ package org.example.foodtruckback.controller.reservation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.reservation.ReservationApi;
+import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
@@ -14,6 +15,9 @@ import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.reservation.ReservationService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +36,7 @@ public class ReservationController {
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody ReservationCreateRequestDto request
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.createReservation(principal, request);
+        ResponseDto<ReservationResponseDto> response = reservationService.createReservation(principal.getId(), request);
 
         return ResponseEntity.ok(response);
     }
@@ -42,7 +46,7 @@ public class ReservationController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.getReservationById(principal, reservationId);
+        ResponseDto<ReservationResponseDto> response = reservationService.getReservationById(principal.getId(), reservationId);
         return ResponseEntity.ok(response);
     }
 
@@ -50,7 +54,7 @@ public class ReservationController {
     public ResponseEntity<ResponseDto<List<ReservationListResponseDto>>> getMyReservations(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<List<ReservationListResponseDto>> response =  reservationService.getMyReservations(principal);
+        ResponseDto<List<ReservationListResponseDto>> response =  reservationService.getMyReservations(principal.getId());
 
         return ResponseEntity.ok(response);
     }
@@ -61,18 +65,24 @@ public class ReservationController {
             @RequestParam Long scheduleId
     ) {
         ResponseDto<List<OwnerReservationListResponseDto>> response =
-                reservationService.getOwnerReservations(principal, scheduleId);
+                reservationService.getOwnerReservations(principal.getId(), scheduleId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(ReservationApi.ADMIN)
-    public ResponseEntity<ResponseDto<List<AdminReservationListResponseDto>>> getAdminReservations(
+    public ResponseEntity<ResponseDto<Page<AdminReservationListResponseDto>>> getAdminReservations(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(required = false) Long scheduleId
-    ) {
-        ResponseDto<List<AdminReservationListResponseDto>> response =
-                reservationService.getAdminReservations(scheduleId);
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "ALL") String dateRange,
+            @RequestParam(required = false) ReservationStatus status,
+            @RequestParam(required = false) String keyword
+            ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        ResponseDto<Page<AdminReservationListResponseDto>> response =
+                reservationService.getAdminReservations(principal.getId(), pageable, dateRange, status, keyword);
 
         return ResponseEntity.ok(response);
     }
@@ -84,7 +94,7 @@ public class ReservationController {
             @RequestBody ReservationStatusUpdateRequestDto request
     ) {
         ResponseDto<ReservationResponseDto> response =
-                reservationService.updateStatus(principal, reservationId, request);
+                reservationService.updateStatus(principal.getId(), reservationId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -94,7 +104,7 @@ public class ReservationController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId
     ) {
-        ResponseDto<Void> response = reservationService.cancelReservation(principal, reservationId);
+        ResponseDto<Void> response = reservationService.cancelReservation(principal.getId(), reservationId);
 
         return ResponseEntity.ok(response);
     }
@@ -105,7 +115,7 @@ public class ReservationController {
             @PathVariable Long reservationId,
             @RequestBody ReservationUpdateRequestDto request
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.updateReservation(principal, reservationId, request);
+        ResponseDto<ReservationResponseDto> response = reservationService.updateReservation(principal.getId(), reservationId, request);
 
         return ResponseEntity.ok(response);
     }

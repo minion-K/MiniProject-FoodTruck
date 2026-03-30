@@ -2,6 +2,7 @@ package org.example.foodtruckback.service.truck.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
+import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
@@ -145,9 +146,10 @@ public class TruckServiceImpl implements TruckService {
 
             if(newStatus == TruckStatus.ACTIVE) {
                 boolean hasMenu = menuItemRepository.existsByTruckId(truckId);
-                boolean hasSchedule = scheduleRepository.existsByTruckIdAndEndTimeAfter(truckId, LocalDateTime.now());
+                boolean hasOpenSchedule = scheduleRepository
+                        .existsByTruckIdAndStatusAndEndTimeAfter(truckId, ScheduleStatus.OPEN, LocalDateTime.now());
 
-                if(!hasMenu || !hasSchedule) {
+                if(!hasMenu || !hasOpenSchedule) {
                     throw new BusinessException(ErrorCode.TRUCK_ACTIVATION_INVALID);
                 }
             }

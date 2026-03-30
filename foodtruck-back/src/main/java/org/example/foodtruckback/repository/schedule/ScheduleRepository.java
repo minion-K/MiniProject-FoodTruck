@@ -1,6 +1,7 @@
 package org.example.foodtruckback.repository.schedule;
 
 import jakarta.validation.constraints.NotNull;
+import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
@@ -62,7 +63,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
 
     boolean existsByLocationId(Long locationId);
 
-    boolean existsByTruckIdAndEndTimeAfter(Long truckId, LocalDateTime now);
-
     boolean existsByIdAndTruckOwnerId(Long scheduleId, Long ownerId);
+
+    boolean existsByTruckIdAndStatusAndEndTimeAfter(Long truckId, ScheduleStatus scheduleStatus, LocalDateTime now);
 }

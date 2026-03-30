@@ -3,7 +3,7 @@ import KakaoMap from "@/components/map/KakaoMap";
 import TruckMenuManager from "@/components/menu/TruckMenuManager";
 import ScheduleManager from "@/components/schedule/ScheduleManager";
 import TruckCreateModal from "@/components/truck/TruckModal";
-import type { TruckDetailResponse, TruckUpdateRequest } from "@/types/truck/truck.dto";
+import type { TruckDetailResponse } from "@/types/truck/truck.dto";
 import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import { getTruckStatus } from "@/utils/TruckStatus";
@@ -241,7 +241,7 @@ const Status = styled.span`
   padding: 2px 10px;
   border-radius: 12px;
   text-align: center;
-  color: white;
+  color: #333;
   white-space: nowrap;
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease;

@@ -56,9 +56,15 @@ export interface AdminReservationListItemResponse {
   status: ReservationStatus;
   paymentStatus: PaymentStatus;
   menus: ReservationMenuItemResponse[];
+  createdAt: string;
 }
 
-export type AdminReservationListResponse = AdminReservationListItemResponse[];
+export interface AdminReservationListResponse {
+  content: AdminReservationListItemResponse[];
+  totalPage: number;
+  totalElement: number;
+  number: number;
+}
 
 export interface ReservationMenuItemResponse {
   menuItemId: number;

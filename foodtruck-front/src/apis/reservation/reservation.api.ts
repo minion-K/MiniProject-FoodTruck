@@ -10,6 +10,7 @@ import type {
   ReservationUpdateRequest,
 } from "@/types/reservation/reservation.dto";
 import type { ApiResponse } from "@/types/common/ApiResponse";
+import type { ReservationStatus } from "@/types/reservation/reservation.type";
 
 export const reservationApi = {
   createReservation: async (
@@ -42,12 +43,16 @@ export const reservationApi = {
     return res.data.data;
   },
 
-  getAdminReservations: async (
-    scheduleId?: number
-  ): Promise<AdminReservationListResponse> => {
+  getAdminReservations: async (params: {
+    page?: number;
+    size?: number;
+    dateRange?: "ALL" | "TODAY" | "WEEK" | "MONTH";
+    status?: ReservationStatus;
+    keyword?: string;
+  }): Promise<AdminReservationListResponse> => {
     const res = await privateApi.get<ApiResponse<AdminReservationListResponse>>(
       RESERVATION_PATH.ADMIN(),
-      {params: scheduleId ? {scheduleId} : {}}
+      {params}
     );
 
     return res.data.data;

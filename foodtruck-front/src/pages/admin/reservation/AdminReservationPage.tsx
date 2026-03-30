@@ -3,6 +3,8 @@ import styled from '@emotion/styled';
 import React, { useState } from 'react'
 import AdminReservationTab from './AdminReservationTab';
 import AdminOrderTab from './AdminOrderTab';
+import type { ReservationStatus } from '@/types/reservation/reservation.type';
+import type { OrderStatus } from '@/types/order/order.type';
 
 type ReservationTab = "RESERVATION" | "ORDER";
 type FilterDate = "ALL" | "TODAY" | "WEEK" | "MONTH"
@@ -10,9 +12,10 @@ type FilterDate = "ALL" | "TODAY" | "WEEK" | "MONTH"
 function AdminReservationPage() {
   const [activeTab, setActiveTab] = useState<ReservationTab>("RESERVATION");
   const [dateRange, setDateRange] = useState<FilterDate>("ALL");
-  const [reservationStatus, setReservationStatus] = useState("");
-  const [orderStatus, setOrderStatus] = useState("");
+  const [reservationStatus, setReservationStatus] = useState<"ALL" | ReservationStatus>("ALL");
+  const [orderStatus, setOrderStatus] = useState<"ALL" | OrderStatus>("ALL");
   const [keyword, setKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   return (
     <Container>
@@ -50,17 +53,17 @@ function AdminReservationPage() {
           {activeTab === "RESERVATION" ? (
             <ReservationStatusSelect
               value={reservationStatus}
-              onChange={(e) => setReservationStatus(e.target.value)}
+              onChange={(e) => setReservationStatus(e.target.value as ReservationStatus)}
             >
               <option value="ALL">전체</option>
-              <option value="ALL">대기</option>
-              <option value="ALL">확정</option>
-              <option value="ALL">취소</option>
+              <option value="PENDING">대기</option>
+              <option value="CONFIRMED">확정</option>
+              <option value="CANCELED">취소</option>
             </ReservationStatusSelect>
           ) : (
             <OrderStatusSelect
               value={orderStatus}
-              onChange={(e) => setOrderStatus(e.target.value)}
+              onChange={(e) => setOrderStatus(e.target.value as OrderStatus)}
             >
               <option value="ALL">전체</option>
               <option value="ALL">대기</option>
@@ -74,15 +77,15 @@ function AdminReservationPage() {
           <SearchInput 
             value={keyword}
             onChange={setKeyword}
-            onSearch={() => {}}
-            placeholder="검색어를 입력해주세요."
+            onSearch={() => {setSearchKeyword(keyword)}}
+            placeholder="트럭명으로 검색해주세요."
           />
         </RightWrapper>
       </FilterRow>
 
       {activeTab === "RESERVATION" && (
         <AdminReservationTab  
-          keyword={keyword} 
+          keyword={searchKeyword} 
           dateRange={dateRange}
           status={reservationStatus}
         />
@@ -90,7 +93,7 @@ function AdminReservationPage() {
 
       {activeTab === "ORDER" && (
         <AdminOrderTab  
-          keyword={keyword}
+          keyword={searchKeyword}
           dateRange={dateRange}
           status={orderStatus}
         />
