@@ -71,8 +71,21 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     """)
     List<Reservation> findByScheduleIdFetch(@Param("scheduleId") Long scheduleId);
 
-    @Query("""
+
+//    TODO: menuItems N + 1 최적화 필요(IN 쿼리)
+    @Query(value = """
         SELECT r
+        FROM Reservation r
+        JOIN FETCH r.user u
+        JOIN FETCH r.schedule s
+        JOIN FETCH s.truck t
+        WHERE (:status IS NULL OR r.status = :status)
+            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:startDate IS NULL OR r.createdAt >= :startDate)
+            AND (:endDate IS NULL OR r.createdAt <= :endDate)
+    """,
+    countQuery = """
+        SELECT COUNT(r)
         FROM Reservation r
         JOIN r.user u
         JOIN r.schedule s
@@ -82,5 +95,5 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
             AND (:startDate IS NULL OR r.createdAt >= :startDate)
             AND (:endDate IS NULL OR r.createdAt <= :endDate)
     """)
-    Page<Reservation> findAdminReservations( Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, ReservationStatus status, String keyword);
+    Page<Reservation> findAdminReservations(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, ReservationStatus status, String keyword);
 }

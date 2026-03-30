@@ -9,6 +9,7 @@ import type {
 import { privateApi } from "../common/axiosInstance";
 import type { ApiResponse } from "@/types/common/ApiResponse";
 import { ORDER_PATH } from "./order.path";
+import type { OrderStatus } from "@/types/order/order.type";
 
 export const orderApi = {
   // 주문 생성
@@ -40,9 +41,16 @@ export const orderApi = {
     return res.data.data;
   },
 
-  getAdminOrderList: async (): Promise<AdminOrderListResponse[]> => {
-    const res = await privateApi.get<ApiResponse<AdminOrderListResponse[]>>(
-      ORDER_PATH.ADMIN
+  getAdminOrderList: async (params?: {
+    page: number;
+    size: number;
+    dateRange?: String;
+    status?: OrderStatus;
+    keyword?: String;
+  }): Promise<AdminOrderListResponse> => {
+    const res = await privateApi.get<ApiResponse<AdminOrderListResponse>>(
+      ORDER_PATH.ADMIN,
+      {params}
     );
 
     return res.data.data;

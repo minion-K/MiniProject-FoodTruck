@@ -33,10 +33,10 @@ export const userApi = {
   
   // 전체 조회
   getUserList: async (params?: {
-    role?: RoleType;
-    page?: number;
-    size?: number;
+    page: number;
+    size: number;
     keyword?: string;
+    role?: RoleType;
     status?: UserStatus
     sortKey?: "createdAt" | "email"
   }): Promise<UserListResponse> => {

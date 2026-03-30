@@ -26,20 +26,32 @@ export const formatPickupRange = (pickupTime: string | Date) => {
   return `${formatTime(start)} - ${formatTime(end)}`;
 };
 
-export function formatDateTime(date: string | Date) {
+type DateFormatType = "full" | "date" | "time";
+
+export function formatDateTime(
+  date: string | Date,
+  type: DateFormatType = "full"
+) {
   const d = typeof date === "string" ? new Date(date) : date;
 
   const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
 
   const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
   const hour = d.getHours().toString().padStart(2, "0");
   const min = d.getMinutes().toString().padStart(2, "0");
 
+  if(type === "date") {
+    return `${year}.${month}.${day} (${weekday})`;
+  }
+
+  if(type === "time") {
+    return `${hour}:${min}`
+  }
+
   return `${year}. ${month.toString().padStart(2, "0")}. 
-    ${day.toString().padStart(2, "0")} 
-    (${weekday}) ${hour}:${min}`
+    ${day.toString().padStart(2, "0")} (${weekday}) ${hour}:${min}`
 }
 
 export function DateAndHour(date: string, hour: string) {

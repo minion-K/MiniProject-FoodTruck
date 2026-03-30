@@ -66,9 +66,8 @@ function AdminReservationPage() {
               onChange={(e) => setOrderStatus(e.target.value as OrderStatus)}
             >
               <option value="ALL">전체</option>
-              <option value="ALL">대기</option>
-              <option value="ALL">확정</option>
-              <option value="ALL">취소</option>
+              <option value="PENDING">대기</option>
+              <option value="CANCELED">취소</option>
             </OrderStatusSelect>
           )}
         </LeftWrapper>

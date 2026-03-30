@@ -93,17 +93,18 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
                 <th style={{width: "10%"}}>주문 유형</th>
                 <th style={{width: "12%"}}>주문자</th>
                 <th style={{width: "20%"}}>메뉴</th>
-                <th style={{width: "10%"}}>금액</th>
-                <th style={{width: "11%"}}>주문 상태</th>
-                <th style={{width: "11%"}}>결제 상태</th>
-                <th style={{width: "21%"}}>주문일</th>
-                <th style={{width: "20%"}}>관리</th>
+                <th style={{width: "13%"}}>금액</th>
+                <th style={{width: "13%"}}>주문 상태</th>
+                <th style={{width: "13%"}}>결제 상태</th>
+                <th style={{width: "25%"}}>주문일</th>
+                <th style={{width: "10%"}}>관리</th>
               </tr>
             </thead>
             <tbody>
               {orders.map(order => {
                 const status = getOrderStatus(order.status);
                 const paymentStatus = getPaymentStatus(order.paymentStatus);
+                const orderSource = getOrderSource(order.source);
                 const menuItems = order.menus ?? [];
 
                 const menuSummary = menuItems.length === 0
@@ -121,7 +122,7 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
                 return (
                   <tr key={order.id}>
                     <td>{order.id}</td>
-                    <td>{getOrderSource(order.source)}</td>
+                    <td>{orderSource.label}</td>
                     <td>{order.username || "-"}</td>
                     <td title={menuText}>{menuSummary}</td>
                     <td>

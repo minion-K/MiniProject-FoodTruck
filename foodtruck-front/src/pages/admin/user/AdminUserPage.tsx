@@ -39,8 +39,8 @@ function AdminUserPage() {
         sortKey
       });
       
-      setUsers(res.content);
-      setTotalPage(res.totalPages);
+      setUsers(res.content ?? []);
+      setTotalPage(res.totalPages ?? 1);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {

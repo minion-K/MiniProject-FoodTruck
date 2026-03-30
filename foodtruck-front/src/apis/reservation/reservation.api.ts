@@ -43,9 +43,9 @@ export const reservationApi = {
     return res.data.data;
   },
 
-  getAdminReservations: async (params: {
-    page?: number;
-    size?: number;
+  getAdminReservations: async (params?: {
+    page: number;
+    size: number;
     dateRange?: "ALL" | "TODAY" | "WEEK" | "MONTH";
     status?: ReservationStatus;
     keyword?: string;

@@ -1,6 +1,7 @@
 package org.example.foodtruckback.service.order;
 
 import jakarta.validation.Valid;
+import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
@@ -9,6 +10,8 @@ import org.example.foodtruckback.dto.order.response.OrderDetailResponseDto;
 import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
 import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -20,7 +23,7 @@ public interface OrderService {
 
     ResponseDto<List<OwnerOrderListResponseDto>> getTruckOrders(Long truckId, UserPrincipal principal);
 
-    ResponseDto<List<AdminOrderListResponseDto>> getAllOrders();
+    ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(Long adminId, Pageable pageable, String dateRange, OrderStatus status, String keyword);
 
     ResponseDto<OrderDetailResponseDto> updateOrder(Long orderId, @Valid OrderUpdateRequestDto request);
 

@@ -30,10 +30,15 @@ import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.order.OrderService;
 import org.example.foodtruckback.service.payment.PaymentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -139,7 +144,7 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .toList();
 
-        return ResponseDto.success("주문 조회 완료", response);
+        return ResponseDto.success("회원용 주문 조회 완료", response);
     }
 
     @Override
@@ -161,27 +166,32 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .toList();
 
-        return ResponseDto.success("주문 조회 완료", response);
+        return ResponseDto.success("운영자용 주문 조회 완료", response);
     }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<List<AdminOrderListResponseDto>> getAllOrders() {
-        List<Order> orders = orderRepository.findAllFetch();
+    public ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(
+            Long adminId, Pageable pageable,
+            String dateRange, OrderStatus status, String keyword
+    ) {
+        LocalDateTime startDate = getStartDate(dateRange);
+        LocalDateTime endDate = getEndDate();
 
-        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orders);
+        Page<Order> orderPage = orderRepository.findAdminOrders(pageable, startDate, endDate, status, keyword);
 
-        List<AdminOrderListResponseDto> response = orders.stream()
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orderPage.getContent());
+
+        Page<AdminOrderListResponseDto> response = orderPage
                 .map(order -> {
                     String productCode = getProductCode(order);
 
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return AdminOrderListResponseDto.from(order, paymentStatus);
-                })
-                .toList();
+                });
 
-        return ResponseDto.success("주문 조회 완료", response);
+        return ResponseDto.success("관리자용 주문 조회 완료", response);
     }
 
 
@@ -324,5 +334,22 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return productCode;
+    }
+
+    private LocalDateTime getStartDate(String dateRange) {
+        if(dateRange == null || dateRange.equals("ALL")) return null;
+
+        LocalDate today = LocalDate.now();
+
+        return switch (dateRange) {
+            case "TODAY" -> today.atStartOfDay();
+            case "WEEK" -> today.with(DayOfWeek.MONDAY).atStartOfDay();
+            case "MONTH" -> today.withDayOfMonth(1).atStartOfDay();
+            default -> throw new BusinessException(ErrorCode.INVALID_INPUT);
+        };
+    }
+
+    private LocalDateTime getEndDate() {
+        return LocalDateTime.now();
     }
 }

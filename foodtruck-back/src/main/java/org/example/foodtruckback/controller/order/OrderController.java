@@ -3,6 +3,7 @@ package org.example.foodtruckback.controller.order;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.order.OrderApi;
+import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
@@ -12,6 +13,9 @@ import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
 import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.order.OrderService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -58,8 +62,19 @@ public class OrderController {
 
     // get order (all) - admin
     @GetMapping
-    public ResponseEntity<ResponseDto<List<AdminOrderListResponseDto>>> getAllOrders() {
-        ResponseDto<List<AdminOrderListResponseDto>> response = orderService.getAllOrders();
+    public ResponseEntity<ResponseDto<Page<AdminOrderListResponseDto>>> getAllOrders(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String dateRange,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) String keyword
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        ResponseDto<Page<AdminOrderListResponseDto>> response = orderService.getAllOrders(
+                principal.getId(), pageable, dateRange, status, keyword
+        );
 
         return ResponseEntity.ok().body(response);
     }

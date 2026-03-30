@@ -33,8 +33,8 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
         status: status === "ALL" ? undefined : status
       });
   
-      setReservations(res.content);
-      setTotalPage(totalPage);
+      setReservations(res.content ?? []);
+      setTotalPage(res.totalPage ?? 1);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {
@@ -108,7 +108,7 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
                     ? "메뉴 정보 없음"
                     : menuItems.length === 1
                     ? `${menuItems[0].name} ${menuItems[0].quantity}개`
-                    : `${menuItems[0].name} 외 ${menuItems.length - 1}건`
+                    : `${menuItems[0].name} ${menuItems[0].quantity}개 외 ${menuItems.length - 1}건`
 
                   const menuText = menuItems.length === 0
                     ? "메뉴 정보 없음"

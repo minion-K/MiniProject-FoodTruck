@@ -1,9 +1,12 @@
 package org.example.foodtruckback.repository.order;
 
+import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
 import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
 import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.entity.reservation.Reservation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,14 +49,29 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     """)
     List<Order> findByUserLoginIdFetch(@Param("loginId") String loginId);
 
-    @Query("""
-        SELECT DISTINCT o
+
+//    TODO: orderItems N + 1 최적화 필요(IN 쿼리)
+    @Query(value = """
+        SELECT o
         FROM Order o
-        LEFT JOIN FETCH o.orderItems
-        LEFT JOIN FETCH o.user
-        LEFT JOIN FETCH o.schedule s
-        LEFT JOIN FETCH o.reservation
-        ORDER BY o.createdAt DESC
+        LEFT JOIN FETCH o.user u
+        JOIN FETCH o.schedule s
+        JOIN FETCH s.truck t
+        WHERE (:status IS NULL OR o.status = :status)
+            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:startDate IS NULL OR o.createdAt >= :startDate)
+            AND (:endDate IS NULL OR o.createdAt <= :endDate)
+    """,
+    countQuery = """
+        SELECT COUNT(o)
+        FROM Order o
+        JOIN o.user u
+        JOIN o.schedule s
+        JOIN s.truck t
+        WHERE (:status IS NULL OR o.status = :status)
+            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:startDate IS NULL OR o.createdAt >= :startDate)
+            AND (:endDate IS NULL OR o.createdAt <= :endDate)
     """)
-    List<Order> findAllFetch();
+    Page<Order> findAdminOrders(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, OrderStatus status, String keyword);
 }

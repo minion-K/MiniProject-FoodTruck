@@ -29,18 +29,26 @@ export interface OrderItemResponse {
   unitPrice: number;
 }
 
-export interface AdminOrderListResponse {
+export interface AdminOrderListItemResponse {
   id: number;
-  scheduleId: number;
-  userId?: number;
+  truckName: string
   username?: string;
-  reservationId: number;
+  startTime: string;
+  endTime: string;
   source: OrderSource;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   amount: number;
   currency: string;
   createdAt: string;
+  items: OrderItemResponse[]
+}
+
+export interface AdminOrderListResponse {
+  content: AdminOrderListItemResponse[];
+  totalPage: number;
+  totalElement: number;
+  number: number;
 }
 
 export interface OwnerOrderListResponse {

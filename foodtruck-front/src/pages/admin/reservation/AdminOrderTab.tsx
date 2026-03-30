@@ -1,6 +1,14 @@
+import { orderApi } from '@/apis/order/order.api';
+import Pagination from '@/components/common/pagination';
+import type { AdminOrderListItemResponse } from '@/types/order/order.dto';
 import type { OrderStatus } from '@/types/order/order.type';
+import { formatDateTime } from '@/utils/date';
+import { getErrorMsg } from '@/utils/error';
+import { getOrderSource } from '@/utils/orderSource';
+import { getOrderStatus } from '@/utils/orderStatus';
+import { getPaymentStatus } from '@/utils/paymentStatus';
 import styled from '@emotion/styled';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface Props {
   keyword: string;
@@ -9,7 +17,39 @@ interface Props {
 }
 
 function AdminOrderTab({keyword, dateRange, status}: Props) {
-  
+  const [orders, setOrders] = useState<AdminOrderListItemResponse[]>([]);
+  const [page, setPage] = useState<number>(0);
+  const [totalPage, setTotalPage] = useState<number>(1);
+  const [loading, setLoading] = useState(false);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+
+    try {
+      const res = await orderApi.getAdminOrderList({
+        page,
+        size: 10,
+        keyword: keyword || undefined,
+        dateRange,
+        status: status === "ALL" ? undefined : status
+      });
+
+      setOrders(res.content ?? []);
+      setTotalPage(res.totalPage ?? 1);
+    } catch (e) {
+      alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    setPage(0);
+  }, [status, keyword, dateRange]);
+
+  useEffect(() => {
+    fetchOrders()
+  }, [page, status, keyword, dateRange])
 
   return (
     <>
@@ -21,42 +61,107 @@ function AdminOrderTab({keyword, dateRange, status}: Props) {
         <StyledTable>
           <thead>
             <tr>
-              <th>주문정보</th>
-              <th>메뉴</th>
-              <th>금액</th>
-              <th>상태</th>
-              <th>주문일</th>
-              <th>액션</th>
+              <th style={{width: "15%"}}>주문정보</th>
+              <th style={{width: "15%"}}>메뉴</th>
+              <th style={{width: "15%"}}>금액</th>
+              <th style={{width: "15%"}}>상태</th>
+              <th style={{width: "20%"}}>주문일</th>
+              <th style={{width: "15%"}}>액션</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr>
-              <td>
-                <InfoMain>김밥트럭</InfoMain>
-                <InfoSub>12:00~14:00</InfoSub>
-                <InfoSub>주문유형 · 홍길동</InfoSub>
-              </td>
-              <td>
-                <Menu>불고기 버거 외2개</Menu>
-              </td>
-              <td>
-                <Price>23000 KRW</Price>
-              </td>
-              <td>
-                <StatusWrapper>
-                  <StatusBadge>COMFIRM</StatusBadge>
-                  <PaymentBadge>PAID</PaymentBadge>
-                </StatusWrapper>
-              </td>
-              <td>2026-03-27</td>
-              <td>
-                <ActionButton>상세</ActionButton>
-              </td>
-            </tr>
+            {loading ? (
+              <tr>
+                <td colSpan={6}>
+                  <Loading>로딩 중 ...</Loading>
+                </td>
+              </tr>
+            ) : (
+              orders.length === 0 ? (
+              <tr>
+                <td colSpan={6}>
+                  <EmptyText>조회된 주문이 없습니다.</EmptyText>
+                </td>
+              </tr>
+            ) : (
+              orders.map(order => {
+                const orderStatus = getOrderStatus(order.status);
+                const paymentStatus = getPaymentStatus(order.paymentStatus);
+                const orderSource = getOrderSource(order.source);
+                const menuItems = order.items ?? [];
+              
+                const menuSummary = menuItems.length === 0
+                  ? "메뉴 정보 없음"
+                  : menuItems.length === 1
+                  ? `${menuItems[0].menuItemName} ${menuItems[0].qty}개`
+                  : `${menuItems[0].menuItemName} ${menuItems[0].qty}개 외 ${menuItems.length - 1}건`
+
+                const menuText = menuItems.length === 0
+                  ? "메뉴 정보 없음"
+                  : menuItems
+                    .map(item => `${item.menuItemName} ${item.qty}개`)
+                    .join(", ");
+                return (
+                  <tr  key={order.id}>
+                    <td>
+                      <InfoBox>
+                        <TopRow>
+                          <TruckName>
+                            {order.truckName}
+                          </TruckName>
+                          <OrderType style={{background: orderSource.color}}>
+                            {orderSource.label}
+                          </OrderType>
+                        </TopRow>
+                        <DateRow>
+                          {formatDateTime(order.startTime, "date")}
+                        </DateRow>
+                        <TimeRow>
+                          {formatDateTime(order.startTime, "time")} - {formatDateTime(order.endTime, "time")}
+                        </TimeRow>
+                        <UserRow>
+                          {order.username}
+                        </UserRow>
+                      </InfoBox>
+                    </td>
+                    <td>
+                      <Menu title={menuText}>
+                        {menuSummary}
+                      </Menu>
+                    </td>
+                    <td>
+                      <Price>{order.amount.toLocaleString()} {order.currency}</Price>
+                    </td>
+                    <td>
+                      <StatusWrapper>
+                        <StatusBadge style={{background: orderStatus.color}}>
+                          {orderStatus.label}
+                        </StatusBadge>
+                        <PaymentBadge style={{background: paymentStatus.color}}>
+                          {paymentStatus.label}
+                        </PaymentBadge>
+                      </StatusWrapper>
+                    </td>
+                    <td>{formatDateTime(order.createdAt)}</td>
+                    <td>
+                      <ActionButton>
+                        상세
+                      </ActionButton>
+                    </td>
+                  </tr>
+                )
+              })
+            ))}
           </tbody>
         </StyledTable>
       </TableWrapper>
+      
+      <Pagination 
+        page={page}
+        totalPage={totalPage}
+        onChange={setPage}
+      />
     </>
   )
 }
@@ -107,16 +212,42 @@ const StyledTable = styled.table`
   }
 `;
 
-const InfoMain = styled.div`
-  font-weight: 600;
-  font-size: 14px;
+const InfoBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
-const InfoSub = styled.div`
+const TopRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const TruckName = styled.div`
+  font-weight: 600;
+`;
+
+const OrderType = styled.div`
+  font-size: 11px;
+  padding: 2px 6px;
+  background: #e5e7eb;
+  border-radius: 4px;
+`;
+
+const DateRow = styled.div`
   font-size: 12px;
   color: #6b7280;
-  margin-top: 2px;
-  line-height: 1.3;
+`;
+
+const TimeRow = styled.div`
+  font-size: 12px;
+  font-weight: 500;
+`;
+
+const UserRow = styled.div`
+  font-size: 12px;
+  color: #9ca3af;
 `;
 
 const Menu = styled.div`
@@ -168,3 +299,16 @@ const ActionButton = styled.button`
     background: #374151;
   }
 `;
+
+const Loading = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+`;
+
+const EmptyText = styled(Loading)``;
