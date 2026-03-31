@@ -5,9 +5,9 @@ export function getOrderStatus(status?: OrderStatus | null) {
     return {label: "주문대기", color: "#fff3dc"}
   }
 
-  switch (status.toUpperCase()) {
+  switch (status) {
     case "PENDING":
-      return {label: "주문완료", color: "#fff3dc"};
+      return {label: "결제대기", color: "#fff3dc"};
 
     case "PAID":
       return {label: "결제완료", color: "#d1e7dd"};

@@ -1,62 +1,37 @@
-import { reservationApi } from '@/apis/reservation/reservation.api';
-import type { ReservationDetailResponse } from '@/types/reservation/reservation.dto';
-import { formatPickupRange } from '@/utils/date';
+import { orderApi } from '@/apis/order/order.api';
+import type { AdminOrderListItemResponse } from '@/types/order/order.dto';
 import { getErrorMsg } from '@/utils/error';
+import { getOrderStatus } from '@/utils/orderStatus';
 import { getPaymentStatus } from '@/utils/paymentStatus';
-import { getReservationStatus } from '@/utils/reservationStatus';
 import styled from '@emotion/styled';
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
+import toast from 'react-hot-toast';
 
 interface Props {
-  reservationId: number;
+  open: boolean;
+  order: AdminOrderListItemResponse | null;
   onClose: () => void;
-  onUpdated?: () => void;
+  onSuccess: () => void;
 }
 
-function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
-  const [detail, setDetail] = useState<ReservationDetailResponse | null>(null);
+function AdminOrderDetailModal({open, order, onClose, onSuccess}: Props) {
   const [loading, setLoading] = useState(false);
 
-  const fetchDetail = async () => {
-      try {
-        const res = await reservationApi.getReservationById(reservationId);
+  if (!open || !order) return null;
 
-        setDetail(res);
-      } catch (e) {
-        alert(getErrorMsg(e));
-      }
-    }
-
-  useEffect(() => {
-    fetchDetail();
-  }, [reservationId]);
-
-  const handleConfirm = async () => {
-    if(!detail) return;
-
-    try {
-      setLoading(true);
-
-      await reservationApi.updateStatus(detail.id, {status: "CONFIRMED"});
-
-      onUpdated?.();
-      onClose();
-    } catch (e) {
-      alert(getErrorMsg(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const canCancel = order.status === "PENDING";
+  const canRefund = order.paymentStatus === "SUCCESS" && order.status === "PAID";
 
   const handleCancel = async () => {
-    if(!detail) return;
+    if(!window.confirm("해당 주문을 취소하시겠습니까?")) return ;
 
     try {
       setLoading(true);
 
-      await reservationApi.cancelReservation(detail.id);
+      await orderApi.cancelOrder(order.id);
 
-      onUpdated?.();
+      toast.success("주문이 취소되었습니다.")
+      onSuccess();
       onClose();
     } catch (e) {
       alert(getErrorMsg(e));
@@ -65,80 +40,87 @@ function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
     }
   };
 
-  if(!detail) return null;
+  const handleRefund = async () => {
+    if(!window.confirm("해당 주문을 환불하시겠습니까?")) return ;
 
-  const reservationStatus = getReservationStatus(detail.status);
-  const paymentStatus = getPaymentStatus(detail.paymentStatus);
+    try {
+      setLoading(true);
 
-  const now = new Date();
-  const pickupTime = new Date(detail.pickupTime);
+      await orderApi.refundOrder(order.id);
 
-  const canCancel = detail.status != "CANCELED" && pickupTime > now;
+      toast.success("주문이 환불되었습니다.")
+      onSuccess();
+      onClose();
+    } catch (e) {
+      alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const orderStatus = getOrderStatus(order.status);
+  const paymentStatus = getPaymentStatus(order.paymentStatus);
 
   return (
     <Overlay onClick={onClose}>
       <Modal onClick={(e) => e.stopPropagation()}>
-        <Title>예약 상세</Title>
+        <Title>주문 상세</Title>
 
         <Divider />
 
         <Row>
-          <Label>예약자</Label>
-          <Value>{detail.username}</Value>
+          <Label>트럭</Label>
+          <Value>{order.truckName}</Value>
         </Row>
-
         <Row>
-          <Label>픽업 시간</Label>
-          <Value>{formatPickupRange(detail.pickupTime)}</Value>
+          <Label>주문자</Label>
+          <Value>{order.username}</Value>
         </Row>
-
-        <Row>
-          <Label>예약 상태</Label>
-          <Status style={{background: reservationStatus.color}}>
-            {reservationStatus.label}
-          </Status>
-        </Row>
-
-        <Row>
-          <Label>결제 상태</Label>
-          <Status style={{background: paymentStatus.color}}>
-            {paymentStatus.label}
-          </Status>
-        </Row>
-
         <MenuSection>
           <SectionTitle>메뉴</SectionTitle>
-          {detail.menus?.map(item => (
+          {order.items.map(item => (
             <MenuItem key={item.menuItemId}>
-              <span>{item.name} {item.quantity}개</span>
+              <span>{item.menuItemName}</span>
+              <span>{item.qty}개</span>
             </MenuItem>
           ))}
         </MenuSection>
-
-        <Actions>
-          <Button 
-            primary 
-            disabled={detail.status !== "PENDING" || loading} 
-            onClick={handleConfirm}
-          >
-            예약 확정
-          </Button>
-
-          <Button 
-            danger
-            disabled={!canCancel ||loading} 
-            onClick={handleCancel}
-          >
-            예약 취소</Button>
-        </Actions>
-        
+        <Row>
+          <Label>금액</Label>
+          <Value>{order.amount} {order.currency}</Value>
+        </Row>
+        <Row>
+          <Label>주문 상태</Label>
+          <Status  style={{background: orderStatus.color}}>
+            {orderStatus.label}
+          </Status>
+        </Row>
+        <Row>
+          <Label>결제 상태</Label>
+          <Status  style={{background: paymentStatus.color}}>
+            {paymentStatus.label}
+          </Status>
+        </Row>
+        <ButtonRow>
+          {canCancel && (
+            <Button danger disabled={loading} onClick={handleCancel}>
+              결제취소
+            </Button>
+          )}
+          {canRefund && (
+            <Button primary disabled={loading} onClick={handleRefund}>
+              환불
+            </Button>
+          )}
+        </ButtonRow>
         <CloseButton onClick={onClose}>X 닫기</CloseButton>
       </Modal>
     </Overlay>
   )
 }
 
-export default ReservationDetailModal
+
+export default AdminOrderDetailModal
 
 const Overlay = styled.div`
   position: fixed;
@@ -207,8 +189,9 @@ const MenuItem = styled.div`
   padding: 4px 0;
 `;
 
-const Actions = styled.div`
+const ButtonRow = styled.div`
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
   margin-top: 16px;
 `;

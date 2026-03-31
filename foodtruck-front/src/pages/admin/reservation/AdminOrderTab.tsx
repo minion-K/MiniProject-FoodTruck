@@ -1,7 +1,7 @@
 import { orderApi } from '@/apis/order/order.api';
 import Pagination from '@/components/common/pagination';
-import type { AdminOrderListItemResponse } from '@/types/order/order.dto';
-import type { OrderStatus } from '@/types/order/order.type';
+import type { AdminOrderListItemResponse, OrderDetailResponse } from '@/types/order/order.dto';
+import type { OrderSource, OrderStatus } from '@/types/order/order.type';
 import { formatDateTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getOrderSource } from '@/utils/orderSource';
@@ -9,18 +9,22 @@ import { getOrderStatus } from '@/utils/orderStatus';
 import { getPaymentStatus } from '@/utils/paymentStatus';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
+import AdminOrderDetailModal from './AdminOrderDetailModal';
 
 interface Props {
   keyword: string;
   dateRange: "ALL" | "TODAY" | "WEEK" | "MONTH";
   status: "ALL" | OrderStatus;
+  source : "ALL" | OrderSource;
 }
 
-function AdminOrderTab({keyword, dateRange, status}: Props) {
+function AdminOrderTab({keyword, dateRange, status, source}: Props) {
   const [orders, setOrders] = useState<AdminOrderListItemResponse[]>([]);
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrderListItemResponse | null>(null);
+  const [open, setOpen] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -31,7 +35,8 @@ function AdminOrderTab({keyword, dateRange, status}: Props) {
         size: 10,
         keyword: keyword || undefined,
         dateRange,
-        status: status === "ALL" ? undefined : status
+        status: status === "ALL" ? undefined : status,
+        source: source === "ALL" ? undefined : source
       });
 
       setOrders(res.content ?? []);
@@ -45,11 +50,11 @@ function AdminOrderTab({keyword, dateRange, status}: Props) {
 
   useEffect(() => {
     setPage(0);
-  }, [status, keyword, dateRange]);
+  }, [status, keyword, dateRange, source]);
 
   useEffect(() => {
     fetchOrders()
-  }, [page, status, keyword, dateRange])
+  }, [page, status, keyword, dateRange, source])
 
   return (
     <>
@@ -61,7 +66,7 @@ function AdminOrderTab({keyword, dateRange, status}: Props) {
         <StyledTable>
           <thead>
             <tr>
-              <th style={{width: "15%"}}>주문정보</th>
+              <th style={{width: "18%"}}>주문정보</th>
               <th style={{width: "15%"}}>메뉴</th>
               <th style={{width: "15%"}}>금액</th>
               <th style={{width: "15%"}}>상태</th>
@@ -145,8 +150,13 @@ function AdminOrderTab({keyword, dateRange, status}: Props) {
                     </td>
                     <td>{formatDateTime(order.createdAt)}</td>
                     <td>
-                      <ActionButton>
-                        상세
+                      <ActionButton
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setOpen(true);
+                        }}
+                      >
+                        상세보기
                       </ActionButton>
                     </td>
                   </tr>
@@ -161,6 +171,13 @@ function AdminOrderTab({keyword, dateRange, status}: Props) {
         page={page}
         totalPage={totalPage}
         onChange={setPage}
+      />
+
+      <AdminOrderDetailModal
+        open={open}
+        order={selectedOrder}
+        onClose={() => setOpen(false)}
+        onSuccess={fetchOrders}
       />
     </>
   )
@@ -289,14 +306,16 @@ const PaymentBadge = styled.div`
 const ActionButton = styled.button`
   padding: 5px 10px;
   font-size: 12px;
-  border: none;
-  background: #111827;
-  color: white;
-  border-radius: 6px;
   cursor: pointer;
+  border-radius: 8px;
+  border: none;
+
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
 
   &:hover {
-    background: #374151;
+    background: #e5e7eb;
   }
 `;
 

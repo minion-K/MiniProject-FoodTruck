@@ -172,13 +172,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(
-            Long adminId, Pageable pageable,
-            String dateRange, OrderStatus status, String keyword
+            Long adminId, Pageable pageable, String dateRange,
+            OrderStatus status, String keyword, OrderSource source
     ) {
         LocalDateTime startDate = getStartDate(dateRange);
         LocalDateTime endDate = getEndDate();
 
-        Page<Order> orderPage = orderRepository.findAdminOrders(pageable, startDate, endDate, status, keyword);
+        Page<Order> orderPage = orderRepository.findAdminOrders(pageable, startDate, endDate, status, keyword, source);
 
         Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orderPage.getContent());
 
@@ -294,7 +294,7 @@ public class OrderServiceImpl implements OrderService {
         paymentService.refundInternal(
                 payment,
                 payment.getAmount(),
-                "운영자 취소"
+                "운영자/관리자 취소"
         );
         order.refund();
 

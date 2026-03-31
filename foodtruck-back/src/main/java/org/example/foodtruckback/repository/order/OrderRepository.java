@@ -1,5 +1,6 @@
 package org.example.foodtruckback.repository.order;
 
+import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
 import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
@@ -59,6 +60,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         JOIN FETCH s.truck t
         WHERE (:status IS NULL OR o.status = :status)
             AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:source IS NULL OR o.source = :source)
             AND (:startDate IS NULL OR o.createdAt >= :startDate)
             AND (:endDate IS NULL OR o.createdAt <= :endDate)
     """,
@@ -70,8 +72,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         JOIN s.truck t
         WHERE (:status IS NULL OR o.status = :status)
             AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:source IS NULL OR o.source = :source)
             AND (:startDate IS NULL OR o.createdAt >= :startDate)
             AND (:endDate IS NULL OR o.createdAt <= :endDate)
     """)
-    Page<Order> findAdminOrders(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, OrderStatus status, String keyword);
+    Page<Order> findAdminOrders(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, OrderStatus status, String keyword, OrderSource source);
 }

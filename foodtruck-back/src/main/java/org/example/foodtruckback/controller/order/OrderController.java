@@ -3,6 +3,7 @@ package org.example.foodtruckback.controller.order;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.order.OrderApi;
+import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
@@ -68,12 +69,13 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String dateRange,
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) String keyword
-    ) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) OrderSource source
+            ) {
         Pageable pageable = PageRequest.of(page, size);
 
         ResponseDto<Page<AdminOrderListResponseDto>> response = orderService.getAllOrders(
-                principal.getId(), pageable, dateRange, status, keyword
+                principal.getId(), pageable, dateRange, status, keyword, source
         );
 
         return ResponseEntity.ok().body(response);

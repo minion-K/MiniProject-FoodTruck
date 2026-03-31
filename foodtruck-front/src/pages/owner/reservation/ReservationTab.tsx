@@ -194,22 +194,19 @@ const ButtonWrapper = styled.div`
   flex-wrap: wrap;
 `;
 
-const Button = styled.button<{
-  primary?: boolean;
-  danger?: boolean;
-}>`
+const Button = styled.button`
   padding: 5px 10px;
   font-size: 12px;
   cursor: pointer;
   border-radius: 8px;
   border: none;
 
-  background: ${({primary, danger}) => primary ? "#ff6b00" : danger ? "#ef4444" : "white"};
-  color: ${({primary, danger}) => primary || danger ? "white" : "#374151"};
-  border: ${({primary, danger}) => primary || danger ? "none" : "1px solid #d1d5db"};
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
 
   &:hover {
-    opacity: 0.9;
+    background: #e5e7eb;
   }
 `;
 

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import AdminReservationTab from './AdminReservationTab';
 import AdminOrderTab from './AdminOrderTab';
 import type { ReservationStatus } from '@/types/reservation/reservation.type';
-import type { OrderStatus } from '@/types/order/order.type';
+import type { OrderSource, OrderStatus } from '@/types/order/order.type';
 
 type ReservationTab = "RESERVATION" | "ORDER";
 type FilterDate = "ALL" | "TODAY" | "WEEK" | "MONTH"
@@ -14,6 +14,7 @@ function AdminReservationPage() {
   const [dateRange, setDateRange] = useState<FilterDate>("ALL");
   const [reservationStatus, setReservationStatus] = useState<"ALL" | ReservationStatus>("ALL");
   const [orderStatus, setOrderStatus] = useState<"ALL" | OrderStatus>("ALL");
+  const [orderSource, setOrdersource] = useState<"ALL" | OrderSource>("ALL");
   const [keyword, setKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
 
@@ -61,14 +62,26 @@ function AdminReservationPage() {
               <option value="CANCELED">취소</option>
             </ReservationStatusSelect>
           ) : (
-            <OrderStatusSelect
-              value={orderStatus}
-              onChange={(e) => setOrderStatus(e.target.value as OrderStatus)}
-            >
-              <option value="ALL">전체</option>
-              <option value="PENDING">대기</option>
-              <option value="CANCELED">취소</option>
-            </OrderStatusSelect>
+            <>
+              <OrderStatusSelect
+                value={orderStatus}
+                onChange={(e) => setOrderStatus(e.target.value as OrderStatus)}
+              >
+                <option value="ALL">전체</option>
+                <option value="PENDING">결제대기</option>
+                <option value="PAID">결제완료</option>
+                <option value="CANCELED">주문취소</option>
+                <option value="REFUNDED">환불완료</option>
+              </OrderStatusSelect>
+              <OrderSourceSelect
+                value={orderSource}
+                onChange={(e) => setOrdersource(e.target.value as OrderSource)}
+              >
+                <option value="ALL">전체</option>
+                <option value="RESERVATION">예약주문</option>
+                <option value="ONSITE">현장주문</option>
+              </OrderSourceSelect>
+            </>
           )}
         </LeftWrapper>
         
@@ -95,6 +108,7 @@ function AdminReservationPage() {
           keyword={searchKeyword}
           dateRange={dateRange}
           status={orderStatus}
+          source={orderSource}
         />
       )}
     </Container>
@@ -167,3 +181,5 @@ const DateSelect = styled.select`
 const ReservationStatusSelect = styled(DateSelect)``;
 
 const OrderStatusSelect = styled(DateSelect)``;
+
+const OrderSourceSelect = styled(DateSelect)``;

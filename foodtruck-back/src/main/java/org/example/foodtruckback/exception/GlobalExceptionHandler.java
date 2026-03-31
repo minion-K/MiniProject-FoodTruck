@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .badRequest()
-                .body(ResponseDto.failure("잘목된 요청 파라미터 타입입니다.",
+                .body(ResponseDto.failure("잘못된 요청 파라미터 타입입니다.",
                         HttpStatus.BAD_REQUEST.value(),
                         ErrorCode.INVALID_TYPE.name()));
     }

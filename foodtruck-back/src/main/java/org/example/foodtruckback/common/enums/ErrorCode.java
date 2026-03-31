@@ -38,7 +38,7 @@ public enum ErrorCode {
     // ===========================
     // location (Lxxx)
     // ===========================
-    DUPLICATE_LOCATION(HttpStatus.CONFLICT, "L001", "이미 존재하는 스팟입니다.", "Duplicate location"),
+    DUPLICATE_LOCATION(HttpStatus.CONFLICT, "L001", "이미 존재하는 장소입니다.", "Duplicate location"),
     LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "L002", "스팟을 찾을 수 없습니다.", "LocationApi not found"),
     LOCATION_IN_USE(HttpStatus.BAD_REQUEST, "L003", "사용 중인 위치는 삭제할 수 없습니다.", "Location is in use"),
     LOCATION_IN_USE_BY_OTHER_TRUCK(HttpStatus.FORBIDDEN, "L004", "다른 트럭에서 사용 중인 위치는 수정할 수 없습니다.", "Location is used by another truck"),

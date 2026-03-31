@@ -1,6 +1,7 @@
 package org.example.foodtruckback.service.order;
 
 import jakarta.validation.Valid;
+import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
@@ -23,7 +24,7 @@ public interface OrderService {
 
     ResponseDto<List<OwnerOrderListResponseDto>> getTruckOrders(Long truckId, UserPrincipal principal);
 
-    ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(Long adminId, Pageable pageable, String dateRange, OrderStatus status, String keyword);
+    ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(Long adminId, Pageable pageable, String dateRange, OrderStatus status, String keyword, OrderSource source);
 
     ResponseDto<OrderDetailResponseDto> updateOrder(Long orderId, @Valid OrderUpdateRequestDto request);
 
