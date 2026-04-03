@@ -1,7 +1,7 @@
 package org.example.foodtruckback.service.statistics;
 
 import org.example.foodtruckback.dto.ResponseDto;
-import org.example.foodtruckback.dto.statistics.response.*;
+import org.example.foodtruckback.dto.statistics.response.owner.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

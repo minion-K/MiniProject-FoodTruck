@@ -1,6 +1,6 @@
 package org.example.foodtruckback.repository.statistics;
 
-import org.example.foodtruckback.dto.statistics.response.*;
+import org.example.foodtruckback.dto.statistics.response.owner.*;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +13,7 @@ import java.util.List;
 public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long> {
 
     @Query("""
-        SELECT new org.example.foodtruckback.dto.statistics.response.DashboardResponseDto(
+        SELECT new org.example.foodtruckback.dto.statistics.response.owner.DashboardResponseDto(
             (SELECT COALESCE(SUM(p.amount - COALESCE(
                 (SELECT SUM(pr.amount)
                 FROM PaymentRefund pr
@@ -63,7 +63,7 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
     DashboardResponseDto getDashBoard(Long ownerId, Long truckId, LocalDateTime fromDate, LocalDateTime toDate);
 
     @Query("""
-        SELECT new org.example.foodtruckback.dto.statistics.response.WeeklySalesResponseDto(
+        SELECT new org.example.foodtruckback.dto.statistics.response.owner.WeeklySalesResponseDto(
             FUNCTION('DATE', p.approvedAt),
             COALESCE(SUM
                 (p.amount - COALESCE((
@@ -142,7 +142,7 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
     List<Object[]> getTopMenus(Long ownerId, Long truckId, LocalDateTime fromDate, LocalDateTime toDate);
 
     @Query(value = """
-        SELECT new org.example.foodtruckback.dto.statistics.response.ScheduleSalesResponseDto(
+        SELECT new org.example.foodtruckback.dto.statistics.response.owner.ScheduleSalesResponseDto(
             s.id, s.location.name, s.startTime,
             COALESCE(SUM
                 (p.amount - COALESCE((
@@ -181,7 +181,7 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
     Page<ScheduleSalesResponseDto> getSchedules(Long ownerId, Long truckId, LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
 
     @Query("""
-        SELECT new org.example.foodtruckback.dto.statistics.response.RefundResponseDto(
+        SELECT new org.example.foodtruckback.dto.statistics.response.owner.RefundResponseDto(
             Count(pr.id)
             )
         FROM PaymentRefund pr
@@ -203,7 +203,7 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
 
 
     @Query("""
-        SELECT new org.example.foodtruckback.dto.statistics.response.OrderTypeResponseDto(
+        SELECT new org.example.foodtruckback.dto.statistics.response.owner.OrderTypeResponseDto(
             CASE
                 WHEN o.source = org.example.foodtruckback.common.enums.OrderSource.RESERVATION THEN 'RESERVATION'
                 ELSE 'ONSITE'
@@ -223,7 +223,7 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
     List<OrderTypeResponseDto> getOrderTypeCounts(Long ownerId, Long truckId, LocalDateTime fromDate, LocalDateTime toDate);
 
     @Query("""
-        SELECT new org.example.foodtruckback.dto.statistics.response.OrderTypeResponseDto(
+        SELECT new org.example.foodtruckback.dto.statistics.response.owner.OrderTypeResponseDto(
             CASE 
                 WHEN o.source = org.example.foodtruckback.common.enums.OrderSource.RESERVATION THEN 'RESERVATION'
                 ELSE 'ONSITE'

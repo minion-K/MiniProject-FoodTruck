@@ -2,7 +2,7 @@ package org.example.foodtruckback.service.statistics.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.dto.ResponseDto;
-import org.example.foodtruckback.dto.statistics.response.*;
+import org.example.foodtruckback.dto.statistics.response.owner.*;
 import org.example.foodtruckback.repository.statistics.OwnerStatisticsRepository;
 import org.example.foodtruckback.service.statistics.OwnerStatisticsService;
 import org.springframework.data.domain.Page;
@@ -11,7 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service

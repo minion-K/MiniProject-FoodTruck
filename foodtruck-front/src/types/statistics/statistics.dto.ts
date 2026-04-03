@@ -1,5 +1,7 @@
 import type { OrderSource } from "../order/order.type";
+import type { PaymentStatus } from "../payment/payment.type";
 
+// == owner == 
 export interface DashboardResponse {
   totalSales: number;
   orderCount: number;
@@ -58,3 +60,78 @@ export interface TimeSlotResponse {
 }
 
 export type TimeSlotListResponse = TimeSlotResponse[];
+
+
+// == admin ==
+export interface AdminDashboardResponse {
+  totalRevenue: number;
+  totalOrders: number;
+  totalReservations: number;
+  totalRefunds: number;
+  totalUsers: number;
+  activeTrucks: number;
+  conversionRate: number;
+
+  revenueChangeRate: number
+  orderChangeRate: number
+  reservationChangeRage: number
+  refundChangeRate: number
+  userChangeRate: number
+  truckChangeRate: number
+  conversionChangeRate: number
+}
+
+export interface AdminGrowthTrendResponse {
+  date: string;
+  revenue: number;
+  orderCount: number;
+  userCount: number;
+  truckCount: number;
+}
+
+export type AdminGrowthTrendListResponse = AdminGrowthTrendResponse[];
+
+export interface AdminConversionFunnelResponse{
+  reservations: number;
+  confirmedReservations: number;
+  orders: number;
+  paidOrder: number;
+  reservationToOrderRate: number;
+  orderToPaymentRate: number;
+}
+
+export interface AdminPaymentStatusResponse {
+  status: PaymentStatus,
+  count: number;
+  amount: number;
+}
+
+export type AdminPaymentStatusListResponse = AdminPaymentStatusResponse[];
+
+export interface AdminTopTruckResponse {
+  truckId: number;
+  truckName: string;
+  revenue: number;
+  orderCount: number;
+  avgSalesPerOrder: number;
+}
+
+export type AdminTopTruckListResponse = AdminTopTruckResponse[]
+
+export interface AdminTopMenuResponse {
+  menuName: string;
+  quantity: number;
+  revenue: number;
+}
+
+export type AdminTopMenuListResponse = AdminTopMenuResponse[]
+
+export interface AdminInsightResponse {
+  category: string;
+  title: string;
+  description: string;
+  value: number | string;
+  unit: string | null;
+}
+
+export type AdminInsightListResponse = AdminInsightResponse[]

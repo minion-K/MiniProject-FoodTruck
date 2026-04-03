@@ -1,4 +1,4 @@
-package org.example.foodtruckback.dto.statistics.response;
+package org.example.foodtruckback.dto.statistics.response.owner;
 
 import java.time.LocalDateTime;
 

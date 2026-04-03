@@ -1,34 +1,231 @@
+import { adminStatisticsApi } from '@/apis/statistics/adminStatistics.api';
+import { type AdminConversionFunnelResponse, type AdminDashboardResponse, type AdminGrowthTrendResponse, type AdminInsightResponse, type AdminPaymentStatusResponse, type AdminTopMenuResponse, type AdminTopTruckResponse } from '@/types/statistics/statistics.dto';
+import { toKstString } from '@/utils/date';
+import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type YAxisProps } from 'recharts';
 
 type Period = "TODAY" | "WEEK" | "MONTH";
 type GrowTab = "REVENUE" | "ORDER" | "USER" | "TRUCK"
-
-const kpiData = [
-  { label: "매출", value: 1200000, changeRate: 20 },
-  { label: "주문", value: 320, changeRate: -10 },
-  { label: "예약", value: 210, changeRate: 5 },
-  { label: "환불", value: 12, changeRate: -2 },
-  { label: "유저", value: 54, changeRate: 12 },
-  { label: "트럭", value: 8, changeRate: 0 },
-  { label: "전환율", value: 32, changeRate: 3 },
-];
 
 function AdminStatisticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("TODAY");
   const [selectedRegion, setSeletedRegion] = useState<string>("ALL");
   const [growTab, setGrowTab] = useState<GrowTab>("REVENUE");
 
-  const getChangeText = (rate: number) => {
-    if(rate > 0) return `▲ ${rate}%`;
-    if(rate < 0) return `▼ ${Math.abs(rate)}%`;
-    return "0%";
+  const [dashboard, setDashboard] = useState<AdminDashboardResponse | null>(null);
+  const [growthTrend, setGrowthTrend] = useState<AdminGrowthTrendResponse[]>([]);
+  const [conversionFunnel, setConversionFunnel] = useState<AdminConversionFunnelResponse | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<AdminPaymentStatusResponse[]>([]);
+  const [topTrucks, setTopTrucks] = useState<AdminTopTruckResponse[]>([]);
+  const [topMenus, setTopMenus] = useState<AdminTopMenuResponse[]>([]);
+  const [insights, setInsights] = useState<AdminInsightResponse[]>([]);
+
+  const [periodStart, setPeriodStart] = useState<string | null>(null);
+  const [periodEnd, setPeriodEnd] = useState<string | null>(null);
+  const [trendStart, setTrendStart] = useState<string | null>(null);
+  const [trendEnd, setTrendEnd] = useState<string | null>(null);
+
+  const [currentInsightIdx, setCurrentInsightIdx] = useState(0);
+
+  useEffect(() => {
+      const now = new Date();
+  
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+  
+      let start: Date;
+      let end: Date;
+      let wStart: Date;
+      let wEnd: Date;
+  
+      switch(selectedPeriod) {
+        case "TODAY":
+          start = new Date();
+          start.setHours(0, 0, 0, 0);
+          
+          end = today;
+  
+          wStart = new Date();
+          wStart.setDate(now.getDate() - 6);
+          wStart.setHours(0, 0, 0, 0);
+          wEnd = today;
+          break;
+        case "WEEK":
+          const dayOfWeek = now.getDay();
+          start = new Date(now);
+          start.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+          start.setHours(0, 0, 0, 0);
+          end = new Date(start);
+          end.setDate(start.getDate() + 6);
+          end.setHours(23, 59, 59, 999);
+  
+          wStart = start;
+          wEnd = today;
+          break;
+        case "MONTH":
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          start.setHours(0, 0, 0, 0);
+          end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          end.setHours(23, 59, 59, 999);
+  
+          wStart = start;
+          wEnd = today;
+          break;
+      }
+  
+      setPeriodStart(toKstString(start));
+      setPeriodEnd(toKstString(end));
+  
+      setTrendStart(toKstString(wStart));
+      setTrendEnd(toKstString(wEnd));
+  
+    }, [selectedPeriod]);
+
+    const generateDateRange = (start: string, end: string) => {
+    const result = [];
+    const current = new Date(start);
+    const last = new Date(end);
+
+    while(current <= last) {
+      result.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    return result;
   }
 
+    const fillEmptyDates = (
+        start: string,
+        end: string,
+        data: AdminGrowthTrendResponse[]
+      ) => {
+        const dateRange = generateDateRange(start, end);
+    
+        const map = new Map(
+          data.map(item => [
+            new Date(item.date).toDateString(),
+            item
+          ])
+        );
+    
+        return dateRange.map(date => {
+          const key = date.toDateString();
+          const found = map.get(key);
+
+          if(found) return found;
+    
+          return {
+            date: toKstString(date),
+            revenue: 0,
+            orderCount: 0,
+            userCount: 0,
+            truckCount: 0
+          };
+        });
+      };
+
+    useEffect(() => {
+      if(!periodStart || !periodEnd || !trendStart || !trendEnd) return ;
+
+      const fetchAdminStatistics = async () => {
+        const params = {
+          region: selectedRegion,
+          fromDate: periodStart,
+          toDate: periodEnd
+        }
+        
+        try {
+          const dashboardResponse = await adminStatisticsApi.getDashboard(params);
+          setDashboard(dashboardResponse);
+
+          const growthResponse = await adminStatisticsApi.getGrowthTrend({
+            region:selectedRegion,
+            fromDate: trendStart,
+            toDate: trendEnd
+          });
+          const filledGrowth = fillEmptyDates(
+            trendStart,
+            trendEnd,
+            growthResponse
+          );
+
+          setGrowthTrend(filledGrowth);
+
+          const ConversionResponse = await adminStatisticsApi.getConversionFunnel(params);
+          setConversionFunnel(ConversionResponse);
+
+          const paymentResponse = await adminStatisticsApi.getPaymentStatus(params);
+          setPaymentStatus(paymentResponse);
+
+          const topTrucksResponse = await adminStatisticsApi.getTopTrucks(params);
+          setTopTrucks(topTrucksResponse);
+
+          const topMenusResponse = await adminStatisticsApi.getTopMenus(params);
+          setTopMenus(topMenusResponse);
+
+          const insightsResponse = await adminStatisticsApi.getInsights(params);
+          setInsights(insightsResponse);
+        } catch (e) {
+          alert(getErrorMsg(e));
+        }
+      };
+
+      fetchAdminStatistics();
+    }, [periodStart, periodEnd, selectedRegion]);
+
+    useEffect(() => {
+      if(insights.length <= 1) return;
+
+      const interval = setInterval(() => {
+        setCurrentInsightIdx(prev => (prev + 1) % insights.length);
+      }, 2500);
+
+      return () => clearInterval(interval);
+    }, [insights.length]);
+
+    const getChangeText = (rate?: number) => {
+      if(!rate) return "0%";
+
+      if(rate > 0) return `▲${rate.toFixed(1)}%`;
+      if(rate < 0) return `▼${Math.abs(rate).toFixed(2)}`;
+      
+      return "0%";
+    }
+
+    const growthData = growthTrend.map(item => ({
+      date: item.date,
+      revenue: item.revenue,
+      orderCount: item.orderCount,
+      userCount: item.userCount,
+      truckCount: item.truckCount
+    }));
+
+    const currentGrowthKey = growTab === "REVENUE" ? "revenue"
+                            : growTab === "ORDER" ? "orderCount"
+                            : growTab === "USER" ? "userCount" : "truckCount";
+
+    const growthLabel = growTab === "REVENUE" ? "수익 (원)"
+                        : growTab === "ORDER" ? "주문"
+                        : growTab === "USER" ? "유저" : "트럭";
+
+    const getColor = () => {
+      switch (growTab) {
+        case "REVENUE": return "#3b83f6";
+        case "ORDER": return "#10b981";
+        case "USER": return "#f59e0b";
+        case "TRUCK": return "#ef4444";
+      }
+    }
+
+    const getDomain: YAxisProps["domain"] = (growTab === "REVENUE")
+      ? ([min, max]) => [min * 0.9, max * 1.1]
+      : [0, "auto"];
   return (
     <Container>
       <Header>
-        <Title>통계 대시보드</Title>
+        <Title>통계 대시보드 (관리자)</Title>
       </Header>
 
       <HeaderRight>
@@ -56,31 +253,100 @@ function AdminStatisticsPage() {
       </HeaderRight>
 
       <CardGrid>
-        {kpiData.map(item => (
-          <StatCard key={item.label}>
-            <StatLabel>{item.label}</StatLabel>
-            <StatValue>
-              <ValueText>
-                {item.label === "매출"
-                  ? `${item.value.toLocaleString()} KRW`
-                  : item.label === "전환율"
-                  ? `${item.value}%`
-                  : item.value}                
-              </ValueText>
+        <StatCard>
+          <StatLabel>총 매출</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.totalRevenue?.toLocaleString() ?? 0} KRW</ValueText>
+            <ChangeRate rate={dashboard?.refundChangeRate ?? 0}>
+              {getChangeText(dashboard?.revenueChangeRate)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText>
+            {selectedPeriod === "TODAY" ? "vs어제"
+              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+          </CompareText>
+        </StatCard>
 
-              <ChangeRate rate={item.changeRate}>
-                {getChangeText(item.changeRate)}
-              </ChangeRate>
-            </StatValue>
-            <CompareText>
-              {selectedPeriod === "TODAY"
-                ? "vs 어제"
-                : selectedPeriod === "WEEK"
-                ? "vs 지난 주" : "vs 지난 달" }
-            </CompareText>
-          </StatCard>
-        ))}
-        
+        <StatCard>
+          <StatLabel>주문 수</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.totalOrders ?? 0}</ValueText>
+            <ChangeRate rate={dashboard?.orderChangeRate ?? 0}>
+              {getChangeText(dashboard?.orderChangeRate)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText>
+            {selectedPeriod === "TODAY" ? "vs어제"
+              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+          </CompareText>
+        </StatCard>
+
+        <StatCard>
+          <StatLabel>예약 수</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.totalReservations ?? 0}</ValueText>
+            <ChangeRate rate={dashboard?.reservationChangeRage ?? 0}>
+              {getChangeText(dashboard?.reservationChangeRage)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText>
+            {selectedPeriod === "TODAY" ? "vs어제"
+              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+          </CompareText>
+        </StatCard>
+
+        <StatCard>
+          <StatLabel>환불 건수</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.totalRefunds ?? 0}</ValueText>
+            <ChangeRate rate={dashboard?.refundChangeRate ?? 0}>
+              {getChangeText(dashboard?.refundChangeRate)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText>
+            {selectedPeriod === "TODAY" ? "vs어제"
+              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+          </CompareText>
+        </StatCard>
+
+        <StatCard>
+          <StatLabel>유저 수</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.totalUsers ?? 0}</ValueText>
+            <ChangeRate rate={dashboard?.userChangeRate ?? 0}>
+              {getChangeText(dashboard?.userChangeRate)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText>
+            {selectedPeriod === "TODAY" ? "vs어제"
+              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+          </CompareText>
+        </StatCard>
+
+        <StatCard>
+          <StatLabel>트럭 수</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.activeTrucks ?? 0}</ValueText>
+            <ChangeRate rate={dashboard?.truckChangeRate ?? 0}>
+              {getChangeText(dashboard?.truckChangeRate)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText>
+            {selectedPeriod === "TODAY" ? "vs어제"
+              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+          </CompareText>
+        </StatCard>
+
+        <StatCard>
+          <StatLabel>전환율</StatLabel>
+          <StatValue>
+            <ValueText>{dashboard?.conversionRate ?? 0}</ValueText>
+            <ChangeRate rate={dashboard?.conversionChangeRate ?? 0}>
+              {getChangeText(dashboard?.conversionChangeRate)}
+            </ChangeRate>
+          </StatValue>
+          <CompareText></CompareText>
+        </StatCard>
       </CardGrid>
       <Row>
         <ChartCard>
@@ -98,38 +364,183 @@ function AdminStatisticsPage() {
               </TabButton>
             ))}
           </TabRow>
-          <ChartPlaceholder>그래프 영역</ChartPlaceholder>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart 
+              key={growTab}
+              data={growthData}
+              margin={{top: 10, right: 10, left: 0, bottom: 0}}
+            >
+              <CartesianGrid 
+                strokeDasharray="3 3"
+                stroke="#eee"
+              />
+              <XAxis 
+                dataKey="date"
+                padding={{left: 10}}
+                tick={{fontSize: 14}}
+                tickMargin={5}
+                tickFormatter={value => {
+                  const d = new Date(value);
+                  const month = d.getMonth() + 1;
+                  const date = d.getDate();
+                  const days = ["일", "월", "화", "수", "목", "금", "토"]
+
+                  return `${month}-${date} (${days[d.getDay()]})`;
+                }}
+              />
+              <YAxis 
+                width={60}
+                tickCount={5}
+                tickMargin={10}
+                domain={getDomain}
+                tick={({x, y, payload}) => {
+
+                  let label;
+
+                  if(growTab === "REVENUE") {
+                    if(payload.value === 0) return null;
+                    label = `${Math.round(payload.value / 10000)}만`;
+                  } else {
+                    label = payload.value
+                  }
+                  return label ? (
+                    <text 
+                      x={x}
+                      y={y} 
+                      dy={6}
+                      textAnchor="end" 
+                      fill="#666" 
+                      fontSize={14}
+                    >
+                      {label}
+                    </text>
+                  ) : null;
+                }}
+              />
+              <Tooltip 
+                cursor={{strokeDasharray: "3 3"}}
+                formatter={value => {
+                  if(growTab === "REVENUE") {
+                    return [`${Number (value).toLocaleString()} KRW`, growthLabel];
+                  }
+
+                  return [`${value}`, growthLabel]
+                }}
+                labelFormatter={value => {
+                  const d = new Date(value);
+                  const days = ["일", "월", "화", "수", "목", "금", "토"]
+
+                  return `날짜: ${d.getMonth() + 1}-${d.getDate()} (${days[d.getDay()]})`
+                }}
+              />
+              <Line 
+                type="monotone"
+                dataKey={currentGrowthKey}
+                name={growthLabel}
+                stroke={getColor()}
+                strokeWidth={1.3}
+                dot={false}
+                activeDot={{r: 6}}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartCard>
 
         <ChartCard>
           <CardTitle>전환 퍼널</CardTitle>
-          <ChartPlaceholder>퍼널 차트</ChartPlaceholder>
+          {conversionFunnel && (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={[conversionFunnel]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="reservations" hide/>
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="reservations" fill="#64748b" name="예약" />
+                <Bar dataKey="confirmedReservations" fill="#3b82f6" name="확정 예약" />
+                <Bar dataKey="orders" fill="#10b981" name="주문" />
+                <Bar dataKey="payments" fill="#f59e6b" name="결제" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </Row>
+
+      <Row>
+        <ChartCard>
+          <CardTitle>결제 상태</CardTitle>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={paymentStatus}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="status" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#3b82f6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard>
+          <CardTitle>주문 유형</CardTitle>
+          <ChartPlaceholder />
         </ChartCard>
       </Row>
       <Row>
         <ChartCard>
-          <CardTitle>결제 상태</CardTitle>
-          <ChartPlaceholder />
+          <CardTitle>인기 트럭 TOP5</CardTitle>
+          {topTrucks.length === 0 ? (
+            <EmptyState>데이터가 없습니다.</EmptyState>
+          ) : (
+            <List>
+              {topTrucks.map((truck, idx) => (
+                <ListItem key={truck.truckId}>
+                  <span>{idx + 1}. {truck.truckName}</span>
+                  <span>{truck.revenue.toLocaleString()} KRW</span>
+                </ListItem>
+              ))}
+            </List>
+          )}
         </ChartCard>
         <ChartCard>
-          <CardTitle>결제 상태</CardTitle>
-          <ChartPlaceholder />
-        </ChartCard>
-      </Row>
-      <Row>
-        <ChartCard>
-          <CardTitle>트럭 TOP</CardTitle>
-          <ChartPlaceholder />
-        </ChartCard>
-        <ChartCard>
-          <CardTitle>메뉴 TOP</CardTitle>
-          <ChartPlaceholder />
+          <CardTitle>인기메뉴 TOP5</CardTitle>
+          {topMenus.length === 0 ? (
+            <EmptyState>데이터가 없습니다.</EmptyState>
+          ) : (
+            <List>
+              {topMenus.map((menu, idx) => (
+                <ListItem key={idx}>
+                  <span>{idx + 1}. {menu.menuName}</span>
+                  <span>{menu.quantity}개</span>
+                </ListItem>
+              ))}
+            </List>
+          )}
         </ChartCard>
       </Row>
 
       <ChartCard>
         <CardTitle>운영 인사이트</CardTitle>
-        <InsightBox />
+        {insights.length > 0 ? (
+          <InsightContainer>
+            {insights.map((insight, idx) => (
+              <InsightSlide
+                key={insight.category}
+                isActive={idx === currentInsightIdx}
+              >
+                <InsightTitle>{insight.title}</InsightTitle>
+                <InsightValue>
+                  {typeof insight.value === "number"
+                    ? insight.value.toLocaleString()
+                    : insight.value}
+                  {insight.unit && ` ${insight.unit}`}
+                </InsightValue>
+
+                <InsightDescription>{insight.description}</InsightDescription>
+              </InsightSlide>
+            ))}
+          </InsightContainer>
+        ) : (
+          <EmptyState>데이터가 없습니다.</EmptyState>
+        )}
+        
       </ChartCard>
     </Container>
   )
@@ -280,6 +691,23 @@ const TabButton = styled.button<{active: boolean}>`
   }
 `;
 
+const List = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const ListItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
 const ChartPlaceholder = styled.div`
   height: 200px;
   background: #fafafa;
@@ -291,17 +719,49 @@ const ChartPlaceholder = styled.div`
   font-size: 14px;
 `;
 
-const ListPlaceholder = styled.div`
-  height: 200px;
-  background: #fafafa;
-  border-radius: 8px;
+const EmptyState = styled(ChartPlaceholder)`
+  height: 160px;
 `;
 
-const InsightBox = styled.div`
-  height: 120px;
-  background: #fff7eb;
-  border-radius: 8px;
-  padding: 16px;
+const InsightContainer = styled.div`
+  height: 280px;
+  overflow: hidden;
+  position: relative;
+  border-radius: 10px;
+  background: #f8f9fa;
+`;
+
+const InsightSlide = styled.div<{isActive: boolean}>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  opacity: ${({isActive}) => isActive ? 1 : 0};
+  transform: ${({isActive}) => isActive ? "translateY(0)" : "translateY(30px)"};;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const InsightTitle = styled.div`
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 12px;
+`;
+
+const InsightValue = styled.div`
+  font-size: 32px;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 8px;
+  line-height: 1.1;
+`;
+
+const InsightDescription = styled.div`
   font-size: 14px;
-  color: #92400e;
+  line-height: 1.5;
+  color: #666;
 `;
