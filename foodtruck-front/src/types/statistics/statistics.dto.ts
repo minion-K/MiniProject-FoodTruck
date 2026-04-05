@@ -95,7 +95,7 @@ export interface AdminConversionFunnelResponse{
   reservations: number;
   confirmedReservations: number;
   orders: number;
-  paidOrder: number;
+  paidOrders: number;
   reservationToOrderRate: number;
   orderToPaymentRate: number;
 }

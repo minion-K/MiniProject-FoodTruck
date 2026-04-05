@@ -1,10 +1,12 @@
 import { adminStatisticsApi } from '@/apis/statistics/adminStatistics.api';
+import type { PaymentStatus } from '@/types/payment/payment.type';
 import { type AdminConversionFunnelResponse, type AdminDashboardResponse, type AdminGrowthTrendResponse, type AdminInsightResponse, type AdminPaymentStatusResponse, type AdminTopMenuResponse, type AdminTopTruckResponse } from '@/types/statistics/statistics.dto';
 import { toKstString } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
+import { getPaymentStatus } from '@/utils/paymentStatus';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type YAxisProps } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, Funnel, FunnelChart, LabelList, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type YAxisProps } from 'recharts';
 
 type Period = "TODAY" | "WEEK" | "MONTH";
 type GrowTab = "REVENUE" | "ORDER" | "USER" | "TRUCK"
@@ -96,132 +98,179 @@ function AdminStatisticsPage() {
     return result;
   }
 
-    const fillEmptyDates = (
-        start: string,
-        end: string,
-        data: AdminGrowthTrendResponse[]
-      ) => {
-        const dateRange = generateDateRange(start, end);
-    
-        const map = new Map(
-          data.map(item => [
-            new Date(item.date).toDateString(),
-            item
-          ])
-        );
-    
-        return dateRange.map(date => {
-          const key = date.toDateString();
-          const found = map.get(key);
+  const fillEmptyDates = (
+      start: string,
+      end: string,
+      data: AdminGrowthTrendResponse[]
+    ) => {
+      const dateRange = generateDateRange(start, end);
+  
+      const map = new Map(
+        data.map(item => [
+          new Date(item.date).toDateString(),
+          item
+        ])
+      );
+  
+      return dateRange.map(date => {
+        const key = date.toDateString();
+        const found = map.get(key);
 
-          if(found) return found;
-    
-          return {
-            date: toKstString(date),
-            revenue: 0,
-            orderCount: 0,
-            userCount: 0,
-            truckCount: 0
-          };
-        });
-      };
+        if(found) return found;
+  
+        return {
+          date: toKstString(date),
+          revenue: 0,
+          orderCount: 0,
+          userCount: 0,
+          truckCount: 0
+        };
+      });
+    };
 
-    useEffect(() => {
-      if(!periodStart || !periodEnd || !trendStart || !trendEnd) return ;
+  useEffect(() => {
+    if(!periodStart || !periodEnd || !trendStart || !trendEnd) return ;
 
-      const fetchAdminStatistics = async () => {
-        const params = {
-          region: selectedRegion,
-          fromDate: periodStart,
-          toDate: periodEnd
-        }
-        
-        try {
-          const dashboardResponse = await adminStatisticsApi.getDashboard(params);
-          setDashboard(dashboardResponse);
-
-          const growthResponse = await adminStatisticsApi.getGrowthTrend({
-            region:selectedRegion,
-            fromDate: trendStart,
-            toDate: trendEnd
-          });
-          const filledGrowth = fillEmptyDates(
-            trendStart,
-            trendEnd,
-            growthResponse
-          );
-
-          setGrowthTrend(filledGrowth);
-
-          const ConversionResponse = await adminStatisticsApi.getConversionFunnel(params);
-          setConversionFunnel(ConversionResponse);
-
-          const paymentResponse = await adminStatisticsApi.getPaymentStatus(params);
-          setPaymentStatus(paymentResponse);
-
-          const topTrucksResponse = await adminStatisticsApi.getTopTrucks(params);
-          setTopTrucks(topTrucksResponse);
-
-          const topMenusResponse = await adminStatisticsApi.getTopMenus(params);
-          setTopMenus(topMenusResponse);
-
-          const insightsResponse = await adminStatisticsApi.getInsights(params);
-          setInsights(insightsResponse);
-        } catch (e) {
-          alert(getErrorMsg(e));
-        }
-      };
-
-      fetchAdminStatistics();
-    }, [periodStart, periodEnd, selectedRegion]);
-
-    useEffect(() => {
-      if(insights.length <= 1) return;
-
-      const interval = setInterval(() => {
-        setCurrentInsightIdx(prev => (prev + 1) % insights.length);
-      }, 2500);
-
-      return () => clearInterval(interval);
-    }, [insights.length]);
-
-    const getChangeText = (rate?: number) => {
-      if(!rate) return "0%";
-
-      if(rate > 0) return `▲${rate.toFixed(1)}%`;
-      if(rate < 0) return `▼${Math.abs(rate).toFixed(2)}`;
-      
-      return "0%";
-    }
-
-    const growthData = growthTrend.map(item => ({
-      date: item.date,
-      revenue: item.revenue,
-      orderCount: item.orderCount,
-      userCount: item.userCount,
-      truckCount: item.truckCount
-    }));
-
-    const currentGrowthKey = growTab === "REVENUE" ? "revenue"
-                            : growTab === "ORDER" ? "orderCount"
-                            : growTab === "USER" ? "userCount" : "truckCount";
-
-    const growthLabel = growTab === "REVENUE" ? "수익 (원)"
-                        : growTab === "ORDER" ? "주문"
-                        : growTab === "USER" ? "유저" : "트럭";
-
-    const getColor = () => {
-      switch (growTab) {
-        case "REVENUE": return "#3b83f6";
-        case "ORDER": return "#10b981";
-        case "USER": return "#f59e0b";
-        case "TRUCK": return "#ef4444";
+    const fetchAdminStatistics = async () => {
+      const params = {
+        region: selectedRegion,
+        fromDate: periodStart,
+        toDate: periodEnd
       }
-    }
+      
+      try {
+        const dashboardResponse = await adminStatisticsApi.getDashboard(params);
+        setDashboard(dashboardResponse);
 
-    const getDomain: YAxisProps["domain"] = (growTab === "REVENUE")
-      ? ([min, max]) => [min * 0.9, max * 1.1]
-      : [0, "auto"];
+        const growthResponse = await adminStatisticsApi.getGrowthTrend({
+          region:selectedRegion,
+          fromDate: trendStart,
+          toDate: trendEnd
+        });
+        const filledGrowth = fillEmptyDates(
+          trendStart,
+          trendEnd,
+          growthResponse
+        );
+
+        setGrowthTrend(filledGrowth);
+
+        const ConversionResponse = await adminStatisticsApi.getConversionFunnel(params);
+        setConversionFunnel(ConversionResponse);
+
+        const paymentResponse = await adminStatisticsApi.getPaymentStatus(params);
+        const normalized = normalizePaymentStatus(paymentResponse);
+        setPaymentStatus(normalized);
+
+        const topTrucksResponse = await adminStatisticsApi.getTopTrucks(params);
+        setTopTrucks(topTrucksResponse);
+
+        const topMenusResponse = await adminStatisticsApi.getTopMenus(params);
+        setTopMenus(topMenusResponse);
+
+        const insightsResponse = await adminStatisticsApi.getInsights(params);
+        setInsights(insightsResponse);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    };
+
+    fetchAdminStatistics();
+  }, [periodStart, periodEnd, selectedRegion]);
+
+  useEffect(() => {
+    if(insights.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentInsightIdx(prev => (prev + 1) % insights.length);
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [insights.length]);
+
+  const getChangeText = (rate?: number) => {
+    if(!rate) return "0%";
+
+    if(rate > 0) return `▲${rate.toFixed(1)}%`;
+    if(rate < 0) return `▼${Math.abs(rate).toFixed(2)}`;
+    
+    return "0%";
+  }
+
+  const growthData = growthTrend.map(item => ({
+    date: item.date,
+    revenue: item.revenue,
+    orderCount: item.orderCount,
+    userCount: item.userCount,
+    truckCount: item.truckCount
+  }));
+
+  const currentGrowthKey = growTab === "REVENUE" ? "revenue"
+                          : growTab === "ORDER" ? "orderCount"
+                          : growTab === "USER" ? "userCount" : "truckCount";
+
+  const growthLabel = growTab === "REVENUE" ? "수익 (원)"
+                      : growTab === "ORDER" ? "주문"
+                      : growTab === "USER" ? "유저" : "트럭";
+
+  const getColor = () => {
+    switch (growTab) {
+      case "REVENUE": return "#3b83f6";
+      case "ORDER": return "#10b981";
+      case "USER": return "#f59e0b";
+      case "TRUCK": return "#ef4444";
+    }
+  }
+
+  const getDomain: YAxisProps["domain"] = (growTab === "REVENUE")
+    ? ([min, max]) => [min * 0.9, max * 1.1]
+    : [0, "auto"];
+
+  const funnelData = conversionFunnel ? [
+    {
+      name: "예약",
+      value: conversionFunnel.reservations ?? 0,
+      label: `예약 ${(conversionFunnel.reservations ?? 0).toLocaleString()}`,
+      fill: "#94a3b8"
+    },
+    {
+      name: "예약 확정",
+      value: conversionFunnel.confirmedReservations ?? 0,
+      label: `예약 확정: ${(conversionFunnel.confirmedReservations ?? 0).toLocaleString()}`,
+      fill: "#60a5fa"
+    },
+    {
+      name: "주문",
+      value: conversionFunnel.orders ?? 0,
+      label: `주문: ${(conversionFunnel.orders ?? 0).toLocaleString()} (${(conversionFunnel.reservationToOrderRate ?? 0).toFixed(1)}%)`,
+      fill: "#34d399"
+    },
+    {
+      name: "결제",
+      value: conversionFunnel.paidOrders ?? 0,
+      label: `결제: ${(conversionFunnel.paidOrders ?? 0).toLocaleString()} (${(conversionFunnel.orderToPaymentRate ?? 0).toFixed(1)}%)`,
+      fill: "#fbbf24"
+    }
+  ] : [];
+
+  const Payment_status: PaymentStatus[] = ["READY", "SUCCESS", "FAILED", "CANCELLED"]
+  const normalizePaymentStatus = (data: AdminPaymentStatusResponse[]) => {
+    const map = new Map<PaymentStatus, AdminPaymentStatusResponse>(
+      data.map(item => [item.status, item])
+    );
+
+    return Payment_status.map(status => {
+      const found = map.get(status);
+
+      return {
+        status,
+        count: found?.count ?? 0,
+        amount: found?.amount ?? 0
+      };
+    });
+  };
+
+  const filleredPaymentStatus = paymentStatus.filter(d => d.count > 0);
   return (
     <Container>
       <Header>
@@ -448,35 +497,88 @@ function AdminStatisticsPage() {
 
         <ChartCard>
           <CardTitle>전환 퍼널</CardTitle>
-          {conversionFunnel && (
+          {conversionFunnel && funnelData.some(d => d.value > 0) ?  (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={[conversionFunnel]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="reservations" hide/>
-                <YAxis />
+              <FunnelChart>
                 <Tooltip />
-                <Bar dataKey="reservations" fill="#64748b" name="예약" />
-                <Bar dataKey="confirmedReservations" fill="#3b82f6" name="확정 예약" />
-                <Bar dataKey="orders" fill="#10b981" name="주문" />
-                <Bar dataKey="payments" fill="#f59e6b" name="결제" />
-              </BarChart>
+                <Funnel
+                  dataKey="value"
+                  data={funnelData}
+                  isAnimationActive={false}
+                >
+                  <LabelList
+                    position="center"
+                    dataKey="label"
+                    fill="#fff"
+                    fontSize={13}
+                  />
+                </Funnel>
+              </FunnelChart>
             </ResponsiveContainer>
+          ) : (
+            <EmptyState>데이터가 없습니다.</EmptyState>
           )}
         </ChartCard>
-      </Row>
+      </Row>  
 
       <Row>
         <ChartCard>
           <CardTitle>결제 상태</CardTitle>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={paymentStatus}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="status" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" />
-            </BarChart>
+            <PieChart>
+              <Pie 
+                data={filleredPaymentStatus}
+                dataKey="count"
+                nameKey="status"
+                cx="50%"
+                cy="50%"
+                outerRadius={90}
+                label={false}
+                isAnimationActive={false}
+                labelLine={false}
+              >
+                {filleredPaymentStatus.map((entry, idx) => {
+                  const paymentStatus = getPaymentStatus(entry.status);
+                  
+                  return (
+                    <Cell 
+                      key={idx}
+                      fill={paymentStatus.color}
+                    />
+                  )
+                  
+                })}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  background: "#222",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "#fff"
+                }}
+                itemStyle={{color: "#fff"}}
+                formatter={(value,name) => {
+                  const paymentStatus = getPaymentStatus(name as PaymentStatus);
+
+                  return [`${Number(value ?? 0).toLocaleString()}건`, paymentStatus.label]
+                }}
+              />
+            </PieChart>
           </ResponsiveContainer>
+
+          <PaymentLegend>
+            {paymentStatus.map(item => {
+              const paymentStatus = getPaymentStatus(item.status);
+              
+
+              return (
+                <LegendItem key={item.status}>
+                  <ColorDot style={{background: paymentStatus.color}}/>
+                  {paymentStatus.label}: {item.count}건
+                </LegendItem>
+              )
+            })}
+          </PaymentLegend>
         </ChartCard>
         <ChartCard>
           <CardTitle>주문 유형</CardTitle>
@@ -721,6 +823,29 @@ const ChartPlaceholder = styled.div`
 
 const EmptyState = styled(ChartPlaceholder)`
   height: 160px;
+`;
+
+const PaymentLegend = styled.div`
+  display: flex;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+`;
+
+const LegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+`;
+
+const ColorDot = styled.div`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({color}) => color};
 `;
 
 const InsightContainer = styled.div`
