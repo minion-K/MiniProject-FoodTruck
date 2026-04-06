@@ -74,6 +74,20 @@ public class AdminStatisticsController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping(AdminStatisticsApi.ORDER_TYPES)
+    public ResponseEntity<ResponseDto<List<OrderTypeResponseDto>>> getOrderTypes(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) String region,
+            @RequestParam LocalDateTime fromDate,
+            @RequestParam LocalDateTime toDate
+    ) {
+        ResponseDto<List<OrderTypeResponseDto>> response =
+                adminStatisticsService.getOrderTypes(principal.getId(), region, fromDate, toDate);
+
+        return ResponseEntity.ok(response);
+    }
+
+
     @GetMapping(AdminStatisticsApi.TOP_TRUCKS)
     public ResponseEntity<ResponseDto<List<TopTrucksResponseDto>>> getTopTrucks(
             @AuthenticationPrincipal UserPrincipal principal,

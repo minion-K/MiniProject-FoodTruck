@@ -1,7 +1,8 @@
 import type { ApiResponse } from "@/types/common/ApiResponse"
-import type { AdminConversionFunnelResponse, AdminDashboardResponse, AdminGrowthTrendListResponse, AdminInsightListResponse, AdminPaymentStatusListResponse, AdminTopMenuListResponse, AdminTopTruckListResponse } from "@/types/statistics/statistics.dto"
+import type { AdminConversionFunnelResponse, AdminDashboardResponse, AdminGrowthTrendListResponse, AdminInsightListResponse, AdminOrderTypesListResponse, AdminPaymentStatusListResponse, AdminTopMenuListResponse, AdminTopTruckListResponse } from "@/types/statistics/statistics.dto"
 import { privateApi } from "../common/axiosInstance"
 import { ADMIN_STATISTICS_PATH } from "./statistics.path"
+import type { AdminOrderListItemResponse } from "@/types/order/order.dto"
 
 export const adminStatisticsApi = {
   getDashboard: async (params: {
@@ -50,6 +51,19 @@ export const adminStatisticsApi = {
   }): Promise<AdminPaymentStatusListResponse> => {
     const res = await privateApi.get<ApiResponse<AdminPaymentStatusListResponse>>(
       ADMIN_STATISTICS_PATH.PAYMENT_STATUS,
+      {params}
+    );
+
+    return res.data.data ?? [];
+  },
+
+  getOrderTypes: async (params: {
+    region?: string,
+    fromDate: string,
+    toDate: string
+  }): Promise<AdminOrderTypesListResponse> => {
+    const res = await privateApi.get<ApiResponse<AdminOrderTypesListResponse>>(
+      ADMIN_STATISTICS_PATH.ORDER_TYPES,
       {params}
     );
 

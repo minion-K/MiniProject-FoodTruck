@@ -15,9 +15,12 @@ public interface AdminStatisticsService {
 
     ResponseDto<List<PaymentStatusResponseDto>> getPaymentStatus(Long id, String region, LocalDateTime fromDate, LocalDateTime toDate);
 
+    ResponseDto<List<OrderTypeResponseDto>> getOrderTypes(Long id, String region, LocalDateTime fromDate, LocalDateTime toDate);
+
     ResponseDto<List<TopTrucksResponseDto>> getTopTrucks(Long id, String region, LocalDateTime fromDate, LocalDateTime toDate);
 
     ResponseDto<List<TopMenusResponseDto>> getTopMenus(Long id, String region, LocalDateTime fromDate, LocalDateTime toDate);
 
     ResponseDto<List<InsightResponseDto>> getInsights(Long id, String region, LocalDateTime fromDate, LocalDateTime toDate);
+
 }

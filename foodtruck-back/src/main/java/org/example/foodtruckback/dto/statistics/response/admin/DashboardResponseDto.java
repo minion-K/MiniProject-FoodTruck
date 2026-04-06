@@ -11,7 +11,7 @@ public record DashboardResponseDto(
 
         Double revenueChangeRate,
         Double orderChangeRate,
-        Double reservationChangeRage,
+        Double reservationChangeRate,
         Double refundChangeRate,
         Double userChangeRate,
         Double truckChangeRate,

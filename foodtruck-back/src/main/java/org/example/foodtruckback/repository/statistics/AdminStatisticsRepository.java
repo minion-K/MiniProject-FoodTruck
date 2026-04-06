@@ -14,6 +14,8 @@ public interface AdminStatisticsRepository{
 
     List<PaymentStatusResponseDto> getPaymentStatus(String region, LocalDateTime fromDate, LocalDateTime toDate);
 
+    List<OrderTypeResponseDto> getOrderType(String region, LocalDateTime fromDate, LocalDateTime toDate);
+
     List<TopTrucksResponseDto> getTopTrucks(String region, LocalDateTime fromDate, LocalDateTime toDate);
 
     List<TopMenusResponseDto> getTopMenus(String region, LocalDateTime fromDate, LocalDateTime toDate);

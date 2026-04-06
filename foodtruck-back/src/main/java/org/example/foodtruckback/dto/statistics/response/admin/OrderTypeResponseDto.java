@@ -4,6 +4,5 @@ import org.example.foodtruckback.common.enums.OrderSource;
 
 public record OrderTypeResponseDto(
         OrderSource source,
-        Long count,
-        Long amount
+        Long count
 ) {}

@@ -74,7 +74,7 @@ export interface AdminDashboardResponse {
 
   revenueChangeRate: number
   orderChangeRate: number
-  reservationChangeRage: number
+  reservationChangeRate: number
   refundChangeRate: number
   userChangeRate: number
   truckChangeRate: number
@@ -107,6 +107,13 @@ export interface AdminPaymentStatusResponse {
 }
 
 export type AdminPaymentStatusListResponse = AdminPaymentStatusResponse[];
+
+export interface AdminOrderTypesResponse {
+  status: OrderSource;
+  count: number;
+}
+
+export type AdminOrderTypesListResponse = AdminOrderTypesResponse[];
 
 export interface AdminTopTruckResponse {
   truckId: number;

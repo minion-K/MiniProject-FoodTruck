@@ -1,25 +1,33 @@
 import { adminStatisticsApi } from '@/apis/statistics/adminStatistics.api';
 import type { PaymentStatus } from '@/types/payment/payment.type';
-import { type AdminConversionFunnelResponse, type AdminDashboardResponse, type AdminGrowthTrendResponse, type AdminInsightResponse, type AdminPaymentStatusResponse, type AdminTopMenuResponse, type AdminTopTruckResponse } from '@/types/statistics/statistics.dto';
+import { REGION_LIST, type Regions } from '@/types/region/region.type';
+import { type AdminConversionFunnelResponse, type AdminDashboardResponse, type AdminGrowthTrendResponse, type AdminInsightResponse, type AdminOrderTypesResponse, type AdminPaymentStatusResponse, type AdminTopMenuResponse, type AdminTopTruckResponse } from '@/types/statistics/statistics.dto';
 import { toKstString } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getPaymentStatus } from '@/utils/paymentStatus';
 import styled from '@emotion/styled';
+import { Autocomplete, TextField} from '@mui/material';
 import React, { useEffect, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, Cell, Funnel, FunnelChart, LabelList, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type YAxisProps } from 'recharts';
+import { CartesianGrid, Cell, Funnel, FunnelChart, LabelList, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type YAxisProps } from 'recharts';
 
 type Period = "TODAY" | "WEEK" | "MONTH";
-type GrowTab = "REVENUE" | "ORDER" | "USER" | "TRUCK"
+type GrowTab = "REVENUE" | "ORDER" | "USER" | "TRUCK";
+type RegionFilter = Regions | "ALL";
+type Option = {
+  value: RegionFilter;
+  label: string;
+}
 
 function AdminStatisticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("TODAY");
-  const [selectedRegion, setSeletedRegion] = useState<string>("ALL");
+  const [selectedRegion, setSelectedRegion] = useState<RegionFilter>("ALL");
   const [growTab, setGrowTab] = useState<GrowTab>("REVENUE");
 
   const [dashboard, setDashboard] = useState<AdminDashboardResponse | null>(null);
   const [growthTrend, setGrowthTrend] = useState<AdminGrowthTrendResponse[]>([]);
   const [conversionFunnel, setConversionFunnel] = useState<AdminConversionFunnelResponse | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<AdminPaymentStatusResponse[]>([]);
+  const [orderTypes, setOrderTypes] = useState<AdminOrderTypesResponse[]>([]);
   const [topTrucks, setTopTrucks] = useState<AdminTopTruckResponse[]>([]);
   const [topMenus, setTopMenus] = useState<AdminTopMenuResponse[]>([]);
   const [insights, setInsights] = useState<AdminInsightResponse[]>([]);
@@ -29,7 +37,9 @@ function AdminStatisticsPage() {
   const [trendStart, setTrendStart] = useState<string | null>(null);
   const [trendEnd, setTrendEnd] = useState<string | null>(null);
 
-  const [currentInsightIdx, setCurrentInsightIdx] = useState(0);
+  const [inputValue, setInputValue] = useState("");
+  const [currentInsightIdx, setCurrentInsightIdx] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
       const now = new Date();
@@ -162,6 +172,9 @@ function AdminStatisticsPage() {
         const normalized = normalizePaymentStatus(paymentResponse);
         setPaymentStatus(normalized);
 
+        const ordertypesResponse = await adminStatisticsApi.getOrderTypes(params);
+        setOrderTypes(ordertypesResponse);
+
         const topTrucksResponse = await adminStatisticsApi.getTopTrucks(params);
         setTopTrucks(topTrucksResponse);
 
@@ -178,21 +191,68 @@ function AdminStatisticsPage() {
     fetchAdminStatistics();
   }, [periodStart, periodEnd, selectedRegion]);
 
+  const slides = insights.length > 0 ? [insights[insights.length - 1], ...insights, insights[0]] : [];
+
   useEffect(() => {
     if(insights.length <= 1) return;
 
-    const interval = setInterval(() => {
-      setCurrentInsightIdx(prev => (prev + 1) % insights.length);
-    }, 2500);
+    let timer: number;
+    
+    const startSlide = () => {
+      timer = window.setTimeout(() => {
+        setCurrentInsightIdx(prev => prev + 1);
+        startSlide();
+      }, 3000);
+    }
 
-    return () => clearInterval(interval);
-  }, [insights.length]);
+    startSlide();
+
+    const handleVisible = () => {
+      if(!document.hidden) {
+        clearTimeout(timer);
+        setCurrentInsightIdx(prev => {
+          if(prev <= 0) return 1;
+          if(prev >= slides.length - 1) return slides.length - 2;
+
+          return prev;
+        });
+
+        setIsTransitioning(true);
+        startSlide();
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisible);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleVisible);  
+    }
+  }, [insights]);
+
+  const handleTransitionEnd = () => {
+    if(currentInsightIdx === slides.length - 1) {
+      setIsTransitioning(false);
+      setCurrentInsightIdx(1);
+    } else if(currentInsightIdx === 0) {
+      setIsTransitioning(false);
+      setCurrentInsightIdx(slides.length - 2);
+    }
+  };
+
+  useEffect(() => {
+    if(!isTransitioning) {
+      const timer = setTimeout(() => setIsTransitioning(true), 0);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning]);
 
   const getChangeText = (rate?: number) => {
     if(!rate) return "0%";
 
     if(rate > 0) return `▲${rate.toFixed(1)}%`;
-    if(rate < 0) return `▼${Math.abs(rate).toFixed(2)}`;
+    if(rate < 0) return `▼${Math.abs(rate).toFixed(1)}`;
     
     return "0%";
   }
@@ -271,6 +331,20 @@ function AdminStatisticsPage() {
   };
 
   const filleredPaymentStatus = paymentStatus.filter(d => d.count > 0);
+
+  const orderTypesWithColor = orderTypes.map(item => ({
+    ...item,
+    count: Number (item.count),
+    fill: item.status === "RESERVATION" ? "#3b82f6" : "#f97316"
+  }))
+
+  const total = orderTypes.reduce((sum, e) => sum + e.count, 0);
+
+
+  const options: Option[] = [{value: "ALL", label: "전체"},
+    ...REGION_LIST.map(region => ({value: region, label: region}))
+  ];
+  
   return (
     <Container>
       <Header>
@@ -291,14 +365,27 @@ function AdminStatisticsPage() {
           ))}
         </PeriodTabs>
 
-        <RegionSelect
-          value={selectedRegion}
-          onChange={(e) =>setSeletedRegion(e.target.value)}
-        >
-          <option value="ALL">전체</option>
-          <option value="BUSAN">부산</option>
-          <option value="SEOUL">서울</option>
-        </RegionSelect>
+        <Autocomplete 
+          options={options}
+          value={
+            selectedRegion === "ALL" 
+            ? null 
+            : options.find(o => o.value === selectedRegion) ?? null}
+          inputValue={inputValue}
+          onInputChange={(_, newInputValue) => {
+            setInputValue(newInputValue);
+          }}
+          onChange={(_, newValue) => {
+            setSelectedRegion((newValue?.value ?? "ALL") as RegionFilter);
+            setInputValue(newValue?.label ?? "");
+          }}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.value === value.value}
+          renderInput={(params) => (
+            <TextField {...params} size="small" placeholder="지역 검색" />
+          )}
+          sx={{width: 200}}
+        />
       </HeaderRight>
 
       <CardGrid>
@@ -325,8 +412,8 @@ function AdminStatisticsPage() {
             </ChangeRate>
           </StatValue>
           <CompareText>
-            {selectedPeriod === "TODAY" ? "vs어제"
-              : selectedPeriod === "WEEK" ? "지난 주" : "지난 달"}
+            {selectedPeriod === "TODAY" ? "vs 어제"
+              : selectedPeriod === "WEEK" ? "vs 지난 주" : "vs 지난 달"}
           </CompareText>
         </StatCard>
 
@@ -334,8 +421,8 @@ function AdminStatisticsPage() {
           <StatLabel>예약 수</StatLabel>
           <StatValue>
             <ValueText>{dashboard?.totalReservations ?? 0}</ValueText>
-            <ChangeRate rate={dashboard?.reservationChangeRage ?? 0}>
-              {getChangeText(dashboard?.reservationChangeRage)}
+            <ChangeRate rate={dashboard?.reservationChangeRate ?? 0}>
+              {getChangeText(dashboard?.reservationChangeRate)}
             </ChangeRate>
           </StatValue>
           <CompareText>
@@ -413,86 +500,96 @@ function AdminStatisticsPage() {
               </TabButton>
             ))}
           </TabRow>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart 
-              key={growTab}
-              data={growthData}
-              margin={{top: 10, right: 10, left: 0, bottom: 0}}
-            >
-              <CartesianGrid 
-                strokeDasharray="3 3"
-                stroke="#eee"
-              />
-              <XAxis 
-                dataKey="date"
-                padding={{left: 10}}
-                tick={{fontSize: 14}}
-                tickMargin={5}
-                tickFormatter={value => {
-                  const d = new Date(value);
-                  const month = d.getMonth() + 1;
-                  const date = d.getDate();
-                  const days = ["일", "월", "화", "수", "목", "금", "토"]
 
-                  return `${month}-${date} (${days[d.getDay()]})`;
-                }}
-              />
-              <YAxis 
-                width={60}
-                tickCount={5}
-                tickMargin={10}
-                domain={getDomain}
-                tick={({x, y, payload}) => {
+          {growthData.every(item => 
+            item.revenue === 0 &&
+            item.orderCount === 0 &&
+            item.userCount === 0 &&
+            item.truckCount === 0
+          ) ? (
+            <EmptyState>데이터가 없습니다.</EmptyState>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart 
+                key={growTab}
+                data={growthData}
+                margin={{top: 10, right: 10, left: 0, bottom: 0}}
+              >
+                <CartesianGrid 
+                  strokeDasharray="3 3"
+                  stroke="#eee"
+                />
+                <XAxis 
+                  dataKey="date"
+                  padding={{left: 10}}
+                  tick={{fontSize: 14}}
+                  tickMargin={5}
+                  tickFormatter={value => {
+                    const d = new Date(value);
+                    const month = d.getMonth() + 1;
+                    const date = d.getDate();
+                    const days = ["일", "월", "화", "수", "목", "금", "토"]
 
-                  let label;
+                    return `${month}-${date} (${days[d.getDay()]})`;
+                  }}
+                />
+                <YAxis 
+                  width={60}
+                  tickCount={5}
+                  tickMargin={10}
+                  domain={getDomain}
+                  tick={({x, y, payload}) => {
 
-                  if(growTab === "REVENUE") {
-                    if(payload.value === 0) return null;
-                    label = `${Math.round(payload.value / 10000)}만`;
-                  } else {
-                    label = payload.value
-                  }
-                  return label ? (
-                    <text 
-                      x={x}
-                      y={y} 
-                      dy={6}
-                      textAnchor="end" 
-                      fill="#666" 
-                      fontSize={14}
-                    >
-                      {label}
-                    </text>
-                  ) : null;
-                }}
-              />
-              <Tooltip 
-                cursor={{strokeDasharray: "3 3"}}
-                formatter={value => {
-                  if(growTab === "REVENUE") {
-                    return [`${Number (value).toLocaleString()} KRW`, growthLabel];
-                  }
+                    let label;
 
-                  return [`${value}`, growthLabel]
-                }}
-                labelFormatter={value => {
-                  const d = new Date(value);
-                  const days = ["일", "월", "화", "수", "목", "금", "토"]
+                    if(growTab === "REVENUE") {
+                      if(payload.value === 0) return null;
+                      label = `${Math.round(payload.value / 10000)}만`;
+                    } else {
+                      label = payload.value
+                    }
+                    return label ? (
+                      <text 
+                        x={x}
+                        y={y} 
+                        dy={6}
+                        textAnchor="end" 
+                        fill="#666" 
+                        fontSize={14}
+                      >
+                        {label}
+                      </text>
+                    ) : null;
+                  }}
+                />
+                <Tooltip 
+                  cursor={{strokeDasharray: "3 3"}}
+                  formatter={value => {
+                    if(growTab === "REVENUE") {
+                      return [`${Number (value).toLocaleString()} KRW`, growthLabel];
+                    }
 
-                  return `날짜: ${d.getMonth() + 1}-${d.getDate()} (${days[d.getDay()]})`
-                }}
-              />
-              <Line 
-                type="monotone"
-                dataKey={currentGrowthKey}
-                name={growthLabel}
-                stroke={getColor()}
-                strokeWidth={1.3}
-                dot={false}
-                activeDot={{r: 6}}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+                    return [`${value}`, growthLabel]
+                  }}
+                  labelFormatter={value => {
+                    const d = new Date(value);
+                    const days = ["일", "월", "화", "수", "목", "금", "토"]
+
+                    return `날짜: ${d.getMonth() + 1}-${d.getDate()} (${days[d.getDay()]})`
+                  }}
+                />
+                <Line 
+                  type="monotone"
+                  dataKey={currentGrowthKey}
+                  name={growthLabel}
+                  stroke={getColor()}
+                  strokeWidth={1.3}
+                  dot={false}
+                  activeDot={{r: 6}}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard>
@@ -524,65 +621,120 @@ function AdminStatisticsPage() {
       <Row>
         <ChartCard>
           <CardTitle>결제 상태</CardTitle>
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie 
-                data={filleredPaymentStatus}
-                dataKey="count"
-                nameKey="status"
-                cx="50%"
-                cy="50%"
-                outerRadius={90}
-                label={false}
-                isAnimationActive={false}
-                labelLine={false}
-              >
-                {filleredPaymentStatus.map((entry, idx) => {
-                  const paymentStatus = getPaymentStatus(entry.status);
+          {filleredPaymentStatus.length === 0 ? (
+            <EmptyState>데이터가 없습니다.</EmptyState>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie 
+                    data={filleredPaymentStatus}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={95}
+                    innerRadius={45}
+                    label={false}
+                    isAnimationActive={false}
+                    labelLine={false}
+                  >
+                    {filleredPaymentStatus.map((entry, idx) => {
+                      const paymentStatus = getPaymentStatus(entry.status);
+                      
+                      return (
+                        <Cell 
+                          key={idx}
+                          fill={paymentStatus.color}
+                        />
+                      )
+                      
+                    })}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: "#222",
+                      border: "none",
+                      borderRadius: "8px",
+                      color: "#fff"
+                    }}
+                    itemStyle={{color: "#fff"}}
+                    formatter={(value,name) => {
+                      const paymentStatus = getPaymentStatus(name as PaymentStatus);
+
+                      return [`${Number(value ?? 0).toLocaleString()}건`, paymentStatus.label]
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <PaymentLegend>
+                {paymentStatus.map(item => {
+                  const paymentStatus = getPaymentStatus(item.status);
                   
+
                   return (
-                    <Cell 
-                      key={idx}
-                      fill={paymentStatus.color}
-                    />
+                    <LegendItem key={item.status}>
+                      <ColorDot style={{background: paymentStatus.color}}/>
+                      {paymentStatus.label}: {item.count}건
+                    </LegendItem>
                   )
-                  
                 })}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: "#222",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "#fff"
-                }}
-                itemStyle={{color: "#fff"}}
-                formatter={(value,name) => {
-                  const paymentStatus = getPaymentStatus(name as PaymentStatus);
+              </PaymentLegend>
+            </>
+          )}
 
-                  return [`${Number(value ?? 0).toLocaleString()}건`, paymentStatus.label]
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <PaymentLegend>
-            {paymentStatus.map(item => {
-              const paymentStatus = getPaymentStatus(item.status);
-              
-
-              return (
-                <LegendItem key={item.status}>
-                  <ColorDot style={{background: paymentStatus.color}}/>
-                  {paymentStatus.label}: {item.count}건
-                </LegendItem>
-              )
-            })}
-          </PaymentLegend>
         </ChartCard>
         <ChartCard>
           <CardTitle>주문 유형</CardTitle>
-          <ChartPlaceholder />
+          {orderTypes.length === 0 ? (
+            <EmptyState>데이터가 없습니다.</EmptyState>
+          ) : (
+            <>
+              <ResponsiveContainer
+                width="100%"
+                height={280}
+              >
+                <PieChart>
+                  <Pie
+                    data={orderTypesWithColor}
+                    dataKey="count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={95}
+                    innerRadius={45}
+                    paddingAngle={3}
+                    labelLine={false}
+                  />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      const type = (props?.payload as {type?: string})?.type;
+                      const labelText = type === "RESERVATION" ? "예약 주문" : "현장 주문";
+
+                      return [`${Number (value)} 건`, labelText];
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <OrderTypeLegend>
+                {orderTypes.map(
+                  item => {
+                    const percent = total > 0 ? ((item.count / total) * 100).toFixed(0) : 0
+
+                    const color = item.status === "RESERVATION" ? "#3b82f6" : "#f97316";
+                    const type = item.status === "RESERVATION" ? "예약 주문" : "현장 주문";
+
+                    return (
+                      <LegendItem key={item.status}>
+                        <ColorDot color={color}/>
+                          {type} {percent}%
+                      </LegendItem>
+                    )}
+                )}
+              </OrderTypeLegend>
+            </>
+          )}
         </ChartCard>
       </Row>
       <Row>
@@ -622,22 +774,21 @@ function AdminStatisticsPage() {
         <CardTitle>운영 인사이트</CardTitle>
         {insights.length > 0 ? (
           <InsightContainer>
-            {insights.map((insight, idx) => (
-              <InsightSlide
-                key={insight.category}
-                isActive={idx === currentInsightIdx}
-              >
-                <InsightTitle>{insight.title}</InsightTitle>
-                <InsightValue>
-                  {typeof insight.value === "number"
-                    ? insight.value.toLocaleString()
-                    : insight.value}
-                  {insight.unit && ` ${insight.unit}`}
-                </InsightValue>
+            <InsightMask idx={currentInsightIdx} transitioning={isTransitioning} onTransitionEnd={handleTransitionEnd}>
+              {slides.map((insight, idx) => (
+                <InsightSlide key={idx}>
+                  <InsightTitle>{insight.title}</InsightTitle>
+                  <InsightValue>
+                    {typeof insight.value === "number"
+                      ? insight.value.toLocaleString()
+                      : insight.value}
+                    {insight.unit && ` ${insight.unit}`}
+                  </InsightValue>
 
-                <InsightDescription>{insight.description}</InsightDescription>
-              </InsightSlide>
-            ))}
+                  <InsightDescription>{insight.description}</InsightDescription>
+                </InsightSlide>
+              ))}
+            </InsightMask>
           </InsightContainer>
         ) : (
           <EmptyState>데이터가 없습니다.</EmptyState>
@@ -770,6 +921,15 @@ const ChartCard = styled.div`
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 `;
 
+const OrderTypeLegend = styled.div`
+  display: flex;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+`;
+
 const CardTitle = styled.h3`
   font-size: 16px;
   margin-bottom: 10px;
@@ -852,41 +1012,46 @@ const InsightContainer = styled.div`
   height: 280px;
   overflow: hidden;
   position: relative;
-  border-radius: 10px;
-  background: #f8f9fa;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8fafc, #eff2ff);
+  border: 1px solid #e5e7db;
 `;
 
-const InsightSlide = styled.div<{isActive: boolean}>`
-  position: absolute;
-  top: 0;
-  left: 0;
+const InsightSlide = styled.div`
   width: 100%;
-  height: 100%;
+  height: 280px;
   padding: 24px;
-  opacity: ${({isActive}) => isActive ? 1 : 0};
-  transform: ${({isActive}) => isActive ? "translateY(0)" : "translateY(30px)"};;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
 `;
 
+const InsightMask = styled.div<{idx: number, transitioning: boolean}>`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: ${props => props.transitioning ? "transform 0.3s ease-in-out" : "none"};
+  transform: translateY(${props => -props.idx * 100}%);
+`;
+
 const InsightTitle = styled.div`
-  font-size: 15px;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #6366f1;
+  margin-bottom: 6px;
 `;
 
 const InsightValue = styled.div`
-  font-size: 32px;
-  font-weight: 800;
-  color: #222;
-  margin-bottom: 8px;
+  font-size: 36px;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 10px;
   line-height: 1.1;
 `;
 
 const InsightDescription = styled.div`
   font-size: 14px;
   line-height: 1.5;
-  color: #666;
+  color: #4b5563;
 `;

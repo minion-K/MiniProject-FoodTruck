@@ -72,6 +72,13 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
     }
 
     @Override
+    public ResponseDto<List<OrderTypeResponseDto>> getOrderTypes(Long adminId, String region, LocalDateTime fromDate, LocalDateTime toDate) {
+        List<OrderTypeResponseDto> response = adminStatisticsRepository.getOrderType(region, fromDate, toDate);
+
+        return ResponseDto.success(response);
+    }
+
+    @Override
     public ResponseDto<List<TopTrucksResponseDto>> getTopTrucks(Long adminId, String region, LocalDateTime fromDate, LocalDateTime toDate) {
         List<TopTrucksResponseDto> response = adminStatisticsRepository.getTopTrucks(region, fromDate, toDate);
 

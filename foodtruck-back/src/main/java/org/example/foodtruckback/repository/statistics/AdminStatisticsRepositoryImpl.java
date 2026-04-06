@@ -3,6 +3,7 @@ package org.example.foodtruckback.repository.statistics;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.dto.statistics.response.admin.*;
 import org.springframework.stereotype.Repository;
@@ -195,12 +196,12 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
         List<Object[]> results = query.getResultList();
 
         return results.stream()
-                .map(row -> new GrowthTrendResponseDto(
-                        row[0].toString(),
-                        ((Number) row[1]).longValue(),
-                        ((Number) row[2]).longValue(),
-                        ((Number) row[3]).longValue(),
-                        ((Number) row[4]).longValue()
+                .map(result -> new GrowthTrendResponseDto(
+                        result[0].toString(),
+                        ((Number) result[1]).longValue(),
+                        ((Number) result[2]).longValue(),
+                        ((Number) result[3]).longValue(),
+                        ((Number) result[4]).longValue()
                 )).toList();
     }
 
@@ -284,10 +285,46 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
         List<Object[]> results = query.getResultList();
 
         return results.stream()
-                .map(row -> new PaymentStatusResponseDto(
-                        PaymentStatus.valueOf((String) row[0]),
-                        ((Number) row[1]).longValue(),
-                        ((Number) row[2]).longValue()
+                .map(result -> new PaymentStatusResponseDto(
+                        PaymentStatus.valueOf((String) result[0]),
+                        ((Number) result[1]).longValue(),
+                        ((Number) result[2]).longValue()
+                )).toList();
+    }
+
+    @Override
+    public List<OrderTypeResponseDto> getOrderType(String region, LocalDateTime fromDate, LocalDateTime toDate) {
+        String sql = """
+            SELECT CASE WHEN o.source = 'RESERVATION' THEN 'RESERVATION'
+                        ELSE 'ONSITE'
+                   END AS orderType,
+                   COUNT(DISTINCT o.id) AS count
+            FROM orders o
+            JOIN truck_schedules s
+                ON o.schedule_id = s.id
+            JOIN locations l 
+                ON l.id = s.location_id
+            WHERE o.status NOT IN ('CANCEL', 'REFUNDED')
+                AND o.created_at BETWEEN ?2 AND ?3
+                AND (?1 = 'ALL' OR l.name LIKE CONCAT('%', ?1, '%')
+                    OR l.address LIKE CONCAT('%', ?1, '%'))
+            GROUP BY 
+                CASE WHEN o.source = 'RESERVATION' THEN 'RESERVATION'
+                     ELSE 'ONSITE'
+                END
+            """;
+
+        Query query = em.createNativeQuery(sql);
+        query.setParameter(1, region);
+        query.setParameter(2, fromDate);
+        query.setParameter(3, toDate);
+
+        List<Object[]> results = query.getResultList();
+
+        return results.stream()
+                .map(result -> new OrderTypeResponseDto(
+                        OrderSource.valueOf((String) result[0]),
+                        ((Number) result[1]).longValue()
                 )).toList();
     }
 
@@ -355,12 +392,12 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
         List<Object[]> results = query.getResultList();
 
         return results.stream()
-                .map(row -> new TopTrucksResponseDto(
-                        ((Number) row[0]).longValue(),
-                        (String) row[1],
-                        ((Number) row[2]).longValue(),
-                        ((Number) row[3]).longValue(),
-                        row[4] != null ? ((Number) row[4]).doubleValue() : 0.0
+                .map(result -> new TopTrucksResponseDto(
+                        ((Number) result[0]).longValue(),
+                        (String) result[1],
+                        ((Number) result[2]).longValue(),
+                        ((Number) result[3]).longValue(),
+                        result[4] != null ? ((Number) result[4]).doubleValue() : 0.0
                 )).toList();
     }
 
@@ -437,10 +474,10 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
         List<Object[]> results = query.getResultList();
 
         return results.stream()
-                .map(row -> new TopMenusResponseDto(
-                        (String) row[0],
-                        ((Number) row[1]).longValue(),
-                        ((Number) row[2]).longValue()
+                .map(result -> new TopMenusResponseDto(
+                        (String) result[0],
+                        ((Number) result[1]).longValue(),
+                        ((Number) result[2]).longValue()
                 )).toList();
     }
 
@@ -515,17 +552,17 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
                 
             (SELECT 'BEST_MENU' AS category,
                    '⭐ 가장 많이 팔린 메뉴' AS title,
-                   CONCAT(t.menu_name, '이(가) 총 ', t.total_qty, '개 판매되어 전체 판매량의 ',
-                   ROUND(100.0 * t.total_qty / NULLIF((SELECT total_qty FROM total_qty_summary), 0), 1),
+                   CONCAT(best_menu.menu_name, '이(가) 총 ', best_menu.total_qty, '개 판매되어 전체 판매량의 ',
+                   ROUND(100.0 * best_menu.total_qty / NULLIF((SELECT total_qty FROM total_qty_summary), 0), 1),
                    '%를 차지했습니다.') AS description,
-                t.total_qty AS value,
+                best_menu.total_qty AS value,
                 '개' AS unit
             FROM (
                 SELECT menu_name, SUM(qty) AS total_qty
                 FROM item_union
                 GROUP BY menu_name
                 ORDER BY total_qty DESC, menu_name ASC
-            ) t
+            ) AS best_menu
             LIMIT 1)
             
             UNION ALL
@@ -541,13 +578,17 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
             
             (SELECT 'BEST_LOCATION' AS category,
                    '📢 가장 매출이 높은 지역' AS title,
-                   CONCAT(location_name, '에서 총 ', SUM(total_amount), '원 판매되었습니다.') AS description,
-                   SUM(total_amount) AS value,
+                    CONCAT(best_location.location_name, '에서 총 ', best_location.total_amount, '원 판매되었습니다.') AS description,
+                   best_location.total_amount AS value,
                    '원' AS unit
-            FROM order_union
-            GROUP BY location_name
-            ORDER BY SUM(total_amount) DESC, location_name ASC
-            LIMIT 1)
+            FROM (
+                SELECT location_name, SUM(total_amount) AS total_amount
+                FROM order_union
+                GROUP BY location_name
+                ORDER BY SUM(total_amount) DESC, location_name ASC
+                LIMIT 1
+                ) AS best_location
+            )
             
             UNION ALL
             
