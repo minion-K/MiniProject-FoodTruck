@@ -1,5 +1,3 @@
-import type { RoleType } from "../role/role.type";
-
 // Request //
 
 // 회원가입
@@ -26,6 +24,7 @@ export interface LogoutRequest {
 
 // 아이디 찾기
 export interface FindIdRequest {
+  name: string;
   email: string
 }
 
@@ -42,6 +41,12 @@ export interface RefreshRequest {
 }
 
 export interface SendEmailRequest {
+  email: string;
+}
+
+export interface ResetPWEmailRequest {
+  name: string;
+  loginId: string;
   email: string;
 }
 
@@ -65,12 +70,12 @@ export interface LoginResponse {
 
 // 아이디 찾기
 export interface FindIdResponse {
-  LoginId: string;
+  loginId: string;
 }
 
 
 // 비밀번호 찾기
-export interface ResetVerifyResponse {
+export interface ResetPWResponse {
   valid: boolean,
   email: string
 }

@@ -18,13 +18,17 @@ import org.example.foodtruckback.security.user.UserPrincipal;
 
 public interface AuthService {
     ResponseDto<SignupResponseDto> sign(@Valid SignupRequestDto request);
+
     ResponseDto<LoginResponseDto> login(@Valid LoginRequestDto request, HttpServletResponse response);
+
     ResponseDto<Void> logout(HttpServletRequest request, HttpServletResponse response);
 
     ResponseDto<FindIdResponseDto> findId(@Valid FindIdRequestDto request);
+
     ResponseDto<Void> resetPassword(@Valid PasswordResetRequest request);
 
     ResponseDto<LoginResponseDto> refreshAccessToken(HttpServletRequest request, HttpServletResponse response);
+
     ResponseDto<PasswordVerifyResponseDto> verifyPasswordToken(String token);
 
     ResponseDto<Void> sendPasswordResetEmail(String email);

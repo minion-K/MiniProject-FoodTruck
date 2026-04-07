@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record FindIdRequestDto(
-        @NotBlank(message = "이메일은 필수입니다.") @Email
+        @NotBlank
+        String name,
+        @NotBlank @Email
         String email
 ) {}

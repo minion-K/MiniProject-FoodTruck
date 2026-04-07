@@ -184,18 +184,17 @@ public class AuthServiceImpl implements AuthService {
     // 아이디 찾기
     @Override
     public ResponseDto<FindIdResponseDto> findId(FindIdRequestDto request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.findByNameAndEmail(request.name(), request.email())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_MATCH));
 
-        FindIdResponseDto response = new FindIdResponseDto(
-                user.getLoginId()
-        );
+        FindIdResponseDto response = FindIdResponseDto.from(user);
 
         return ResponseDto.success("ID를 찾았습니다.", response);
     }
 
     // 비밀번호 재설정
     @Override
+    @Transactional
     public ResponseDto<Void> resetPassword(PasswordResetRequest request) {
         if (!request.newPassword().equals((request.confirmPassword()))) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
@@ -229,7 +228,7 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtProvider.generateEmailJwtToken(user.getId(), email, "RESET_PASSWORD");
 
-        String url = "http://localhost:8080/api/v1/auth/reset-password?token=" + token;
+        String url = "http://localhost:5173/reset-password?token=" + token;
         emailService.sendPasswordReset(email, url);
 
         return ResponseDto.success("비밀번호 재설정 이메일 전송 완료");

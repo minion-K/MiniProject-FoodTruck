@@ -1,5 +1,6 @@
 import { userApi } from '@/apis/user/user.api';
 import { useAuthStore } from '@/stores/auth.store';
+import { getErrorMsg } from '@/utils/error';
 import React, { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -32,17 +33,9 @@ function OAuth2CallbackPage() {
         }
         setUser(data);
         
-        const role = data.roles ?? [];
-        
-        if(role.includes("ADMIN")) {
-          navigate("/admin", {replace: true});
-        } else if(role.includes("OWNER")) {
-          navigate("/owner", {replace: true});
-        } else {
-          navigate("/", {replace: true});
-        }
-      } catch(err) {
-        navigate("/login?error=oauth2_me");
+        navigate("/", {replace: true});
+      } catch (e) {
+        alert(getErrorMsg(e));
       }
     }
 

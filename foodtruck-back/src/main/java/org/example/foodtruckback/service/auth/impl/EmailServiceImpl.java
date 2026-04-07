@@ -8,7 +8,7 @@ import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.config.MailProperties;
 import org.example.foodtruckback.dto.ResponseDto;
-import org.example.foodtruckback.dto.mail.request.SendEmailRequestDto;
+import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.user.UserRepository;

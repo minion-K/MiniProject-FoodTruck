@@ -7,7 +7,8 @@ import type {
   LogoutRequest,
   PasswordResetRequest,
   RefreshRequest,
-  ResetVerifyResponse,
+  ResetPWEmailRequest,
+  ResetPWResponse,
   SendEmailRequest,
   SignupRequest,
   SignupResponse,
@@ -46,25 +47,44 @@ export const authApi = {
   // 아이디 찾기
   findId: async (req: FindIdRequest): Promise<FindIdResponse> => {
     const res = await publicApi.post<ApiResponse<FindIdResponse>>(
-      AUTH_PATH.FINDID,
+      AUTH_PATH.FIND_ID,
       req
     );
 
     return res.data.data;
   },
 
-  resetPW: async (req: PasswordResetRequest): Promise<ResetVerifyResponse> => {
-    const res = await publicApi.post<ApiResponse<ResetVerifyResponse>>(
-      AUTH_PATH.RESETPW,
+  resetPW: async (req: PasswordResetRequest): Promise<ResetPWResponse> => {
+    const res = await publicApi.post<ApiResponse<ResetPWResponse>>(
+      AUTH_PATH.RESET_PW,
       req
     );
 
     return res.data.data;
+  },
+
+  resetPWEmail: async(req: ResetPWEmailRequest): Promise<void> => {
+    const res = await publicApi.post<ApiResponse<void>>(
+      AUTH_PATH.RESET_PW_EMAIL,
+      req
+    );
+
+    return res.data.data;
+  },
+
+  passwordVerify: async(token: string): Promise<boolean> => {
+    const res = await publicApi.get<ApiResponse<{valid: boolean}>>(
+      `${AUTH_PATH.PASSWORD_VERIFY}?token=${token}`,
+    );
+
+    return res.data.data.valid;
   },
 
   // 리프레시
   refresh: async (req: RefreshRequest): Promise<void> => {
-    const res = await publicApi.post<ApiResponse<void>>(AUTH_PATH.REFRESH, req);
+    const res = await publicApi.post<ApiResponse<void>>(
+      AUTH_PATH.REFRESH, req
+    );
 
     return res.data.data;
   },

@@ -1,5 +1,6 @@
 package org.example.foodtruckback.repository.user;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.example.foodtruckback.common.enums.AuthProvider;
@@ -27,18 +28,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(@NotBlank(message = "이메일은 필수입니다.") @Size(max = 255) String email);
 
+    Optional<User> findByNameAndEmail(@NotBlank String name, @NotBlank @Email String email);
+
     Optional<User> findByLoginId(@NotBlank(message = "아이디는 필수입니다.") String LoginId);
 
     Optional<User> findByProviderAndProviderId(AuthProvider provider, String providerId);
-
-    @Query("""
-        SELECT u
-        FROM User u
-        JOIN u.userRoles r
-        WHERE r.role.name = :roleType
-        ORDER BY u.id
-    """)
-    Page<User> findAllByRole(@Param("roleType") RoleType roleType, Pageable pageable);
 
     @Query("""
         SELECT u
@@ -52,4 +46,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
             CASE WHEN :sortKey = 'createdAt' THEN u.createdAt END DESC
     """)
     Page<User> findAllByRoleWithFilter(RoleType roleType, Pageable pageable, String keyword, UserStatus status, String sortKey);
+
 }

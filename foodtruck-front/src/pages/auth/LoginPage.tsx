@@ -98,7 +98,12 @@ function LoginPage() {
 
       <LinkContainer>
         <Link to="/register">회원가입</Link>
-        <Link to="/forgot-password">비밀번호 찾기</Link>
+
+        <FindWrapper>
+          <Link to="/find-id">아이디 찾기</Link>
+          <Divider>|</Divider>
+          <Link to="/forgot-password">비밀번호 찾기</Link>
+        </FindWrapper>
       </LinkContainer>
     </Container>
   );
@@ -138,7 +143,7 @@ const Input = styled.input`
 `;
 
 const ErrorText = styled.p`
-  color: eb2222;
+  color: #eb2222;
   font-size: 0.9rem;
   margin-top: -8px;
 `;
@@ -164,9 +169,20 @@ const LinkContainer = styled.div`
 
   a {
     color: #1b73e8;
+    font-size: 13px;
   }
 
   a:hover {
     text-decoration: underline;
   }
+`;
+
+const FindWrapper = styled.div`
+  display: flex;
+  gap: 6px;
+  align-items: center;
+`;
+
+const Divider = styled.span`
+  color: #9ca3af;
 `;

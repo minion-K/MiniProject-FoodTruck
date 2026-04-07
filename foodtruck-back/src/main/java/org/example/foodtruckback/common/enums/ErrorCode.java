@@ -32,8 +32,9 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다.", "User not found"),
     ACCESS_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "권한을 찾을 수 없습니다.", "UserApi not found"),
     DUPLICATE_USER(HttpStatus.CONFLICT, "U002", "이미 존재하는 사용자입니다.", "Duplicate user"),
-    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U003", "존재하지 않는 ROLE입니다." ,"Role not found" ),
-    INVALID_ROLE(HttpStatus.BAD_REQUEST,"U004", "ROLE은 필수입니다." ,"Roles are mandatory" ),
+    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U003", "존재하지 않는 권한입니다." ,"Role not found" ),
+    INVALID_ROLE(HttpStatus.BAD_REQUEST,"U004", "권한은 필수입니다." ,"Roles are mandatory" ),
+    USER_NOT_MATCH(HttpStatus.BAD_REQUEST,"U005", "일치하는 회원정보가 없습니다." ,"User not match" ),
 
     // ===========================
     // location (Lxxx)

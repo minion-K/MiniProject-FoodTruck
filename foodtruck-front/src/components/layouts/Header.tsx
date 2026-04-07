@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/stores/auth.store";
 import styled from "@emotion/styled";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -9,18 +9,31 @@ interface HeaderProps {
 
 function Header({ onToggleSidebar }: HeaderProps) {
   const {accessToken, user, clearAuth} = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const isLogged = accessToken ? true : false;
   const roles = user?.roles ?? [];
 
-  const isOwnerOrAdmin = 
-    isLogged && (roles.includes("OWNER") || roles.includes("ADMIN"));
-  const isUser = 
-    isLogged && roles.includes("USER") && !isOwnerOrAdmin;
+  const isOwner = isLogged && (roles.includes("OWNER"));
+  const isAdmin = isLogged && (roles.includes("ADMIN"));
+  const isUser = isLogged && roles.includes("USER") && !isOwner && !isAdmin;
+
+  const isOwnerPage = location.pathname.startsWith("/owner");
+  const isAdminPage = location.pathname.startsWith("/admin");
+
+  const showHamburger = isOwnerPage || isAdminPage;
+
+  const handleLogout = () => {
+    if(!window.confirm("로그아웃 하시겠습니까?")) return ;
+
+    clearAuth();
+    navigate("/");
+  }
 
   return (
     <HeaderContainer>
-      {isOwnerOrAdmin ? (
+      {showHamburger ? (
         <HamburgerBtn onClick={onToggleSidebar}>
           <span />
           <span className="hamburger2"/>
@@ -38,7 +51,13 @@ function Header({ onToggleSidebar }: HeaderProps) {
             {isUser && (
               <OutlineBtn><Link to="/mypage">마이페이지</Link></OutlineBtn>
             )}
-            <OutlineBtn onClick={clearAuth}>로그아웃</OutlineBtn>
+            {isOwner && (
+              <OutlineBtn><Link to="/owner/trucks">운영자 페이지</Link></OutlineBtn>
+            )}
+            {isAdmin && (
+              <OutlineBtn><Link to="/admin/users">관리자 페이지</Link></OutlineBtn>
+            )}
+            <OutlineBtn onClick={handleLogout}>로그아웃</OutlineBtn>
           </>
         ) : (
           <>

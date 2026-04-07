@@ -11,7 +11,7 @@ import org.example.foodtruckback.dto.auth.response.FindIdResponseDto;
 import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
 import org.example.foodtruckback.dto.auth.response.PasswordVerifyResponseDto;
 import org.example.foodtruckback.dto.auth.response.SignupResponseDto;
-import org.example.foodtruckback.dto.mail.request.SendEmailRequestDto;
+import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.auth.AuthService;
 import org.example.foodtruckback.service.auth.EmailService;
@@ -31,9 +31,9 @@ public class AuthController {
     public ResponseEntity<ResponseDto<SignupResponseDto>> signup(
             @Valid @RequestBody SignupRequestDto request
     ) {
-        ResponseDto<SignupResponseDto> result = authService.sign(request);
+        ResponseDto<SignupResponseDto> response = authService.sign(request);
 
-        return ResponseEntity.status(result.getStatus()).body(result);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // 로그인
@@ -59,13 +59,23 @@ public class AuthController {
     }
 
     // 아이디 찾기
-    @GetMapping(AuthApi.LOGINID_FIND)
+    @PostMapping(AuthApi.FIND_ID)
     public ResponseEntity<ResponseDto<FindIdResponseDto>> findId(
             @Valid @RequestBody FindIdRequestDto request
     ) {
         ResponseDto<FindIdResponseDto> response = authService.findId(request);
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(response);
+    }
+
+    // 비밀번호 재설정 메일 발송
+    @PostMapping(AuthApi.PASSWORD_RESET_MAIL)
+    public ResponseEntity<ResponseDto<Void>> sendPasswordResetEmail(
+        @Valid @RequestBody SendEmailRequestDto request
+    ) {
+        ResponseDto<Void> response = authService.sendPasswordResetEmail(request.email());
+
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // 비밀번호 재설정
@@ -93,9 +103,9 @@ public class AuthController {
     public ResponseEntity<ResponseDto<PasswordVerifyResponseDto>> verifyPasswordToken(
             @RequestParam("token") String token
     ) {
-        ResponseDto<PasswordVerifyResponseDto> result = authService.verifyPasswordToken(token);
+        ResponseDto<PasswordVerifyResponseDto> response = authService.verifyPasswordToken(token);
 
-        return ResponseEntity.status(result.getStatus()).body(result);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // 이메일 전송
@@ -103,17 +113,17 @@ public class AuthController {
     public ResponseEntity<ResponseDto<Void>> sendEmail(
             @Valid @RequestBody SendEmailRequestDto request
     ) {
-        ResponseDto<Void> result = emailService.sendEmail(request);
+        ResponseDto<Void> response = emailService.sendEmail(request);
 
-        return ResponseEntity.status(result.getStatus()).body(result);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // 이메일 인증
     @GetMapping("/email/verify")
     public ResponseEntity<ResponseDto<Void>> verifyEmail(@RequestParam String token) {
-        ResponseDto<Void> result = authService.verifyEmail(token);
+        ResponseDto<Void> response = authService.verifyEmail(token);
 
-        return ResponseEntity.status(result.getStatus()).body(result);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     // 이메일 변경
@@ -122,17 +132,17 @@ public class AuthController {
             @RequestBody @Valid SendEmailRequestDto request,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        ResponseDto<Void> result = authService.sendEmailChangeVerify(request.email(), principal);
+        ResponseDto<Void> response = authService.sendEmailChangeVerify(request.email(), principal);
 
-        return ResponseEntity.status(result.getStatus()).body(result);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 
     @GetMapping("/email/change/confirm")
     public ResponseEntity<ResponseDto<Void>> confirmEmailChange(
             @RequestParam String token
     ) {
-        ResponseDto<Void> result = authService.confirmEmailChange(token);
+        ResponseDto<Void> response = authService.confirmEmailChange(token);
 
-        return ResponseEntity.status(result.getStatus()).body(result);
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 }

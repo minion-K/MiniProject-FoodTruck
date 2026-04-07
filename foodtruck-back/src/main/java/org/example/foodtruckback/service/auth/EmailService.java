@@ -1,10 +1,8 @@
 package org.example.foodtruckback.service.auth;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import org.example.foodtruckback.dto.ResponseDto;
-import org.example.foodtruckback.dto.mail.request.SendEmailRequestDto;
+import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
 
 public interface EmailService {
     void sendHtmlEmail(String email, String subject, String html);

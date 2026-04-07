@@ -11,6 +11,9 @@ import ProfilePendingPage from "@/pages/auth/ProfilePendingPage";
 import UserTossPaymentPage from "@/pages/payment/UserTossPaymentPage";
 import OwnerOnsitePaymentPage from "@/pages/payment/OwnerOnsitePaymentPage";
 import TossSuccessPage from "@/components/payment/TossSuccessPage";
+import FindIdpage from "@/pages/auth/FindIdpage";
+import ForgotpasswordPage from "@/pages/auth/ForgotpasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
 function MainRouter() {
   const { user, isInitialized } = useAuthStore();
@@ -26,9 +29,13 @@ function MainRouter() {
       <Route path="/login/*" element={<LoginPage />} />
       <Route path="/register/*" element={<RegisterPage />} />
       <Route path="/register/pending" element={<PendingPage />} />
+      <Route path="/find-id" element={<FindIdpage />}/>
+      <Route path="/forgot-password" element={<ForgotpasswordPage />}/>
+      <Route path="/reset-password" element={<ResetPasswordPage />}/>
       <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
 
       <Route path="mypage/pending" element={<ProfilePendingPage />} />
+      <Route path="password/pending" element={<ProfilePendingPage />} />
 
       <Route path="/*" element={<TruckRouter />} />
       {isOwner && <Route path="/owner/*" element={<OwnerRouter />} />}
