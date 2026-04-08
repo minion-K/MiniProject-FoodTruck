@@ -2,23 +2,26 @@ import { authApi } from "@/apis/auth/auth.api";
 import type { PasswordResetRequest } from "@/types/auth/auth.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useEffect, useState } from 'react'
+import { useMutation } from "@tanstack/react-query";
+import React, { useEffect, useRef, useState } from 'react'
 import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [errorMsg, setErrorMsg] = useState<Partial<Record<keyof PasswordResetRequest, string>>>({});
-  const [globalError, setGlobalError] = useState<string | null>(null);
-  const [touched, setTouched] = useState<Partial<Record<keyof PasswordResetRequest, boolean>>>({});
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
   const navigate = useNavigate();
   const location = useLocation();
+  const verifyRef = useRef(false);
+
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
+    if(verifyRef.current) return;
+    verifyRef.current = true;
 
     if(!token) {
       navigate("/login");
@@ -26,79 +29,56 @@ function ResetPasswordPage() {
       return;
     };
 
-    const verify = async () => {
+    const verifyToken = async () => {
       try {
         const isValid = await authApi.passwordVerify(token);
 
         if(!isValid) {
           alert("유효하지 않거나 만료된 링크입니다.");
           navigate("/login");
-        } 
+        } else {
+          alert("이메일 인증이 완료되었습니다.");
+        }
       } catch (e) {
         alert(getErrorMsg(e));
       }
     };
 
-    verify();
-  }, [location, navigate]);
+    verifyToken();
+  }, [token, navigate]);
 
-  const validate = (name: keyof PasswordResetRequest, value: string) => {
-      let msg = "";
-  
-      if(name === "newPassword") {
-        if(!value) msg = "비밀번호를 입력해주세요."
-        else if(!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()+=-]).{8,16}$/.test(value)) {
-          msg = "비밀번호는 영문, 숫자, 특수문자 포함 8~16자여야 합니다.";
-        }
-      }
+  const resetMutation = useMutation({
+    mutationFn: () => authApi.resetPW({token: token!, newPassword, confirmPassword}),
 
-      if(name === "confirmPassword") {
-        if(!value) msg = "비밀번호 확인을 입력해주세요."
-        else if(value !== newPassword) msg = "비밀번호와 일치하지 않습니다.";
-      }
-  
-      setErrorMsg(prev => ({...prev, [name]: msg}));
-      return msg;
-  }
+    onSuccess: () => {
+      toast.success("비밀번호가 성공적으로 변경되었습니다.");
+      navigate("/login");
+    },
 
-  const handleblur = (name: keyof PasswordResetRequest) => {
-      setTouched(prev => ({...prev, [name]: true}));
-
-      const value = name === "newPassword" ? newPassword : confirmPassword;
-      validate(name, value);
-  };
+    onError: (e) => setErrorMsg(getErrorMsg(e))
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let hasError = false;
+    setErrorMsg("");
 
-    const newPasswordError = validate("newPassword", newPassword);
-    const confirmPasswordError = validate("confirmPassword", confirmPassword);
-
-    if(newPasswordError || confirmPasswordError) {
-      hasError = true;
+    if(!newPassword || !confirmPassword) {
+      setErrorMsg("비밀번호를 모두 입력해주세요.");
+      return;
     }
 
-    if(hasError) return;
-    setGlobalError(null);
-
-    try {
-      const params = new URLSearchParams(location.search);
-      const token = params.get("token");
-
-      if(!token) {
-        setGlobalError("잘못된 접근입니다.");
-
-        return;
-      }
-
-      await authApi.resetPW({token, newPassword, confirmPassword});
-
-      toast.success("비밀번호가 성공적으로 변경되었습니다.");
-      navigate("/login");
-    } catch (e) {
-      alert(getErrorMsg(e));
+    if(!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()+=-]).{8,16}$/.test(newPassword)) {
+      setErrorMsg("비밀번호는 영문, 숫자, 특수문자 포함 8~16자여야 합니다.");
+      return;
     }
+
+    if(newPassword !== confirmPassword) {
+      setErrorMsg("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+
+    resetMutation.mutate();
   };
 
   return (
@@ -112,29 +92,21 @@ function ResetPasswordPage() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            onBlur={() => handleblur("newPassword")}
-            required
             placeholder="비밀번호 입력"
           />
-          {touched.newPassword && errorMsg.newPassword && (
-            <ErrorText>{errorMsg.newPassword}</ErrorText>
-          )}
         </InputGroup>
+
         <InputGroup>
           <Label>비밀번호 확인</Label>
           <Input 
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            onBlur={() => handleblur("confirmPassword")}
-            required
             placeholder="비밀번호 다시 입력"
           />
-          {touched.confirmPassword && errorMsg.confirmPassword && (
-            <ErrorText>{errorMsg.confirmPassword}</ErrorText>
-          )}
         </InputGroup>
-        {globalError && <ErrorText>{globalError}</ErrorText>}
+
+        {errorMsg && <ErrorText>{errorMsg}</ErrorText>}
         <Button type="submit">비밀번호 변경</Button>
       </Form>
     </Container>

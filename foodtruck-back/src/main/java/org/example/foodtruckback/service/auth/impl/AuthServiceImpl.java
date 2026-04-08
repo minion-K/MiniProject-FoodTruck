@@ -11,6 +11,8 @@ import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.dto.ResponseDto;
+import org.example.foodtruckback.dto.auth.mail.request.ResetPasswordEmailRequestDto;
+import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
 import org.example.foodtruckback.dto.auth.request.FindIdRequestDto;
 import org.example.foodtruckback.dto.auth.request.LoginRequestDto;
 import org.example.foodtruckback.dto.auth.request.PasswordResetRequest;
@@ -222,14 +224,14 @@ public class AuthServiceImpl implements AuthService {
 
     // 바밀번호 재설정 메일 발송
     @Override
-    public ResponseDto<Void> sendPasswordResetEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public ResponseDto<Void> sendPasswordResetEmail(ResetPasswordEmailRequestDto request) {
+        User user = userRepository.findByNameAndLoginIdAndEmail(request.name(), request.loginId(), request.email())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_MATCH));
 
-        String token = jwtProvider.generateEmailJwtToken(user.getId(), email, "RESET_PASSWORD");
+        String token = jwtProvider.generateEmailJwtToken(user.getId(), request.email(), "RESET_PASSWORD");
 
         String url = "http://localhost:5173/reset-password?token=" + token;
-        emailService.sendPasswordReset(email, url);
+        emailService.sendPasswordReset(request.email(), url);
 
         return ResponseDto.success("비밀번호 재설정 이메일 전송 완료");
     }

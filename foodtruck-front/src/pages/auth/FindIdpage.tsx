@@ -2,6 +2,7 @@
 import { authApi } from "@/apis/auth/auth.api";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
+import { useMutation } from "@tanstack/react-query";
 import React, { useState } from 'react'
 import { useNavigate } from "react-router-dom";
 
@@ -9,22 +10,38 @@ function FindIdpage() {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [result, setResult] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string>("")
 
   const navigate = useNavigate();
+
+  const findIdMutation = useMutation({
+    mutationFn: () => authApi.findId({name, email}),
+
+    onSuccess: (res) => {
+      setResult(res.loginId);
+    },
+
+    onError: (e) => {
+      setErrorMsg(getErrorMsg(e));
+    }
+  });
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
     setResult("");
 
-    if(!name || !email) return;
+    if(!name || !email) {
+      setErrorMsg("아이디와 이메일을 입력해주세요")
+      return;
+    };
 
-    try {
-      const res = await authApi.findId({name, email});
-
-      setResult(res.loginId);
-    } catch (e) {
-      alert(getErrorMsg(e));
+    if(!/^\S+@\S+\.\S+$/.test(email)) {
+      setErrorMsg("이메일 형식이 올바르지 않습니다.");
+      return;
     }
+
+    findIdMutation.mutate();
   }
 
   return (
@@ -38,8 +55,8 @@ function FindIdpage() {
             type="text"
             value={name} 
             onChange={e => setName(e.target.value)} 
-            required
-            placeholder="이름을 입력해주세요"
+            placeholder="이름을 입력해주세요."
+            disabled={!!result}
           />
         </InputGroup>
 
@@ -49,11 +66,24 @@ function FindIdpage() {
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            required
-            placeholder="이메일을 입력해주세요"
+            placeholder="이메일을 입력해주세요."
+            disabled={!!result}
           />
         </InputGroup>
-        <Button type="submit">아이디 찾기</Button>
+
+        {errorMsg && <ErrorText>{errorMsg}</ErrorText>}
+
+        <Button 
+          type="submit"
+          disabled={findIdMutation.isPending || !!result}
+        >
+          {findIdMutation.isPending 
+          ? "찾는 중..." 
+          : result
+          ? "조회 완료"
+          :"아이디 찾기"}
+        </Button>
+
 
         {result && (
           <ResultCard>
@@ -121,6 +151,12 @@ const Button = styled.button`
   &:hover {
     background-color: #0b5ac2;
   }
+
+  &:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+    color: #666;
+  }
 `;
 
 const ResultCard = styled.div`
@@ -168,5 +204,5 @@ const LoginText = styled.p`
 
 const ErrorText = styled.p`
   color: #eb2222;
-  font-size: 13px;
+  font-size: 14px;
 `;

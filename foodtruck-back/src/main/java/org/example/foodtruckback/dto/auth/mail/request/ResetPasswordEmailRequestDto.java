@@ -11,6 +11,6 @@ public record ResetPasswordEmailRequestDto(
         String loginId,
 
         @Email
-        String Email
+        String email
 ) {
 }

@@ -47,4 +47,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     """)
     Page<User> findAllByRoleWithFilter(RoleType roleType, Pageable pageable, String keyword, UserStatus status, String sortKey);
 
+    Optional<User> findByNameAndLoginIdAndEmail(@NotBlank String name, @NotBlank String s, @Email String email);
 }

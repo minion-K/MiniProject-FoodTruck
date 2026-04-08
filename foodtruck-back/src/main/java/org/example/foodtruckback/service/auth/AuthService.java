@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.example.foodtruckback.dto.ResponseDto;
+import org.example.foodtruckback.dto.auth.mail.request.ResetPasswordEmailRequestDto;
 import org.example.foodtruckback.dto.auth.request.FindIdRequestDto;
 import org.example.foodtruckback.dto.auth.request.LoginRequestDto;
 import org.example.foodtruckback.dto.auth.request.PasswordResetRequest;
@@ -31,7 +32,7 @@ public interface AuthService {
 
     ResponseDto<PasswordVerifyResponseDto> verifyPasswordToken(String token);
 
-    ResponseDto<Void> sendPasswordResetEmail(String email);
+    ResponseDto<Void> sendPasswordResetEmail(ResetPasswordEmailRequestDto request);
 
     ResponseDto<Void> verifyEmail(String token);
 

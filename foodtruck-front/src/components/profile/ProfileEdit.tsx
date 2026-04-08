@@ -23,7 +23,7 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
   const isLocalUser = user.provider === "LOCAL";
   const isPhoneValid = isValidPhoneNumber(form.phone ?? "");
   const isValidEmail = (email: string) => {
-    return /^[a-zA-Z0-9+-\_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email);
+    return /^\S+@\S+\.\S+$/.test(email);
   }
 
   const [email, setEmail] = useState(user.email);

@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.auth.AuthApi;
 import org.example.foodtruckback.dto.ResponseDto;
+import org.example.foodtruckback.dto.auth.mail.request.ResetPasswordEmailRequestDto;
 import org.example.foodtruckback.dto.auth.request.*;
 import org.example.foodtruckback.dto.auth.response.FindIdResponseDto;
 import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
@@ -71,9 +72,9 @@ public class AuthController {
     // 비밀번호 재설정 메일 발송
     @PostMapping(AuthApi.PASSWORD_RESET_MAIL)
     public ResponseEntity<ResponseDto<Void>> sendPasswordResetEmail(
-        @Valid @RequestBody SendEmailRequestDto request
+        @Valid @RequestBody ResetPasswordEmailRequestDto request
     ) {
-        ResponseDto<Void> response = authService.sendPasswordResetEmail(request.email());
+        ResponseDto<Void> response = authService.sendPasswordResetEmail(request);
 
         return ResponseEntity.status(response.getStatus()).body(response);
     }

@@ -3,7 +3,6 @@ import { userApi } from "@/apis/user/user.api";
 import SocialLoginButton from "@/components/SocialLoginButton";
 import { useAuthStore } from "@/stores/auth.store";
 import type { LoginRequest } from "@/types/auth/auth.dto";
-import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
@@ -26,7 +25,6 @@ function LoginPage() {
     setForm(prev => ({...prev, [e.target.name]: e.target.value}));
   }
 
-  // 로그인 fetch
   const loginMutation = useMutation({
     mutationFn: async () => {
       const res = await authApi.login(form);
@@ -47,8 +45,8 @@ function LoginPage() {
     onSuccess: () => {
       navigate("/")
     },
-    onError: (err: any) => {
-      setErrorMsg(getErrorMsg(err, "로그인에 실패하였습니다."))
+    onError: () => {
+      setErrorMsg("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
   });
 
@@ -61,7 +59,7 @@ function LoginPage() {
       
       return;
     }
-    
+
     loginMutation.mutate();
   }
 
@@ -76,7 +74,7 @@ function LoginPage() {
             name="loginId"
             value={form.loginId}
             onChange={handleChange}
-            required />
+          />
         </InputContainer>
         <InputContainer>
           <Label>비밀번호</Label>
@@ -85,7 +83,6 @@ function LoginPage() {
             name="password" 
             value={form.password}
             onChange={handleChange}
-            required
           />
         </InputContainer>
 
@@ -140,6 +137,11 @@ const Input = styled.input`
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #bbb;
+  outline: none;
+
+  &:focus {
+    border-color: #1b73e8;
+  }
 `;
 
 const ErrorText = styled.p`

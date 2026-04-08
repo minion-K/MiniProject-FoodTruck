@@ -1,48 +1,62 @@
 import { authApi } from "@/apis/auth/auth.api";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
+import { useMutation } from "@tanstack/react-query";
 import React, { useState } from 'react'
 import { useNavigate } from "react-router-dom";
 
 function ForgotpasswordPage() {
-  const [name, setName] = useState("");
-  const [loginId, setLoginId] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState<string>("");
+  const [loginId, setLoginId] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string>("")
   
   const navigate = useNavigate();
 
-  const handleSendEmail = async () => {
+  const resetPasswordMutation = useMutation({
+    mutationFn: () => authApi.resetPWEmail({name, loginId, email}),
+
+    onSuccess: () => {
+      setSuccess(true);
+      alert("이메일 발송이 완료되었습니다.");
+      navigate("/password/pending", {replace: true});
+    },
+
+    onError: (e) => setErrorMsg(getErrorMsg(e))
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccess(false);
+
+
     if(!name || !loginId || !email) {
-      alert("모든 정보를 입력해주세요");
-      
+      setErrorMsg("모든 정보를 입력해주세요");
       return;
     }
 
-    try {
-      await authApi.resetPWEmail({name, loginId, email});
-
-      alert("이메일 발송이 완료되었습니다.")
-      navigate("/password/pending", {replace: true})
-    } catch (e) {
-      alert(getErrorMsg(e));
+    if(!/^\S+@\S+\.\S+$/.test(email)) {
+      setErrorMsg("이메일 형식이 올바르지 않습니다.");
+      return;
     }
-
     
+    resetPasswordMutation.mutate();
   }
 
   return (
     <Container>
       <Title>비밀번호 찾기 / 재설정</Title>
 
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <InputGroup>
           <Label>이름</Label>
           <Input 
             type="text"
             value={name} 
             onChange={e => setName(e.target.value)}
-            required
-            placeholder="이름을 입력해주세요"
+            placeholder="이름을 입력해주세요."
           />
         </InputGroup>
 
@@ -52,8 +66,7 @@ function ForgotpasswordPage() {
             type="text"
             value={loginId} 
             onChange={e => setLoginId(e.target.value)}
-            required
-            placeholder="아이디를 입력해주세요"
+            placeholder="아이디를 입력해주세요."
           />
             
         </InputGroup>
@@ -64,13 +77,19 @@ function ForgotpasswordPage() {
             type="email"
             value={email} 
             onChange={e => setEmail(e.target.value)}
-            required
             placeholder="이메일을 입력해주세요"
           />
         </InputGroup>
-
-        <Button type="button" onClick={handleSendEmail}>
-          인증
+        {errorMsg && <ErrorText>{errorMsg}</ErrorText>}
+        <Button 
+          type="submit"
+          disabled={resetPasswordMutation.isPending}
+        >
+          {resetPasswordMutation.isPending
+            ? "전송 중"
+            : success
+            ? "전송 완료"
+            : "인증"}
         </Button>
       </Form>
     </Container>
