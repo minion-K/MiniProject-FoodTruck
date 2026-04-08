@@ -18,33 +18,36 @@ public record TruckListItemResponseDto(
         BigDecimal longitude,
         String ownerName,
         String ownerLoginId,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        boolean isActive
 ) {
 
    public static TruckListItemResponseDto from(Truck truck) {
 
        Schedule activeSchedule = truck.getSchedules().stream()
                .filter(Schedule::isNowActive)
-               .max(Comparator.comparing(Schedule::getStartTime))
+               .findFirst()
                .orElse(null);
 
-       String locationSummary = "현재 운영하지 않습니다.";
+       Schedule lastestSchedule = truck.getSchedules().stream()
+               .filter(schedule -> schedule.getLocation() != null)
+               .findFirst()
+               .orElse(null);
+
+       Schedule target = activeSchedule != null ? activeSchedule : lastestSchedule;
+
+       boolean isOpen = activeSchedule != null;
+       String locationSummary = "위치 정보 없음";
        BigDecimal latitude = null;
        BigDecimal longitude = null;
 
-       if(activeSchedule == null || activeSchedule.getLocation() == null) {
-           return new TruckListItemResponseDto(
-                   truck.getId(),
-                   truck.getName(),
-                   truck.getCuisine(),
-                   truck.getStatus(),
-                   locationSummary,
-                   latitude,
-                   longitude,
-                   truck.getOwner().getName(),
-                   truck.getOwner().getLoginId(),
-                   truck.getCreatedAt()
-           );
+       if(target != null && target.getLocation() != null) {
+           locationSummary = isOpen
+                   ? target.getLocationName()
+                   : "현재 영업 중이 아닙니다.";
+           latitude = target.getLocation().getLatitude();
+           longitude = target.getLocation().getLongitude();
+
        }
 
        return new TruckListItemResponseDto(
@@ -52,12 +55,13 @@ public record TruckListItemResponseDto(
                truck.getName(),
                truck.getCuisine(),
                truck.getStatus(),
-               activeSchedule.getLocation().getName(),
-               activeSchedule.getLocation().getLatitude(),
-               activeSchedule.getLocation().getLongitude(),
+               locationSummary,
+               latitude,
+               longitude,
                truck.getOwner().getName(),
                truck.getOwner().getLoginId(),
-               truck.getCreatedAt()
+               truck.getCreatedAt(),
+               isOpen
        );
    }
 }

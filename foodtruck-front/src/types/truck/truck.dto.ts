@@ -28,7 +28,8 @@ export interface TruckListItemResponse {
   longitude: number | null;
   ownerName: string;
   ownerLoginId: string;
-  createdAt: string
+  createdAt: string;
+  isActive: boolean;
 }
 
 export interface TruckListResponse {

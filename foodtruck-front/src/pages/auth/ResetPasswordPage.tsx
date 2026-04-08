@@ -1,5 +1,4 @@
 import { authApi } from "@/apis/auth/auth.api";
-import type { PasswordResetRequest } from "@/types/auth/auth.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import { useMutation } from "@tanstack/react-query";

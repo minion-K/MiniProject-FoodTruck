@@ -71,7 +71,10 @@ function TruckDetail() {
     ? { lat: activeSchedule.latitude, lng: activeSchedule.longitude }
     : { lat: 35.15776, lng: 129.05657 };
 
-  const markers = activeSchedule ? [{ lat: center.lat, lng: center.lng }] : [];
+  const markers = activeSchedule ? [{ 
+    lat: center.lat, 
+    lng: center.lng,
+    isAcive: truck.status === "ACTIVE"}] : [];
 
   return (
     <Container>

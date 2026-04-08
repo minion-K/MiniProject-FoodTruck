@@ -46,6 +46,7 @@ public class Truck extends BaseTimeEntity {
     private List<MenuItem> menus = new ArrayList<>();
 
     @OneToMany(mappedBy = "truck", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("startTime DESC")
     private List<Schedule> schedules = new ArrayList<>();
 
     public Truck(User owner, String name, String cuisine) {

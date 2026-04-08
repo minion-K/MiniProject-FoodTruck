@@ -1,4 +1,5 @@
 import { truckApi } from "@/apis/truck/truck.api";
+import SearchInput from "@/components/common/SearchInput";
 import KakaoMap from "@/components/map/KakaoMap";
 import Trucks from "@/components/truck/Trucks";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
@@ -10,6 +11,16 @@ function TruckList() {
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showActive, setShowActive] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const [center, setCenter] = useState({
+    lat: 35.15776,
+    lng: 129.05657,
+  })
+  const [myLocation, setMyLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchTrucks = async () => {
@@ -27,11 +38,19 @@ function TruckList() {
     fetchTrucks();
   }, []);
 
-  const center = {
-    lat: 35.15776,
-    lng: 129.05657,
-  };
-
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCenter({lat, lng});
+        setMyLocation({lat, lng});
+      },
+      (err) => {
+        console.log("위치 가져오기 실패", err);
+      },
+    )
+  }, [])
   const markers = trucks
     .filter(
       (
@@ -41,13 +60,21 @@ function TruckList() {
         longitude: number;
       } => truck.latitude !== null && truck.longitude !== null,
     )
+    .filter(truck => showActive ? truck.isActive : true)
     .map((truck) => ({
-      id: truck.id,
       lat: truck.latitude,
       lng: truck.longitude,
+      isActive: truck.isActive
     }));
-
-  if (loading) return <LoadingMsg>트럭 내역 불러오는 중...</LoadingMsg>;
+  
+  const handleMoveMyLocation = () => {
+    if(!myLocation) return;
+    setCenter({
+      lat: myLocation.lat,
+      lng: myLocation.lng
+    });
+  }
+  
   if (error) return <ErrorMsg>{error}</ErrorMsg>;
 
   return (
@@ -56,11 +83,52 @@ function TruckList() {
 
       <Content>
         <MapWrapper>
-          <KakaoMap center={center} markers={markers} />
+          {myLocation ? (
+            <>
+              <KakaoMap 
+                center={center} 
+                markers={markers} 
+                myLocation={myLocation}
+              />
+
+              <MapControl>
+                <FloatingButton 
+                  onClick={handleMoveMyLocation}
+                  title="내 위치"
+                >
+                  📍
+                </FloatingButton>
+                <ToggleWrapper>
+                  <span>영업 중</span>
+                  <ToggleSwitch>
+                    <input 
+                      type="checkbox"
+                      checked={showActive}
+                      onChange={() => setShowActive(prev => !prev)}
+                    />
+                    <span className="slider" />
+                  </ToggleSwitch>
+                </ToggleWrapper >
+              </MapControl>
+            </>
+
+          ) : (
+            <LoadingMsg>지도 불러오는 중...</LoadingMsg>
+          )}
         </MapWrapper>
 
         <ListWrapper>
-          {trucks && <Trucks trucks={trucks} />}
+          <SearchInput 
+            value={keyword}
+            onChange={setKeyword}
+            onSearch={() =>{}}
+          />
+          {trucks ? (
+            <Trucks trucks={trucks} />
+          ) : (
+            <LoadingMsg>트럭 내역 불러오는 중...</LoadingMsg>
+          )}
+          
         </ListWrapper>
       </Content>
     </Container>
@@ -96,6 +164,94 @@ const MapWrapper = styled.div`
   min-height: 400px;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
+`;
+
+const MapControl = styled.div`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 6px 8px;
+  z-index: 10;
+`;
+
+const FloatingButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+`;
+
+const ToggleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+
+  span {
+    font-size: 12px;
+  }
+`;
+
+const ToggleSwitch = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  cursor: pointer;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  span.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ccc;
+    border-radius: 18px;
+    transition: 0.2s;
+  }
+
+  span.slider::before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  input:checked + .slider {
+    background: #4caf50;
+  }
+
+  input:checked + .slider::before {
+    transform: translateX(14px);
+  }
 `;
 
 const ListWrapper = styled.div`
