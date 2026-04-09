@@ -11,7 +11,7 @@ function Profile() {
   const [user, setUser] = useState<UserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"view" | "edit">("view");
-  const [updateduser, setUpdatedtUser] = useState<UserDetailResponse | null>(null);
+  const [updatedUser, setUpdatedtUser] = useState<UserDetailResponse | null>(null);
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -53,13 +53,13 @@ function Profile() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
-    if(!token || !updateduser) return ;
+    if(!token || !updatedUser) return ;
 
     handleEmailToken(token);
-  }, [updateduser]);
+  }, [updatedUser]);
 
   const handleEmailToken = async (token: string) => {
-    if(!updateduser) return;
+    if(!updatedUser) return;
 
     const handleKey = `email-verified:${token}`;
     if(sessionStorage.getItem(handleKey)) return;
@@ -84,14 +84,14 @@ function Profile() {
 
   const handleEdit = () => {
     sessionStorage.removeItem("emailVerified");
-    if(updateduser) setMode("edit");
+    if(updatedUser) setMode("edit");
   };
 
   const handleCancel = () => {
     sessionStorage.removeItem("profile-edit-draft");
     sessionStorage.removeItem("emailVerified");
 
-    if(updateduser && user) setUpdatedtUser(user);
+    if(updatedUser && user) setUpdatedtUser(user);
     setMode("view");
   };
 
@@ -104,13 +104,13 @@ function Profile() {
   }
 
   if(loading) return <Loading>회원 정보 불러오는 중...</Loading>
-  if(!user || !updateduser) return <Empty>회원 정보를 불러올 수 없습니다.</Empty>
+  if(!user || !updatedUser) return <Empty>회원 정보를 불러올 수 없습니다.</Empty>
 
   return mode === "view" ? (
     <ProfileView user={user} onEdit={handleEdit}/>
   ) : (
     <ProfileEdit 
-      user={updateduser} 
+      user={updatedUser} 
       onCancel={handleCancel} 
       onComplete={handleComplete}
     />

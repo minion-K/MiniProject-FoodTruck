@@ -4,8 +4,10 @@ import type { UserDetailResponse, UserUpdateRequest } from '@/types/user/user.dt
 import { getErrorMsg } from '@/utils/error';
 import { isValidPhoneNumber } from '@/utils/phone';
 import styled from '@emotion/styled'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useMutation } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Props {
   user: UserDetailResponse;
@@ -19,7 +21,6 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
     name: user.name,
     phone: user.phone ?? "",
   });
-
   const isLocalUser = user.provider === "LOCAL";
   const isPhoneValid = isValidPhoneNumber(form.phone ?? "");
   const isValidEmail = (email: string) => {
@@ -32,6 +33,10 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
   const [emailVerified, setEmailVerified] = useState(() => {
     return sessionStorage.getItem("emailVerified") === "true";
   });
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const verifyRef = useRef(false);
 
   const isProfileChanged = 
     form.name !== user.name ||
@@ -61,35 +66,73 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
     }
   }, [email, user.email]);
 
-  const handleComplete = async () => {
-    try {
-      const request: UserUpdateRequest = {
-        name: form.name,
-        phone: form.phone?.trim() === "" ? null : form.phone,
-      };
-
-      const updated: UserDetailResponse = await userApi.updateMe(request);
-      onComplete(updated);
-
-      toast.success("회원 정보가 수정되었습니다.");
-    } catch(err) {
-      alert(getErrorMsg(err));
-    }
-  };
-
-  const handleSendEmailAuth = async () => {
-    if (!isLocalUser || !emailChanged) return;
-
-    try {
-      await authApi.sendEmailChange({email});
+  const sendEmailMutation = useMutation({
+    mutationFn:() => authApi.sendEmailChange({email}),
+    
+    onSuccess: () => {
       setEmailSend(true);
-
-      alert("인증 메일이 발송되었습니다.");
-      window.location.href = "/mypage/pending";
-    } catch (err) {
-      alert(getErrorMsg(err));
+      navigate("/mypage/pending");
+    },
+    
+    onError: (e) => {
+      alert(getErrorMsg(e));
     }
-  };
+  });
+
+  const handleSendEmail = () => {
+    if(!isLocalUser || !emailChanged) return;
+    
+    sendEmailMutation.mutate();
+  }
+
+  useEffect(() => {
+    if(verifyRef.current) return;
+    verifyRef.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if(!token || emailVerified) return;
+
+    const verify = async () => {
+      try {
+        await authApi.verifyEmail(token);
+
+        sessionStorage.setItem("emailVerified", "true");
+        setEmailVerified(true);
+        alert("이메일 인증 완료");
+
+        window.history.replaceState({}, "", "/mypage");
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    };
+
+    verify();
+
+  }, [window.location.search]);
+
+  const updateMutation = useMutation({
+    mutationFn: (request: UserUpdateRequest) => userApi.updateMe(request),
+    
+    onSuccess: (updated) => {
+      onComplete(updated);
+      toast.success("회원 정보가 수정되었습니다.");
+    },
+
+    onError:(e) => {
+      alert(getErrorMsg(e));
+    }
+  });
+
+  const handleComplete = () => {
+    const request: UserUpdateRequest = {
+      name: form.name,
+      phone: form.phone?.trim() === "" ? null : form.phone
+    };
+
+    updateMutation.mutate(request);
+  }
 
   const displayLoginId = useMemo(() => {
     if(user.provider === "LOCAL") {
@@ -136,10 +179,10 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
               />
               {isLocalUser && !emailVerified && (
                 <AuthButton 
-                  onClick={handleSendEmailAuth}
+                  onClick={handleSendEmail}
                   disabled={!emailChanged || emailSend || !isValidEmail(email)}
                 >
-                  인증
+                  {sendEmailMutation.isPending ? "전송 중..." : "인증"}
                 </AuthButton>
               )}
 

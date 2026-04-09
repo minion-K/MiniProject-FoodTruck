@@ -23,6 +23,7 @@ function ResetPasswordPage() {
     verifyRef.current = true;
 
     if(!token) {
+      alert("잘못된 접근입니다.");
       navigate("/login");
 
       return;
@@ -37,9 +38,12 @@ function ResetPasswordPage() {
           navigate("/login");
         } else {
           alert("이메일 인증이 완료되었습니다.");
+
+          window.history.replaceState({}, "/reset-password");
         }
       } catch (e) {
         alert(getErrorMsg(e));
+        navigate("/login");
       }
     };
 

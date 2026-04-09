@@ -270,7 +270,7 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("이메일 인증이 완료되었습니다.", null);
     }
 
-    // 이메일 변경
+    // 이메일 변경 메일 발송
     @Override
     @Transactional
     public ResponseDto<Void> sendEmailChangeVerify(String email, UserPrincipal principal) {
