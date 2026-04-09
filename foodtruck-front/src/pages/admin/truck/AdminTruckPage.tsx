@@ -3,7 +3,7 @@ import Pagination from '@/components/common/pagination';
 import SearchInput from '@/components/common/SearchInput';
 import { type TruckListItemResponse } from '@/types/truck/truck.dto';
 import type { TruckStatus } from '@/types/truck/truck.type';
-import { formatDateTime, toKstString } from '@/utils/date';
+import { formatDateTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getTruckStatus } from '@/utils/TruckStatus';
 import styled from '@emotion/styled';

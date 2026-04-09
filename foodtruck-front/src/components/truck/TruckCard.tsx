@@ -1,19 +1,22 @@
+import type { TruckStatus } from '@/types/truck/truck.type';
+import { getTruckStatus } from '@/utils/TruckStatus';
 import styled from '@emotion/styled';
 import React from 'react'
 
 interface Props {
   name: string;
   cuisine?: string;
-  status: string;
+  status: TruckStatus;
   location: string;
 }
 
 function TruckCard({name, cuisine, status, location}: Props) {
+  const truckStatus = getTruckStatus(status);
   return (
     <Card>
       <Header>
         <Name>{name}</Name>
-        <Status data-status={status}></Status>
+        <Status style={{background: truckStatus.color}}></Status>
       </Header>
 
       <Cuisine>{cuisine}</Cuisine>
@@ -22,7 +25,7 @@ function TruckCard({name, cuisine, status, location}: Props) {
   )
 }
 
-export default TruckCard
+export default React.memo(TruckCard)
 
 const Card = styled.div`
   border: 1px solid #ddd;
@@ -62,16 +65,6 @@ const Status = styled.span`
   padding: 4px 8px;
   border-radius: 8px;
   background: #eee;
-
-  &[data-status="ACTIVE"] {
-    background: #e6f7ec;
-    color: #1a7f37;
-  }
-
-  &[data-status="INACTIVE"] {
-    background: #fef3c7;
-    color: #92400e;
-  }
 `;
 
 const Cuisine = styled.div`

@@ -2,6 +2,7 @@ import type { TruckListItemResponse } from "@/types/truck/truck.dto";
 import styled from "@emotion/styled";
 import TruckCard from "./TruckCard";
 import { useNavigate } from "react-router-dom";
+import React from "react";
 
 interface Props {
   trucks: TruckListItemResponse[];
@@ -29,7 +30,7 @@ function Trucks({ trucks, urlPrefix = "" }: Props) {
   );
 }
 
-export default Trucks;
+export default React.memo(Trucks);
 
 const List = styled.div`
   display: flex;

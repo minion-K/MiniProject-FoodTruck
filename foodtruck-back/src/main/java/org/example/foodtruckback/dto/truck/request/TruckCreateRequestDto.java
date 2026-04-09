@@ -14,6 +14,5 @@ public record TruckCreateRequestDto(
         String name,
 
         @Size(max = 50, message = "음식 장르는 50자 내로 작성해주세요.")
-        @NotBlank(message = "음식 장르를 입력해주세요.")
         String cuisine
 ){}

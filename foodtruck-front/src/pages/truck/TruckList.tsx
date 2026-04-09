@@ -5,14 +5,17 @@ import Trucks from "@/components/truck/Trucks";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 function TruckList() {
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showActive, setShowActive] = useState(false);
-  const [keyword, setKeyword] = useState("");
+  const [keyword, setKeyword] = useState<string>("");
+  const [page, setPage] = useState<number>(0);
+  const [totalPage, setTotalPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState(true);
   const [center, setCenter] = useState({
     lat: 35.15776,
     lng: 129.05657,
@@ -21,22 +24,72 @@ function TruckList() {
     lat: number;
     lng: number;
   } | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const getDistance = (
+    lat1: number, lng1: number, 
+    lat2: number, lng2: number
+  ) => {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const RADIUS = 6371;
+    const disLat = toRad(lat2 - lat1);
+    const disLng = toRad(lng2 - lng1);
+    const a = Math.sin(disLat / 2) ** 2 + 
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(disLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return RADIUS * c;
+  }
+  
+  const fetchTrucks = async () => {
+    try {
+      const res = await truckApi.getTruckList({
+        page,
+        size: 5,
+        keyword: keyword || undefined
+      });
+      let fetchedTrucks = res.content;
+      
+      if(myLocation) {
+        fetchedTrucks = [...fetchedTrucks]
+          .sort((a, b) => 
+            getDistance(myLocation.lat, myLocation.lng, a.latitude!, a.longitude!)
+            - getDistance(myLocation.lat, myLocation.lng, b.latitude!, b.longitude!)
+        );
+      }
+
+      if(listRef.current && page !== 0) {
+        const prevScrollHeight = listRef.current.scrollHeight;
+        setTrucks(prev => [...prev, ...fetchedTrucks]);
+        
+        requestAnimationFrame(() => {
+          if(listRef.current) {
+            listRef.current.scrollTop = 
+            listRef.current.scrollHeight - prevScrollHeight + listRef.current.scrollTop;
+          }
+        });
+      } else {
+        setTrucks(fetchedTrucks);
+        if(listRef.current) listRef.current.scrollTop = 0;
+      }
+      
+      setTotalPage(res.totalPages);
+      setHasMore(page + 1 < res.totalPages);
+
+
+    } catch (e) {
+      setError(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTrucks = async () => {
-      try {
-        const res = await truckApi.getTruckList();
-
-        setTrucks(res.content);
-      } catch (e) {
-        setError(getErrorMsg(e));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrucks();
-  }, []);
+    if(myLocation !== null) {
+      setLoading(true);
+      fetchTrucks();
+    }
+  }, [myLocation, page]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -50,7 +103,8 @@ function TruckList() {
         console.log("위치 가져오기 실패", err);
       },
     )
-  }, [])
+  }, []);
+
   const markers = trucks
     .filter(
       (
@@ -64,7 +118,8 @@ function TruckList() {
     .map((truck) => ({
       lat: truck.latitude,
       lng: truck.longitude,
-      isActive: truck.isActive
+      isActive: truck.isActive,
+      name: truck.name
     }));
   
   const handleMoveMyLocation = () => {
@@ -73,6 +128,26 @@ function TruckList() {
       lat: myLocation.lat,
       lng: myLocation.lng
     });
+  }
+
+  const handleSearch = () => {
+    setTrucks([]);
+    setPage(0);
+    setLoading(true);
+    fetchTrucks();
+
+    if(listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if(!hasMore) return;
+
+    if(target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+      setPage(prev => prev + 1);
+    }
   }
   
   if (error) return <ErrorMsg>{error}</ErrorMsg>;
@@ -117,16 +192,16 @@ function TruckList() {
           )}
         </MapWrapper>
 
-        <ListWrapper>
+        <ListWrapper onScroll={handleScroll} ref={listRef}>
           <SearchInput 
             value={keyword}
             onChange={setKeyword}
-            onSearch={() =>{}}
+            onSearch={handleSearch}
           />
-          {trucks ? (
-            <Trucks trucks={trucks} />
-          ) : (
+          {loading || (myLocation === null && trucks.length > 0) ? (
             <LoadingMsg>트럭 내역 불러오는 중...</LoadingMsg>
+          ) : (
+            <Trucks trucks={showActive ? trucks.filter(t => t.isActive) : trucks} />
           )}
           
         </ListWrapper>
@@ -157,6 +232,7 @@ const Content = styled.div`
   display: flex;
   gap: 20px;
   flex: 1;
+  min-height: 0;
 `;
 
 const MapWrapper = styled.div`
@@ -165,6 +241,9 @@ const MapWrapper = styled.div`
   border-radius: 8px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const MapControl = styled.div`
@@ -263,10 +342,19 @@ const ListWrapper = styled.div`
   padding: 8px;
   background-color: #fafafa;
   border-radius: 8px;
+  min-height: 0;
+  overflow-anchor: none;
 `;
 
-const LoadingMsg = styled.div``;
+const LoadingMsg = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #555;
+`;
 
 const ErrorMsg = styled.div`
-  color: red;
+  color: #eb2222;
 `;

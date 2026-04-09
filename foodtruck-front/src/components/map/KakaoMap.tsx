@@ -6,7 +6,8 @@ import myLocationMarker from "@/assets/images/marker_me.png";
 interface Marker {
   lat: number;
   lng: number;
-  isActive: boolean;
+  isActive?: boolean;
+  name?: string;
 }
 
 interface Props {
@@ -78,7 +79,8 @@ function KakaoMap({center, markers, level = 4, onClick, myLocation}: Props) {
       const markerImg = new window.kakao.maps.MarkerImage(imageSrc, imageSize);
       const mk = new window.kakao.maps.Marker({
         position: pos,
-        image: markerImg
+        image: markerImg,
+        title: marker.name
       });
       
       mk.setMap(mapInstance.current);
