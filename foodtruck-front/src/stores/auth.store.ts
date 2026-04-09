@@ -19,6 +19,19 @@ type AuthActions = {
 
 const AUTH_STORAGE = "auth-storage";
 
+const sessionStorageWrapper = {
+  getItem: (name: string) => {
+    const value = sessionStorage.getItem(name);
+    return value ? JSON.parse(value) : null;
+  },
+  setItem: (name: string, value: any) => {
+    sessionStorage.setItem(name, JSON.stringify(value));
+  },
+  removeItem: (name: string) => {
+    sessionStorage.removeItem(name);
+  }
+}
+
 export const useAuthStore = create(
   persist<AuthState & AuthActions> (
     (set, get) => ({
@@ -36,6 +49,7 @@ export const useAuthStore = create(
     }),
     {
       name: AUTH_STORAGE,
+      storage: sessionStorageWrapper,
       onRehydrateStorage: () => () => {
         setTimeout(() => {
           useAuthStore.setState({isInitialized: true});
