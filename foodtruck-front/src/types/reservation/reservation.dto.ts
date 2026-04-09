@@ -35,7 +35,12 @@ export interface ReservationListItemResponse {
   locationName: string;
 }
 
-export type ReservationListResponse = ReservationListItemResponse[];
+export interface ReservationListResponse {
+  content: ReservationListItemResponse[];
+  totalPage: number;
+  totalElement: number;
+  number: number;
+}
 
 export interface OwnerReservationListItemResponse {
   id: number;

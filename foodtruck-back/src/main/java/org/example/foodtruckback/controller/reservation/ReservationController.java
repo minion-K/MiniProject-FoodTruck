@@ -8,11 +8,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
-import org.example.foodtruckback.dto.reservation.response.AdminReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.OwnerReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
-import org.example.foodtruckback.entity.user.User;
+import org.example.foodtruckback.dto.reservation.response.*;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.reservation.ReservationService;
 import org.springframework.data.domain.Page;
@@ -51,10 +47,16 @@ public class ReservationController {
     }
 
     @GetMapping(ReservationApi.ME)
-    public ResponseEntity<ResponseDto<List<ReservationListResponseDto>>> getMyReservations(
-            @AuthenticationPrincipal UserPrincipal principal
+    public ResponseEntity<ResponseDto<ReservationPageResponseDto>> getMyReservations(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) ReservationStatus status
     ) {
-        ResponseDto<List<ReservationListResponseDto>> response =  reservationService.getMyReservations(principal.getId());
+        Pageable pageable = PageRequest.of(page, size);
+
+        ResponseDto<ReservationPageResponseDto> response =  reservationService.getMyReservations(principal.getId(), pageable, keyword, status);
 
         return ResponseEntity.ok(response);
     }

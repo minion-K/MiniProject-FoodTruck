@@ -1,60 +1,59 @@
 import { reservationApi } from "@/apis/reservation/reservation.api";
+import Pagination from "@/components/common/Pagination";
 import SearchInput from "@/components/common/SearchInput";
 import ReservationFilter from "@/components/reservation/ReservationFilter";
-import { type ReservationListResponse } from "@/types/reservation/reservation.dto";
+import { type ReservationListItemResponse } from "@/types/reservation/reservation.dto";
+import type { ReservationStatus } from "@/types/reservation/reservation.type";
 import { formatPickupRange, formatTime } from "@/utils/date";
 import { getErrorMsg } from "@/utils/error";
 import { getPaymentStatus } from "@/utils/paymentStatus";
 import { getReservationStatus } from "@/utils/reservationStatus";
 import styled from "@emotion/styled";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function MyReservation() {
-  const [reservations, setReservations] = useState<ReservationListResponse>([]);
-  const [loading, setLoading] = useState(true);
+  const [reservations, setReservations] = useState<ReservationListItemResponse[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [keyword, setKeyword] = useState("");
+  const [status, setStatus] = useState<ReservationStatus | "ALL">("ALL");
 
   const navigate = useNavigate();
 
+  const fetchReservations = async () => {
+    setLoading(true);
+    try {
+      const res = await reservationApi.getMyReservations({
+        page,
+        size: 10,
+        keyword: keyword || undefined,
+        status: status === "ALL" ? undefined : status
+      });
+
+      setReservations(res.content ?? []);
+      setTotalPage(res.totalPage ?? 1);
+    } catch (err) {
+      getErrorMsg(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        const data = await reservationApi.getMyReservations();
+    setPage(0);
+  }, [status, keyword]);
 
-        setReservations(data);
-      } catch (err) {
-        getErrorMsg(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchReservations();
-  }, []);
-
-  const filteredReservations = useMemo(() => {
-    return reservations.filter((res) => {
-      if (statusFilter !== "ALL" && res.status !== statusFilter) return false;
-
-      if (search && !res.truckName.toLowerCase().includes(search.toLowerCase()))
-        return false;
-
-      return true;
-    });
-  }, [reservations, statusFilter, search]);
+  }, [page, status, keyword]);
 
   if (loading) return <LoadingMsg>예약 내역 불러오는 중...</LoadingMsg>;
 
-  if (reservations.length === 0) {
-    return <Empty>예약 내역이 없습니다.</Empty>;
-  }
-
   const handleSearch = () => {
-    setSearch(searchInput);
+    setKeyword(searchInput);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -62,61 +61,72 @@ function MyReservation() {
   };
 
   return (
-    <Container>
-      <Header>예약 목록</Header>
+    <>
+      <Container>
+        <Header>예약 목록</Header>
 
-      <FilterRow>
-        <SearchWrapper>
-          <ReservationFilter
-            status={statusFilter}
-            onStatusChange={setStatusFilter}
-          />
+        <FilterRow>
+          <SearchWrapper>
+            <ReservationFilter
+              status={status}
+              onStatusChange={setStatus}
+            />
 
-          <SearchInput
-            value={searchInput}
-            onChange={setSearchInput}
-            onKeyDown={handleKeyDown}
-            onSearch={handleSearch}
-            placeholder="검색어를 입력하세요."
-          />
-        </SearchWrapper>
-      </FilterRow>
+            <SearchInput
+              value={searchInput}
+              onChange={setSearchInput}
+              onKeyDown={handleKeyDown}
+              onSearch={handleSearch}
+              placeholder="검색어를 입력하세요."
+            />
+          </SearchWrapper>
+        </FilterRow>
 
-      {filteredReservations.map((reservation) => {
-        const payment = getPaymentStatus(reservation.paymentStatus);
-        const status = getReservationStatus(reservation.status);
-
-        return (
-          <Card
-            key={reservation.id}
-            onClick={() => navigate(`/mypage/reservation/${reservation.id}`)}
-          >
-            <Row>
-              <Title>{reservation.truckName}</Title>
-
-              <StatusColumn>
-                <Status style={{ backgroundColor: status.color }}>
-                  {status.label}
-                </Status>
-
-                {reservation.status !== "CANCELED" && (
-                  <PaymentStatus style={{ backgroundColor: payment.color }}>
-                    {payment.label}
-                  </PaymentStatus>
-                )}
-              </StatusColumn>
-            </Row>
-
-            <Location>{reservation.locationName}</Location>
-
-            <Info>픽업 시간: {formatPickupRange(reservation.pickupTime)}</Info>
-            <Info>
-              결제 금액: {reservation.totalAmount?.toLocaleString() ?? "-s"} KRW
-            </Info>
-          </Card>
-        );
-      })}
-    </Container>
+        {reservations.length > 0 ? (
+          reservations.map((reservation) => {
+            const payment = getPaymentStatus(reservation.paymentStatus);
+            const status = getReservationStatus(reservation.status);
+    
+            return (
+              <Card
+                key={reservation.id}
+                onClick={() => navigate(`/mypage/reservation/${reservation.id}`)}
+              >
+                <Row>
+                  <Title>{reservation.truckName}</Title>
+    
+                  <StatusColumn>
+                    <Status style={{ backgroundColor: status.color }}>
+                      {status.label}
+                    </Status>
+    
+                    {reservation.status !== "CANCELED" && (
+                      <PaymentStatus style={{ backgroundColor: payment.color }}>
+                        {payment.label}
+                      </PaymentStatus>
+                    )}
+                  </StatusColumn>
+                </Row>
+    
+                <Location>{reservation.locationName}</Location>
+    
+                <Info>픽업 시간: {formatPickupRange(reservation.pickupTime)}</Info>
+                <Info>
+                  결제 금액: {reservation.totalAmount?.toLocaleString() ?? "-s"} KRW
+                </Info>
+              </Card>
+            );
+          })
+        ) : (
+          <Empty>예약 내역이 없습니다.</Empty>
+        )}
+      </Container>
+      <Pagination 
+        page={page}
+        totalPage={totalPage}
+        onChange={setPage}
+      />
+    </>
   );
 }
 

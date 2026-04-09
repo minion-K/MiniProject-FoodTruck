@@ -1,5 +1,5 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
-import Pagination from '@/components/common/pagination';
+import Pagination from '@/components/common/Pagination';
 import { type AdminReservationListItemResponse } from '@/types/reservation/reservation.dto';
 import type { ReservationStatus } from '@/types/reservation/reservation.type';
 import { formatDateTime, formatPickupRange } from '@/utils/date';
@@ -33,8 +33,8 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
         status: status === "ALL" ? undefined : status
       });
   
-      setReservations(res.content ?? []);
-      setTotalPage(res.totalPage ?? 1);
+      setReservations(res.content);
+      setTotalPage(res.totalPage);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {

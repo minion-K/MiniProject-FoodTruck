@@ -162,22 +162,29 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public ResponseDto<List<ReservationListResponseDto>> getMyReservations(
-            Long userId
+    public ResponseDto<ReservationPageResponseDto> getMyReservations(
+            Long userId, Pageable pageable, String keyword, ReservationStatus status
     ) {
-        List<Reservation> reservations = reservationRepository.findForUserReservationList(userId);
+        Page<Reservation> reservationPage = reservationRepository.findForUserReservations(userId, pageable, keyword, status);
 
-        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus((reservations));
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservationPage.getContent());
 
-        List<ReservationListResponseDto> response = reservations.stream()
+        List<ReservationListResponseDto> content = reservationPage.stream()
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return ReservationListResponseDto.from(reservation, paymentStatus);
-                })
-                .toList();
+                }).toList();
+
+        ReservationPageResponseDto response = new ReservationPageResponseDto(
+                content,
+                reservationPage.getTotalPages(),
+                reservationPage.getTotalElements(),
+                reservationPage.getNumber()
+        );
+
 
         return ResponseDto.success("조회 성공", response);
     }

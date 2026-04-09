@@ -6,10 +6,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationCreateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
-import org.example.foodtruckback.dto.reservation.response.AdminReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.OwnerReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationListResponseDto;
-import org.example.foodtruckback.dto.reservation.response.ReservationResponseDto;
+import org.example.foodtruckback.dto.reservation.response.*;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.springframework.data.domain.Page;
@@ -27,7 +24,7 @@ public interface ReservationService {
 
     ResponseDto<Page<AdminReservationListResponseDto>> getAdminReservations(Long adminId, Pageable pageable, String dateRange, ReservationStatus status, String keyword);
 
-    ResponseDto<List<ReservationListResponseDto>> getMyReservations(Long userId);
+    ResponseDto<ReservationPageResponseDto> getMyReservations(Long userId, Pageable pageable, String keyword, ReservationStatus status);
 
     ResponseDto<ReservationResponseDto> updateStatus(Long userId, Long reservationId, ReservationStatusUpdateRequestDto request);
 

@@ -30,22 +30,52 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
 
     );
 
-    @Query("SELECT DISTINCT r" +
-            " FROM Reservation r" +
-            " JOIN FETCH r.schedule s" +
-            " JOIN FETCH s.truck t " +
-            "JOIN FETCH s.location l " +
-            "WHERE r.user.id = :userId " +
-            "ORDER BY r.createdAt DESC")
-    List<Reservation> findForUserReservationList(@Param("userId") Long userId);
+    @Query(value = """
+        SELECT r
+        FROM Reservation r
+        JOIN r.schedule s
+        JOIN s.truck t
+        JOIN s.location l
+        WHERE r.user.id = :userId
+            AND (:status IS NULL OR r.status = :status)
+            AND (:keyword IS NULL OR t.name LIKE %:keyword%)
+        ORDER BY r.createdAt DESC
+    """,
+    countQuery = """
+        SELECT COUNT(r)
+        FROM Reservation r
+        JOIN r.schedule s
+        JOIN s.truck t
+        WHERE r.user.id = :userId
+            AND (:status IS NULL OR r.status = :status)
+            AND (:keyword IS NULL OR t.name LIKE %:keyword%)
+    """)
+    Page<Reservation> findForUserReservations(@Param("userId") Long userId, Pageable pageable, String keyword, ReservationStatus status);
 
-    @Query("SELECT DISTINCT r" +
-            " FROM Reservation r" +
-            " JOIN FETCH r.schedule s" +
-            " JOIN FETCH s.truck t " +
-            "JOIN FETCH s.location l " +
-            "ORDER BY r.createdAt DESC")
-    List<Reservation> findForAdminReservationList();
+    //    TODO: menuItems N + 1 최적화 필요(IN 쿼리)
+    @Query(value = """
+        SELECT r
+        FROM Reservation r
+        JOIN FETCH r.user u
+        JOIN FETCH r.schedule s
+        JOIN FETCH s.truck t
+        WHERE (:status IS NULL OR r.status = :status)
+            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:startDate IS NULL OR r.createdAt >= :startDate)
+            AND (:endDate IS NULL OR r.createdAt <= :endDate)
+    """,
+    countQuery = """
+        SELECT COUNT(r)
+        FROM Reservation r
+        JOIN r.user u
+        JOIN r.schedule s
+        JOIN s.truck t
+        WHERE (:status IS NULL OR r.status = :status)
+            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
+            AND (:startDate IS NULL OR r.createdAt >= :startDate)
+            AND (:endDate IS NULL OR r.createdAt <= :endDate)
+    """)
+    Page<Reservation> findAdminReservations(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, ReservationStatus status, String keyword);
 
 
     @Query("""
@@ -70,30 +100,4 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         ORDER BY r.createdAt DESC
     """)
     List<Reservation> findByScheduleIdFetch(@Param("scheduleId") Long scheduleId);
-
-
-//    TODO: menuItems N + 1 최적화 필요(IN 쿼리)
-    @Query(value = """
-        SELECT r
-        FROM Reservation r
-        JOIN FETCH r.user u
-        JOIN FETCH r.schedule s
-        JOIN FETCH s.truck t
-        WHERE (:status IS NULL OR r.status = :status)
-            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
-            AND (:startDate IS NULL OR r.createdAt >= :startDate)
-            AND (:endDate IS NULL OR r.createdAt <= :endDate)
-    """,
-    countQuery = """
-        SELECT COUNT(r)
-        FROM Reservation r
-        JOIN r.user u
-        JOIN r.schedule s
-        JOIN s.truck t
-        WHERE (:status IS NULL OR r.status = :status)
-            AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
-            AND (:startDate IS NULL OR r.createdAt >= :startDate)
-            AND (:endDate IS NULL OR r.createdAt <= :endDate)
-    """)
-    Page<Reservation> findAdminReservations(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, ReservationStatus status, String keyword);
 }

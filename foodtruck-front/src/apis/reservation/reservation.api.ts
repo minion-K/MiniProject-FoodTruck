@@ -24,9 +24,15 @@ export const reservationApi = {
     return res.data.data;
   },
 
-  getMyReservations: async (): Promise<ReservationListResponse> => {
+  getMyReservations: async (params: {
+    page: number;
+    size: number;
+    status?: string;
+    keyword?: string;
+  }): Promise<ReservationListResponse> => {
     const res = await privateApi.get<ApiResponse<ReservationListResponse>>(
       RESERVATION_PATH.ME(),
+      {params}
     );
 
     return res.data.data;

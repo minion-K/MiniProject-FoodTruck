@@ -1,9 +1,10 @@
+import type { ReservationStatus } from '@/types/reservation/reservation.type';
 import styled from '@emotion/styled';
 import React from 'react'
 
 interface Props {
   status: string;
-  onStatusChange: (status: string) => void;
+  onStatusChange: (status: ReservationStatus | "ALL") => void;
 }
 
 function ReservationFilter({status, onStatusChange}: Props) {
@@ -11,12 +12,12 @@ function ReservationFilter({status, onStatusChange}: Props) {
     <FilterWrapper>
       <select
         value={status}
-        onChange={e => onStatusChange(e.target.value)}
+        onChange={(e) => onStatusChange(e.target.value as ReservationStatus | "ALL")}
       >
         <option value="ALL">전체</option>
-        <option value="PENDING">PENDING</option>
-        <option value="CONFIRMED">CONFIRMED</option>
-        <option value="CANCELED">CANCELED</option>
+        <option value="PENDING">예약완료</option>
+        <option value="CONFIRMED">주문완료</option>
+        <option value="CANCELED">예약취소</option>
       </select>
 
     </FilterWrapper>
