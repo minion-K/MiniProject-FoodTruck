@@ -9,10 +9,9 @@ import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
-import org.example.foodtruckback.dto.user.response.UserListResponseDto;
+import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {
@@ -20,7 +19,7 @@ public interface UserService {
 
     ResponseDto<UserDetailResponseDto> updateMyInfo(UserPrincipal principal, @Valid UserUpdateRequestDto request);
 
-    ResponseDto<Page<UserListResponseDto>> getAllUsers(RoleType role, Pageable pageable, String keyword, UserStatus status, String sortKey);
+    ResponseDto<UserPageResponseDto> getAllUsers(RoleType role, Pageable pageable, String keyword, UserStatus status, String sortKey);
 
     ResponseDto<UserDetailResponseDto> getById(Long userId);
 

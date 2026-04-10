@@ -8,6 +8,7 @@ import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
+import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public interface TruckService {
 
     ResponseDto<TruckDetailResponseDto> getTruckById(Long truckId);
 
-    ResponseDto<Page<TruckListItemResponseDto>> getAllTrucks(Pageable pageable, String keyword, TruckStatus status);
+    ResponseDto<TruckPageResponseDto> getAllTrucks(Pageable pageable, String keyword, TruckStatus status);
 
     ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks(Long userId);
 

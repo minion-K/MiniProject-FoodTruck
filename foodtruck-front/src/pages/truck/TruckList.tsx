@@ -73,9 +73,8 @@ function TruckList() {
         if(listRef.current) listRef.current.scrollTop = 0;
       }
       
-      setTotalPage(res.totalPages);
-      setHasMore(page + 1 < res.totalPages);
-
+      setTotalPage(res.totalPage);
+      setHasMore(page + 1 < res.totalPage);
 
     } catch (e) {
       setError(getErrorMsg(e));

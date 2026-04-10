@@ -6,10 +6,7 @@ import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
-import org.example.foodtruckback.dto.order.response.AdminOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.OrderDetailResponseDto;
-import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
+import org.example.foodtruckback.dto.order.response.*;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +21,7 @@ public interface OrderService {
 
     ResponseDto<List<OwnerOrderListResponseDto>> getTruckOrders(Long truckId, UserPrincipal principal);
 
-    ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(Long adminId, Pageable pageable, String dateRange, OrderStatus status, String keyword, OrderSource source);
+    ResponseDto<AdminOrderPageResponseDto> getAllOrders(Long adminId, Pageable pageable, String dateRange, OrderStatus status, String keyword, OrderSource source);
 
     ResponseDto<OrderDetailResponseDto> updateOrder(Long orderId, @Valid OrderUpdateRequestDto request);
 

@@ -10,6 +10,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.payment.request.PaymentApproveRequestDto;
 import org.example.foodtruckback.dto.payment.request.PaymentCreateRequestDto;
 import org.example.foodtruckback.dto.payment.request.PaymentRefundRequestDto;
+import org.example.foodtruckback.dto.payment.response.PaymentPageResponseDto;
 import org.example.foodtruckback.dto.payment.response.PaymentResponseDto;
 import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.entity.payment.Payment;
@@ -24,6 +25,8 @@ import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.payment.gateway.PaymentGateway;
 import org.example.foodtruckback.service.payment.gateway.PaymentGatewayResolver;
 import org.example.foodtruckback.service.payment.gateway.PaymentResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -152,15 +155,24 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseDto<List<PaymentResponseDto>> getMyPayments(UserPrincipal principal) {
+    public ResponseDto<PaymentPageResponseDto> getMyPayments(
+            UserPrincipal principal, Pageable pageable,
+            String keyword, PaymentStatus status
+    ) {
         User user = getUser(principal);
 
-        List<Payment> payments = paymentRepository.findByUserWithUser(user);
+        Page<Payment> paymentPage = paymentRepository.findByUserWithUser(user, pageable, keyword, status);
 
-        List<PaymentResponseDto> response = payments.stream()
+        List<PaymentResponseDto> content = paymentPage.stream()
                 .map(PaymentResponseDto::from)
                 .toList();
 
+        PaymentPageResponseDto response = new PaymentPageResponseDto(
+                content,
+                paymentPage.getTotalPages(),
+                paymentPage.getTotalElements(),
+                paymentPage.getNumber()
+        );
         return ResponseDto.success(response);
     }
 

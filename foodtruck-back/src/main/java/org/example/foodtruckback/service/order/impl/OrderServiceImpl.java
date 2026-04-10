@@ -8,10 +8,7 @@ import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
-import org.example.foodtruckback.dto.order.response.AdminOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.OrderDetailResponseDto;
-import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
+import org.example.foodtruckback.dto.order.response.*;
 import org.example.foodtruckback.dto.orderItem.request.CreateOrderItemRequestDto;
 import org.example.foodtruckback.dto.orderItem.request.UpdateOrderItemRequestDto;
 import org.example.foodtruckback.entity.order.Order;
@@ -171,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<Page<AdminOrderListResponseDto>> getAllOrders(
+    public ResponseDto<AdminOrderPageResponseDto> getAllOrders(
             Long adminId, Pageable pageable, String dateRange,
             OrderStatus status, String keyword, OrderSource source
     ) {
@@ -182,14 +179,21 @@ public class OrderServiceImpl implements OrderService {
 
         Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orderPage.getContent());
 
-        Page<AdminOrderListResponseDto> response = orderPage
+        List<AdminOrderListResponseDto> content = orderPage.stream()
                 .map(order -> {
                     String productCode = getProductCode(order);
 
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return AdminOrderListResponseDto.from(order, paymentStatus);
-                });
+                }).toList();
+
+        AdminOrderPageResponseDto response = new AdminOrderPageResponseDto(
+                content,
+                orderPage.getTotalPages(),
+                orderPage.getTotalElements(),
+                orderPage.getNumber()
+        );
 
         return ResponseDto.success("관리자용 주문 조회 완료", response);
     }

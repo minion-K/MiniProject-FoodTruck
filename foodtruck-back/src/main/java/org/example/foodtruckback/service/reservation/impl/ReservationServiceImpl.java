@@ -220,7 +220,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<Page<AdminReservationListResponseDto>> getAdminReservations(
+    public ResponseDto<AdminReservationPageResponseDto> getAdminReservations(
             Long adminId, Pageable pageable,
             String dateRange, ReservationStatus status, String keyword
     ) {
@@ -231,15 +231,21 @@ public class ReservationServiceImpl implements ReservationService {
 
         Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservationPage.getContent());
 
-        Page<AdminReservationListResponseDto> response = reservationPage
+        List<AdminReservationListResponseDto> content = reservationPage.stream()
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
                     PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
 
                     return AdminReservationListResponseDto.from(reservation, paymentStatus);
-                });
+                }).toList();
 
+        AdminReservationPageResponseDto response = new AdminReservationPageResponseDto(
+                content,
+                reservationPage.getTotalPages(),
+                reservationPage.getTotalElements(),
+                reservationPage.getNumber()
+        );
         return ResponseDto.success("조회 성공", response);
     }
 

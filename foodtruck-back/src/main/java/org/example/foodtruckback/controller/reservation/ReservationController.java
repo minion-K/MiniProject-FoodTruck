@@ -73,7 +73,7 @@ public class ReservationController {
     }
 
     @GetMapping(ReservationApi.ADMIN)
-    public ResponseEntity<ResponseDto<Page<AdminReservationListResponseDto>>> getAdminReservations(
+    public ResponseEntity<ResponseDto<AdminReservationPageResponseDto>> getAdminReservations(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -83,7 +83,7 @@ public class ReservationController {
             ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        ResponseDto<Page<AdminReservationListResponseDto>> response =
+        ResponseDto<AdminReservationPageResponseDto> response =
                 reservationService.getAdminReservations(principal.getId(), pageable, dateRange, status, keyword);
 
         return ResponseEntity.ok(response);

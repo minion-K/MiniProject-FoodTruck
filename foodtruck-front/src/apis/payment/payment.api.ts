@@ -7,7 +7,7 @@ import type {
   PaymentRefundRequest,
   PaymentResponseList,
 } from "@/types/payment/payment.dto";
-import type { PaymentMethod } from "@/types/payment/payment.type";
+import type { PaymentMethod, PaymentStatus } from "@/types/payment/payment.type";
 
 export const paymentApi = {
   createPayment: async (
@@ -44,9 +44,15 @@ export const paymentApi = {
     return res.data.data;
   },
 
-  getMyPayments: async (): Promise<PaymentResponseList> => {
+  getMyPayments: async (params:{
+    page: number;
+    size: number;
+    keyword?: string;
+    status?: PaymentStatus
+  }): Promise<PaymentResponseList> => {
     const res = await privateApi.get<ApiResponse<PaymentResponseList>>(
       PAYMENT_PATH.ME,
+      {params}
     );
 
     return res.data.data ?? [];

@@ -22,7 +22,7 @@ public interface ReservationService {
 
     ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(Long ownerId, Long scheduleId);
 
-    ResponseDto<Page<AdminReservationListResponseDto>> getAdminReservations(Long adminId, Pageable pageable, String dateRange, ReservationStatus status, String keyword);
+    ResponseDto<AdminReservationPageResponseDto> getAdminReservations(Long adminId, Pageable pageable, String dateRange, ReservationStatus status, String keyword);
 
     ResponseDto<ReservationPageResponseDto> getMyReservations(Long userId, Pageable pageable, String keyword, ReservationStatus status);
 

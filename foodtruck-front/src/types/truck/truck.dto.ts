@@ -34,8 +34,8 @@ export interface TruckListItemResponse {
 
 export interface TruckListResponse {
   content: TruckListItemResponse[];
-  totalPages: number;
-  totalElements: number;
+  totalPage: number;
+  totalElement: number;
   number: number;
 };
 

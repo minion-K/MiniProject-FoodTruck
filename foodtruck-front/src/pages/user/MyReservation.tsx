@@ -34,10 +34,10 @@ function MyReservation() {
         status: status === "ALL" ? undefined : status
       });
 
-      setReservations(res.content ?? []);
-      setTotalPage(res.totalPage ?? 1);
-    } catch (err) {
-      getErrorMsg(err);
+      setReservations(res.content);
+      setTotalPage(res.totalPage);
+    } catch (e) {
+      alert(getErrorMsg(e));
     } finally {
       setLoading(false);
     }
@@ -72,13 +72,15 @@ function MyReservation() {
               onStatusChange={setStatus}
             />
 
-            <SearchInput
-              value={searchInput}
-              onChange={setSearchInput}
-              onKeyDown={handleKeyDown}
-              onSearch={handleSearch}
-              placeholder="검색어를 입력하세요."
-            />
+            <SearchBox>
+              <SearchInput
+                value={searchInput}
+                onChange={setSearchInput}
+                onKeyDown={handleKeyDown}
+                onSearch={handleSearch}
+                placeholder="트럭명을 입력하세요."
+              />
+            </SearchBox>
           </SearchWrapper>
         </FilterRow>
 
@@ -155,7 +157,12 @@ const FilterRow = styled.div`
 const SearchWrapper = styled.div`
   display: flex;
   gap: 4px;
-  flex: 1;
+  align-items: center;
+`;
+
+const SearchBox = styled.div`
+  width: 280px;
+  flex-shrink: 0;
 `;
 
 const Card = styled.div`

@@ -1,15 +1,16 @@
+import type { PaymentStatus } from "@/types/payment/payment.type";
 import styled from "@emotion/styled";
 import React from "react";
 
 interface Props {
   status: string;
-  onStatusChange: (status: string) => void;
+  onStatusChange: (status: PaymentStatus | "ALL") => void;
 }
 
 function PaymentFilter({ status, onStatusChange }: Props) {
   return (
     <FilterWrapper>
-      <select value={status} onChange={(e) => onStatusChange(e.target.value)}>
+      <select value={status} onChange={(e) => onStatusChange(e.target.value as PaymentStatus | "ALL")}>
         <option value="ALL">전체</option>
         <option value="READY">결제 대기</option>
         <option value="SUCCESS">결제 완료</option>

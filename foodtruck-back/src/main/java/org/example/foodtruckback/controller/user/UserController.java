@@ -11,11 +11,10 @@ import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
-import org.example.foodtruckback.dto.user.response.UserListResponseDto;
+import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.user.UserService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +50,7 @@ public class UserController {
 
     // 사용자 목록
     @GetMapping
-    public ResponseEntity<ResponseDto<Page<UserListResponseDto>>> getAllUsers(
+    public ResponseEntity<ResponseDto<UserPageResponseDto>> getAllUsers(
             @RequestParam(required = false) RoleType role,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -60,7 +59,7 @@ public class UserController {
             @RequestParam(defaultValue = "createdAt") String sortKey
             ) {
         Pageable pageable = PageRequest.of(page, size);
-        ResponseDto<Page<UserListResponseDto>> response =
+        ResponseDto<UserPageResponseDto> response =
                 userService.getAllUsers(role, pageable, keyword, status, sortKey);
 
         return ResponseEntity.ok().body(response);

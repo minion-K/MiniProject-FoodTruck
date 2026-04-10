@@ -11,6 +11,7 @@ import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserListResponseDto;
+import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
 import org.example.foodtruckback.entity.user.Role;
 import org.example.foodtruckback.entity.user.User;
@@ -25,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -76,19 +78,27 @@ public class UserServiceImpl implements UserService {
     // 유저 리스트
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<Page<UserListResponseDto>> getAllUsers(
+    public ResponseDto<UserPageResponseDto> getAllUsers(
             RoleType role, Pageable pageable, String keyword,
             UserStatus status, String sortKey
     ) {
-        Page<User> userPage;
 
         if(role == null) {
             throw new BusinessException(ErrorCode.INVALID_ROLE);
         }
 
-        userPage = userRepository.findAllByRoleWithFilter(role, pageable, keyword, status, sortKey);
+        Page<User> userPage = userRepository.findAllByRoleWithFilter(role, pageable, keyword, status, sortKey);
 
-        Page<UserListResponseDto> response = userPage.map(UserListResponseDto::from);
+        List<UserListResponseDto> content = userPage.stream()
+                .map(UserListResponseDto::from)
+                .toList();
+
+        UserPageResponseDto response = new UserPageResponseDto(
+                content,
+                userPage.getTotalPages(),
+                userPage.getTotalElements(),
+                userPage.getNumber()
+        );
 
         return ResponseDto.success("회원 목록", response);
     }

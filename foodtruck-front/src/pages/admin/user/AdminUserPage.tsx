@@ -1,9 +1,9 @@
 import { userApi } from '@/apis/user/user.api';
-import Pagination from '@/components/common/pagination';
+import Pagination from '@/components/common/Pagination';
 import SearchInput from '@/components/common/SearchInput';
 import type { RoleType } from '@/types/role/role.type';
 import type { UserListItemResponse } from '@/types/user/user.dto';
-import { toKstString } from '@/utils/date';
+import { formatDateTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getRoleInfo } from '@/utils/role';
 import { getUserStatus } from '@/utils/userStatus';
@@ -39,8 +39,8 @@ function AdminUserPage() {
         sortKey
       });
       
-      setUsers(res.content ?? []);
-      setTotalPage(res.totalPages ?? 1);
+      setUsers(res.content);
+      setTotalPage(res.totalPage);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {
@@ -221,7 +221,7 @@ function AdminUserPage() {
                             })}
                           </RoleSelect>
                         </td>
-                        <td>{user.createdAt}</td>
+                        <td>{formatDateTime(user.createdAt)}</td>
                       </tr>
                     )
                   })

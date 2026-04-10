@@ -10,6 +10,7 @@ import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
+import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.truck.TruckService;
 import org.springframework.data.domain.Page;
@@ -48,14 +49,14 @@ public class TruckController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<Page<TruckListItemResponseDto>>> getAllTrucks(
+    public ResponseEntity<ResponseDto<TruckPageResponseDto>> getAllTrucks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) TruckStatus status
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        ResponseDto<Page<TruckListItemResponseDto>> response = truckService.getAllTrucks(pageable, keyword, status);
+        ResponseDto<TruckPageResponseDto> response = truckService.getAllTrucks(pageable, keyword, status);
 
         return ResponseEntity.ok(response);
     }

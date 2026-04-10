@@ -12,6 +12,7 @@ import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
+import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
 import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.entity.truck.MenuItem;
 import org.example.foodtruckback.entity.truck.Schedule;
@@ -80,12 +81,20 @@ public class TruckServiceImpl implements TruckService {
     }
 
     @Override
-    public ResponseDto<Page<TruckListItemResponseDto>> getAllTrucks(
+    public ResponseDto<TruckPageResponseDto> getAllTrucks(
             Pageable pageable, String keyword, TruckStatus status
     ) {
         Page<Truck> truckPage = truckRepository.findAllWithFilter(pageable, keyword, status);
 
-        Page<TruckListItemResponseDto> response = truckPage.map(TruckListItemResponseDto::from);
+        List<TruckListItemResponseDto> content = truckPage.stream()
+                .map(TruckListItemResponseDto::from).toList();
+
+        TruckPageResponseDto response = new TruckPageResponseDto(
+                content,
+                truckPage.getTotalPages(),
+                truckPage.getTotalElements(),
+                truckPage.getNumber()
+        );
 
         return ResponseDto.success("트럭 조회 성공", response);
     }

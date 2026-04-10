@@ -1,5 +1,5 @@
 import { orderApi } from '@/apis/order/order.api';
-import Pagination from '@/components/common/pagination';
+import Pagination from '@/components/common/Pagination';
 import type { AdminOrderListItemResponse, OrderDetailResponse } from '@/types/order/order.dto';
 import type { OrderSource, OrderStatus } from '@/types/order/order.type';
 import { formatDateTime } from '@/utils/date';
@@ -39,8 +39,8 @@ function AdminOrderTab({keyword, dateRange, status, source}: Props) {
         source: source === "ALL" ? undefined : source
       });
 
-      setOrders(res.content ?? []);
-      setTotalPage(res.totalPage ?? 1);
+      setOrders(res.content);
+      setTotalPage(res.totalPage);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {

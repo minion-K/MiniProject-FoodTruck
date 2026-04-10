@@ -25,8 +25,8 @@ export interface UserListItemResponse {
 
 export interface UserListResponse {
   content: UserListItemResponse[];
-  totalPages: number;
-  totalElements: number;
+  totalPage: number;
+  totalElement: number;
   number: number;
 }
 

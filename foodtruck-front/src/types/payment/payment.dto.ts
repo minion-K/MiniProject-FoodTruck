@@ -37,4 +37,9 @@ export interface PaymentResponse {
   approvedAt: string | null;
 }
 
-export type PaymentResponseList = PaymentResponse[];
+export interface PaymentResponseList {
+  content: PaymentResponse[];
+  totalPage: number;
+  totalElement: number;
+  number: number;
+};

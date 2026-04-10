@@ -8,10 +8,7 @@ import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
-import org.example.foodtruckback.dto.order.response.AdminOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.OrderDetailResponseDto;
-import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
+import org.example.foodtruckback.dto.order.response.*;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.order.OrderService;
 import org.springframework.data.domain.Page;
@@ -63,7 +60,7 @@ public class OrderController {
 
     // get order (all) - admin
     @GetMapping
-    public ResponseEntity<ResponseDto<Page<AdminOrderListResponseDto>>> getAllOrders(
+    public ResponseEntity<ResponseDto<AdminOrderPageResponseDto>> getAllOrders(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -74,7 +71,7 @@ public class OrderController {
             ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        ResponseDto<Page<AdminOrderListResponseDto>> response = orderService.getAllOrders(
+        ResponseDto<AdminOrderPageResponseDto> response = orderService.getAllOrders(
                 principal.getId(), pageable, dateRange, status, keyword, source
         );
 

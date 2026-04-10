@@ -1,5 +1,5 @@
 import { truckApi } from '@/apis/truck/truck.api';
-import Pagination from '@/components/common/pagination';
+import Pagination from '@/components/common/Pagination';
 import SearchInput from '@/components/common/SearchInput';
 import { type TruckListItemResponse } from '@/types/truck/truck.dto';
 import type { TruckStatus } from '@/types/truck/truck.type';
@@ -32,7 +32,7 @@ function AdminTruckPage() {
       });
 
       setTrucks(res.content);
-      setTotalPage(res.totalPages);
+      setTotalPage(res.totalPage);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {
