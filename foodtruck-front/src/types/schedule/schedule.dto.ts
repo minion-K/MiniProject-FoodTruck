@@ -8,8 +8,8 @@ export interface ScheduleCreateRequest {
 }
 
 export interface ScheduleUpdateRequest {
-  startTime?: string;
-  endTime?: string;
+  startTime: string;
+  endTime: string;
   locationId: number;
   maxReservations?: number;
 }

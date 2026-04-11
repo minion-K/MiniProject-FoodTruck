@@ -6,6 +6,7 @@ import type { TruckScheduleItemResponse } from "@/types/schedule/schedule.dto";
 import { type TruckDetailResponse } from "@/types/truck/truck.dto";
 import { formatDateTime } from "@/utils/date";
 import { getErrorMsg } from "@/utils/error";
+import { getScheduleStatus } from "@/utils/ScheduleStatus";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import styled from "@emotion/styled";
 import React, { useEffect, useMemo, useState } from "react";
@@ -37,28 +38,15 @@ function TruckDetail() {
   };
 
   const isReservation = (schedule: TruckScheduleItemResponse) => {
-    const now = new Date();
-
-    return (
-      schedule.status === "OPEN" &&
-      new Date(schedule.startTime) <= now &&
-      new Date(schedule.endTime) >= now
-    );
+    return schedule.status === "OPEN"
   };
 
   const activeSchedule = useMemo(() => {
     if (!truck || truck.schedules.length === 0) return null;
 
-    const now = new Date();
-
     return (
-      truck.schedules.find((schedule) => {
-        return (
-          schedule.status == "OPEN" &&
-          new Date(schedule.startTime) <= now &&
-          new Date(schedule.endTime) >= now
-        );
-      }) ?? truck.schedules[0]
+      truck.schedules.find((schedule) => 
+        schedule.status == "OPEN") ?? truck.schedules[0]
     );
   }, [truck]);
 
@@ -86,13 +74,25 @@ function TruckDetail() {
         lat: activeSchedule.latitude,
         lng: activeSchedule.longitude,
       });
+      return;
     }
-  }, [activeSchedule]);
+
+    if(truck && truck.schedules.length === 0) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          setCenter({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        }
+      );
+    }
+  }, [activeSchedule, truck]);
 
   const markers = center ? [{ 
     lat: center.lat, 
     lng: center.lng,
-    isAcive: truck!.status === "ACTIVE"}] : [];
+    isActive: activeSchedule?.status === "OPEN"}] : [];
 
   const handleMoveTruck = () => {
     if(!activeSchedule) return;
@@ -105,7 +105,6 @@ function TruckDetail() {
 
   if (!truck && !loading) return null;  
   const status = getTruckStatus(truck?.status);
-
   return (
     <Container>
       {loading ? (
@@ -138,7 +137,7 @@ function TruckDetail() {
               <MapControl>
                 <FloatingButton onClick={handleMoveTruck}>📍</FloatingButton>
               </MapControl>
-              {!activeSchedule && (
+              {truck.schedules.length === 0 && (
                 <MapOverlay>위치 정보가 등록되지 않았습니다.</MapOverlay>
               )}
             </MapWrapper>
@@ -151,28 +150,39 @@ function TruckDetail() {
               <>
                 <SectionTitle>영업 일정</SectionTitle>
                 <ScheduleList>
-                  {truck.schedules.map((schedule, idx) => (
-                    <ScheduleItem key={idx}>
-                      <div>
-                        <div>{schedule.locationName}</div>
-                        <ScheduleTime>
-                          {formatDateTime(schedule.startTime)} ~{" "}
-                          {formatDateTime(schedule.endTime)}
-                        </ScheduleTime>
-                      </div>
+                  {truck.schedules.map((schedule, idx) => {
+                    const scheduleStatus = getScheduleStatus(schedule.status)
 
-                      <ScheduleRight>
-                        <Badge data-status={schedule.status}>{schedule.status}</Badge>
+                    return (
+                      <ScheduleItem key={idx}>
+                        <div>
+                          <div>{schedule.locationName}</div>
+                          <ScheduleTime>
+                            {formatDateTime(schedule.startTime)} ~{" "}
+                            {formatDateTime(schedule.endTime)}
+                          </ScheduleTime>
+                        </div>
 
-                        <ReservationButton
-                          disabled={!isReservation(schedule)}
-                          onClick={() => handleReservationClick(schedule)}
-                        >
-                          예약하기
-                        </ReservationButton>
-                      </ScheduleRight>
-                    </ScheduleItem>
-                  ))}
+                        <ScheduleRight>
+                          <Badge
+                            style={{
+                              color: scheduleStatus.color,
+                              borderColor: scheduleStatus.color
+                            }}
+                          >
+                            {scheduleStatus.label}
+                          </Badge>
+
+                          <ReservationButton
+                            disabled={!isReservation(schedule)}
+                            onClick={() => handleReservationClick(schedule)}
+                          >
+                            예약하기
+                          </ReservationButton>
+                        </ScheduleRight>
+                      </ScheduleItem>
+                    )
+                })}
                 </ScheduleList>
               </>  
             )}
@@ -349,7 +359,9 @@ const ScheduleRight = styled.div`
 const Badge = styled.span`
   font-size: 12px;
   padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: 6px;
+  background: white;
+  border: 1px solid;
 `;
 
 const ReservationButton = styled.button<{ disabled?: boolean }>`

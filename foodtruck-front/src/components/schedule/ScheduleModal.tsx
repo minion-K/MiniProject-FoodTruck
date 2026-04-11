@@ -1,13 +1,16 @@
 import { locationApi } from '@/apis/location/location.api';
 import { scheduleApi } from '@/apis/schedule/schdule.api';
 import { type LocationListResponse } from '@/types/location/location.dto';
-import type { ScheduleCreateRequest, ScheduleUpdateRequest, TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
+import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 import CreateLocation from '../map/CreateLocation';
 import LocationManageModal from '../map/LocationManageModal';
-import { DateAndHour, formatTime } from '@/utils/date';
+import { toKstString } from '@/utils/date';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ko } from 'date-fns/locale';
 
 interface Props {
   truckId: number;
@@ -19,9 +22,8 @@ interface Props {
 function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
   const isEdit = !!schedule;
 
-  const [date, setDate] = useState("");
-  const [startHour, setStartHour] = useState("");
-  const [endHour, setEndHour] = useState("");
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
   const [locationId, setLocationId] = useState<number|null>(null);
   const [locations, setLocations] = useState<LocationListResponse>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -29,10 +31,6 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
   const [loading, setLoading] = useState(false);
   const [isAdviceOpen, setIsAdviceOpen] = useState(false);
   const [maxReservations, setMaxReservations] = useState<number | null>(null);
-
-  const HOURS = Array.from({length: 24}, (_, i) => 
-    `${String(i).padStart(2, "0")}:00`
-  )
 
   useEffect(() => {
     if(!schedule) {
@@ -51,9 +49,8 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
           const end = new Date(res.endTime);
           const defaultMax = 100;
     
-          setDate(start.toISOString().slice(0, 10));
-          setStartHour(formatTime(start));
-          setEndHour(formatTime(end));
+          setStartTime(start);
+          setEndTime(end);
           setLocationId(res.locationId);
           setMaxReservations(res.maxReservations ?? null);
           setIsAdviceOpen(res.maxReservations != null && res.maxReservations !== defaultMax);
@@ -61,9 +58,8 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
           alert(getErrorMsg(e));
         }
       } else {
-        setDate("");
-        setStartHour("");
-        setEndHour("");
+        setStartTime(null);
+        setEndTime(null);
         setLocationId(null);
         setMaxReservations(null);
         setIsAdviceOpen(false);
@@ -73,50 +69,32 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
       fetchDetail();
   }, [schedule]);
 
-  useEffect(() => {
-    if(!startHour || !endHour) return;
-
-    if(startHour >= endHour) {
-      setEndHour("");
-    }
-  }, [startHour, endHour])
-
   const handleSubmit = async () => {
-    if(!date || !startHour || !endHour || !locationId) {
+    if(!startTime || !endTime || !locationId) {
       alert("시간과 위치를 지정해주세요");
 
       return;
     }
 
-    if(startHour >= endHour) {
+    if(startTime >= endTime) {
       alert("종료 시간은 시작 시간 이후여야 합니다.");
 
       return;
     }
 
-    const startTime = DateAndHour(date, startHour);
-    const endTime = DateAndHour(date, endHour);
-
     try {
       setLoading(true);
 
-      if(isEdit && schedule) {
-        const request: ScheduleUpdateRequest = {
-          startTime,
-          endTime,
-          locationId,
-          maxReservations: maxReservations ?? undefined
-        };
+      const request = {
+        startTime: toKstString(startTime),
+        endTime: toKstString(endTime),
+        locationId,
+        maxReservations: maxReservations ?? undefined
+      };
 
+      if(isEdit && schedule) {
         await scheduleApi.updateSchedule(schedule.scheduleId, request);
       } else {
-        const request: ScheduleCreateRequest = {
-          startTime,
-          endTime,
-          locationId,
-          maxReservations: maxReservations ?? undefined
-        };
-
         await scheduleApi.createSchedule(truckId, request);
       }
 
@@ -142,6 +120,25 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
     fetchLocations();
   }, []);
 
+  useEffect(() => {
+    if(!schedule) {
+      const today = new Date();
+
+      setStartTime(today);
+      setEndTime(today);
+    }
+  }, [schedule]);
+
+  const handleEndTime = () => {
+    if(!startTime || !endTime) {
+      return new Date(0, 0, 0, 0, 0);
+    }
+
+    const isSameDate = startTime.toDateString() === endTime.toDateString();
+
+    return isSameDate ? startTime : new Date(0, 0, 0, 0, 0);
+  }
+
   return (
     <Overlay>
       <Modal>
@@ -150,32 +147,43 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
         </Title>
 
         <Field>
-          <Label>날짜</Label>
-          <Input 
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <Label>시작</Label>
+          <DatePickerWrapper>
+            <DatePicker
+              selected={startTime}
+              onChange={(date: Date | null) => setStartTime(date)}
+              showTimeSelect
+              timeIntervals={60}
+              dateFormat="yyyy-MM-dd a hh:mm"
+              timeFormat="a hh:mm"
+              timeCaption="시간"
+              placeholderText="시작 시간 선택"
+              locale={ko}
+              calendarStartDay={1}
+              minDate={new Date()}
+            />
+          </DatePickerWrapper>
         </Field>
 
         <Field>
-          <Label>시간</Label>
-          <TimeRow>
-            <Select value={startHour} onChange={(e) => setStartHour(e.target.value)}>
-              <option value="">시작 시간</option>
-              {HOURS.map((hour) => (
-                <option key={hour}>{hour}</option>
-              ))}
-            </Select>
-            <span>~</span>
-            <Select value={endHour} onChange={(e) => setEndHour(e.target.value)}>
-              <option value="">종료 시간</option>
-              {HOURS.filter(hour => !startHour || hour > startHour)
-                .map((hour) => (
-                <option key={hour}>{hour}</option>
-              ))}
-            </Select>  
-          </TimeRow>
+          <Label>종료</Label>
+          <DatePickerWrapper>
+            <DatePicker
+              selected={endTime}
+              onChange={(date: Date | null) => setEndTime(date)}
+              showTimeSelect
+              timeIntervals={60}
+              dateFormat="yyyy-MM-dd a hh:mm"
+              timeFormat="a hh:mm"
+              placeholderText="종료 시간 선택"
+              timeCaption="시간"
+              locale={ko}
+              calendarStartDay={1}
+              minDate={new Date()}
+              minTime={handleEndTime()}
+              maxTime={new Date(0, 0, 0, 23, 59, 59)}
+            />
+          </DatePickerWrapper>
         </Field>
 
         <Field>
@@ -326,10 +334,23 @@ const Input = styled.input`
   }
 `;
 
-const TimeRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
+const DatePickerWrapper = styled.div`
+  .react-datepicker-wrapper {
+    width: 100%;
+  }
+
+  .react-datepicker__input-container input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+  }
+
+  .react-datepicker__input-container input:focus {
+    outline: none;
+    border-color: #ff6b00;
+  }
 `;
 
 const Actions = styled.div`

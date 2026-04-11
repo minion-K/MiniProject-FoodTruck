@@ -25,7 +25,7 @@ public record ScheduleItemResponseDto(
                 schedule.getLocation().getName(),
                 schedule.getLocation().getLatitude(),
                 schedule.getLocation().getLongitude(),
-                schedule.getCurrentStatus(),
+                schedule.getStatus(),
                 schedule.getMaxReservations()
         );
     }

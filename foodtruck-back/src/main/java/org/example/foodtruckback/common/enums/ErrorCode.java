@@ -64,6 +64,7 @@ public enum ErrorCode {
     MISSING_TIME(HttpStatus.BAD_REQUEST, "S004", "스케줄의 시작 시간과 종료시간을 모두 입력해주세요", "Missing startTime or endTime"),
     INVALID_SCHEDULE_STATUS(HttpStatus.BAD_REQUEST, "S005", "잘못된 스케줄 상태 변경입니다.", "Invalid schedule status transition"),
     INVALID_SCHEDULE_REQUEST(HttpStatus.BAD_REQUEST, "S006", "유효하지 않은 스케줄 요청입니다.", "Invalid schedule request"),
+    ALREADY_OPEN_SCHEDULE_EXISTS(HttpStatus.BAD_REQUEST, "S007", "이미 OPEN 상태인 스케줄이 존재합니다.", "Already open Schedule exists"),
 
     // ===========================
     // reservation (Rxxx)

@@ -65,4 +65,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
     boolean existsByIdAndTruckOwnerId(Long scheduleId, Long ownerId);
 
     boolean existsByTruckIdAndStatusAndEndTimeAfter(Long truckId, ScheduleStatus scheduleStatus, LocalDateTime now);
+
+    boolean existsByTruckIdAndStatus(Long id, ScheduleStatus scheduleStatus);
 }

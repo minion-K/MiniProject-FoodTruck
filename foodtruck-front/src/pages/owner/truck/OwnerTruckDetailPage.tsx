@@ -8,7 +8,7 @@ import type { TruckFormData } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import styled from "@emotion/styled";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -16,7 +16,6 @@ function OwnerTruckDetailPage() {
   const { truckId } = useParams();
   const [truck, setTruck] = useState<TruckDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [center, setCenter] = useState<{lat: number, lng: number} | null>(null)
   const [isOpen, setIsOpen] = useState(false);
   
@@ -32,49 +31,47 @@ function OwnerTruckDetailPage() {
         const res = await truckApi.getTruckById(Number(truckId));
   
         setTruck(res);
-        setError(null);
       } catch (e) {
-        setError(getErrorMsg(e));
+        alert(getErrorMsg(e));
       } finally {
         setLoading(false);
       }
     }, [truckId]);
+
+  const activeSchedule = useMemo(() => {
+      if (!truck || truck.schedules.length === 0) return null;
+  
+      return (
+        truck.schedules.find(schedule => 
+          schedule.status == "OPEN") ?? truck.schedules[0]
+      );
+    }, [truck]);
 
   useEffect(() => {
     fetchTruck();
   }, [fetchTruck]);
 
   useEffect(() => {
-    if(!truck) return;
-
-    if(truck.schedules.length > 0) {
+    if(activeSchedule) {
       setCenter({
-        lat: truck.schedules[0].latitude,
-        lng: truck.schedules[0].longitude
+        lat: activeSchedule.latitude,
+        lng: activeSchedule.longitude,
       });
-
       return;
     }
 
-    if(navigator.geolocation) {
+    if(truck && truck.schedules.length === 0) {
       navigator.geolocation.getCurrentPosition(
-        position => {
+        pos => {
           setCenter({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
           });
-        },
-
-        () => {
-          setCenter({
-            lat: 35.15776,
-            lng: 129.05657
-          })
         }
-      )
+      );
     }
-  }, [truck])
-
+  }, [activeSchedule, truck]);
+    
   const handleStatusToggle = async () => {
     if(!truck) return;
 
@@ -122,12 +119,13 @@ function OwnerTruckDetailPage() {
   }
 
   if (loading) return <Loading>트럭 정보 불러오는 중...</Loading>;
-  if (error || !truck) return <Error>{error}</Error>;
 
-  const markers = truck.schedules.map((schedule) => ({
-    lat: schedule.latitude,
-    lng: schedule.longitude,
-  }));
+  if (!truck) return;
+
+  const markers = center ? [{ 
+    lat: center.lat, 
+    lng: center.lng,
+    isActive: activeSchedule?.status === "OPEN"}] : [];
 
   const truckStatus = getTruckStatus(truck.status);
 
@@ -138,7 +136,7 @@ function OwnerTruckDetailPage() {
           <NameStatusRow>
             <TruckName>{truck.name}</TruckName>
             <Status
-              style={{ backgroundColor: truckStatus.color }}
+              style={{ backgroundColor: truckStatus.bg, color: truckStatus.color }}
               onClick={handleStatusToggle}
             >
               {truckStatus.label}
@@ -175,6 +173,10 @@ function OwnerTruckDetailPage() {
             <KakaoMap center={center} markers={markers} />
           ) : (
             <Loading>현재 위치 확인 중...</Loading>
+          )}
+
+          {truck.schedules.length === 0 && (
+            <MapOverlay>위치 정보가 등록되지 않았습니다.</MapOverlay>
           )}
         </MapWrapper>
       </Section>
@@ -322,17 +324,28 @@ const SectionTitle = styled.h2`
 `;
 
 const MapWrapper = styled.div`
-  height: 220px;
+  height: 40vh;
+  max-height: 400px;
+  min-height: 260px;
   border-radius: 12px;
   overflow: hidden;
+  position: relative;
+`;
+
+const MapOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10;
 `;
 
 const Loading = styled.div`
   font-size: 14px;
   color: #555;
-`;
-
-const Error = styled.div`
-  font-size: 14px;
-  color: red;
 `;

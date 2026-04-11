@@ -79,13 +79,13 @@ public class Schedule extends BaseTimeEntity {
             throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
         }
 
-        if(start.isBefore(now)) {
-            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
-        }
+//        if(start.isBefore(now)) {
+//            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
+//        }
     }
 
     public boolean isNowActive() {
-        return getCurrentStatus() == ScheduleStatus.OPEN;
+        return this.status == ScheduleStatus.OPEN;
     }
 
     public String getLocationName() {
@@ -93,8 +93,9 @@ public class Schedule extends BaseTimeEntity {
     }
 
     public boolean isReservation() {
-        return getCurrentStatus() == ScheduleStatus.OPEN;
+        return this.status == ScheduleStatus.OPEN;
     }
+
     public void setTruck(Truck truck) {
         this.truck = truck;
     }
@@ -143,46 +144,27 @@ public class Schedule extends BaseTimeEntity {
     }
 
     public void changeStatus(ScheduleStatus newStatus) {
-        if(newStatus == null) {
+        if (newStatus == null) {
             throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        if (this.status == newStatus) return;
 
-        if(now.isBefore(startTime) && newStatus == ScheduleStatus.OPEN) {
-            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
-        }
+        boolean isValid = switch (this.status) {
+            case PLANNED -> newStatus == ScheduleStatus.OPEN ||
+                    newStatus == ScheduleStatus.CLOSED ||
+                    newStatus == ScheduleStatus.CANCELED;
 
-        if((now.isAfter(endTime) || now.isEqual(endTime))
-            && newStatus == ScheduleStatus.OPEN
-        ) {
-            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
-        }
+            case OPEN -> newStatus == ScheduleStatus.CLOSED ||
+                    newStatus == ScheduleStatus.CANCELED;
 
-        if((now.isAfter(startTime) || now.isEqual(startTime))
-            && newStatus == ScheduleStatus.PLANNED
-        ) {
+            case CLOSED, CANCELED -> false;
+        };
+
+        if (!isValid) {
             throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
         }
 
         this.status = newStatus;
-    }
-
-    public ScheduleStatus getCurrentStatus() {
-        if(this.status == ScheduleStatus.CANCELED) {
-            return ScheduleStatus.CANCELED;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-
-        if(now.isAfter(endTime) || now.isEqual(endTime)) {
-            return ScheduleStatus.CLOSED;
-        }
-
-        if(now.isAfter(startTime) || now.isEqual(startTime)) {
-            return ScheduleStatus.OPEN;
-        }
-
-        return ScheduleStatus.PLANNED;
     }
 }

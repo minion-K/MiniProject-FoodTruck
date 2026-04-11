@@ -23,7 +23,6 @@ function OwnerReservationPage() {
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [page, setPage] = useState(0);
-  const [totalPage, setTotalPage] = useState(1);
 
   const fetchTrucks = async () => {
       try {

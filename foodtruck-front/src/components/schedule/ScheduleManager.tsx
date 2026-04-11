@@ -2,7 +2,7 @@ import { scheduleApi } from '@/apis/schedule/schdule.api';
 import type { TruckScheduleItemResponse, TruckScheduleListResponse } from '@/types/schedule/schedule.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ScheduleModal from './ScheduleModal';
 import { formatDateTime } from '@/utils/date';
 import toast from 'react-hot-toast';

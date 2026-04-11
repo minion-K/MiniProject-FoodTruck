@@ -143,9 +143,19 @@ public class ScheduleServiceImpl implements ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
+        if(request.status() == ScheduleStatus.OPEN) {
+            boolean existOpen = scheduleRepository.existsByTruckIdAndStatus(
+                    schedule.getTruck().getId(), ScheduleStatus.OPEN
+            );
+
+            if(existOpen && schedule.getStatus() != ScheduleStatus.OPEN) {
+                throw new BusinessException(ErrorCode.ALREADY_OPEN_SCHEDULE_EXISTS);
+            }
+        }
+
         schedule.changeStatus(request.status());
 
-        return ResponseDto.success("해당 스케줄 상태 변경이 완료되었습니다.: " + schedule.getCurrentStatus());
+        return ResponseDto.success("해당 스케줄 상태 변경이 완료되었습니다.: " + schedule.getStatus());
     }
 
     @Override
