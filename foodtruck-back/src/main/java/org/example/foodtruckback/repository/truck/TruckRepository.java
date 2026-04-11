@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface TruckRepository extends JpaRepository<Truck,Long> {
-    List<Truck> findByOwnerIdOrderByIdDesc(Long id);
+    Page<Truck> findByOwnerIdOrderByIdDesc(Long id, Pageable pageable);
 
     @Query("""
         SELECT t

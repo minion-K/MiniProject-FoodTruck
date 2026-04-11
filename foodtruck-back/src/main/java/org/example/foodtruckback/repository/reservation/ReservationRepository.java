@@ -89,15 +89,21 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     """)
     Optional<Reservation> findDetail(@Param("reservationId") Long reservationId);
 
-    @Query("""
-        SELECT DISTINCT r
+    @Query(value = """
+        SELECT r
         FROM Reservation r
-        JOIN FETCH r.schedule s
-        JOIN FETCH s.truck t
-        JOIN FETCH s.location l
-        LEFT JOIN FETCH r.menuItems m
+        JOIN r.schedule s
+        JOIN s.truck t
+        JOIN s.location l
+        LEFT JOIN r.menuItems m
         WHERE s.id = :scheduleId
         ORDER BY r.createdAt DESC
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT r)
+        FROM Reservation r
+        JOIN r.schedule s
+        WHERE s.id = :scheduleId
     """)
-    List<Reservation> findByScheduleIdFetch(@Param("scheduleId") Long scheduleId);
+    Page<Reservation> findByScheduleId(@Param("scheduleId") Long scheduleId, Pageable pageable);
 }

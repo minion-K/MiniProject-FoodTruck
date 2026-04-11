@@ -51,7 +51,12 @@ export interface OwnerReservationListItemResponse {
   menus: ReservationMenuItemResponse[];
 }
 
-export type OwnerReservationListResponse = OwnerReservationListItemResponse[];
+export interface OwnerReservationListResponse {
+  content: OwnerReservationListItemResponse[];
+  totalPage: number;
+  totalElement: number;
+  number: number;
+}
 
 export interface AdminReservationListItemResponse {
   id: number;

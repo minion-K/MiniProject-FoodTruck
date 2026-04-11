@@ -39,19 +39,24 @@ export function formatDateTime(
   const day = d.getDate().toString().padStart(2, "0");
 
   const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
-  const hour = d.getHours().toString().padStart(2, "0");
+  const rawHour = d.getHours();
   const min = d.getMinutes().toString().padStart(2, "0");
+
+  const period = rawHour < 12 ? "오전" : "오후";
+  let hour = rawHour % 12;
+  if(hour === 0) hour = 12;
+
+  const timeStr = `${period} ${hour}:${min}`;
 
   if(type === "date") {
     return `${year}.${month}.${day} (${weekday})`;
   }
 
   if(type === "time") {
-    return `${hour}:${min}`
+    return timeStr;
   }
 
-  return `${year}. ${month.toString().padStart(2, "0")}. 
-    ${day.toString().padStart(2, "0")} (${weekday}) ${hour}:${min}`
+  return `${year}. ${month}.${day} (${weekday}) ${timeStr}`
 }
 
 export function DateAndHour(date: string, hour: string) {

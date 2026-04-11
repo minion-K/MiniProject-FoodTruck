@@ -62,10 +62,13 @@ public class TruckController {
     }
 
     @GetMapping(TruckApi.OWNER)
-    public ResponseEntity<ResponseDto<List<TruckListItemResponseDto>>> getOwnerTrucks(
-            @AuthenticationPrincipal UserPrincipal principal
+    public ResponseEntity<ResponseDto<TruckPageResponseDto>> getOwnerTrucks(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        ResponseDto<List<TruckListItemResponseDto>> response = truckService.getOwnerTrucks(principal.getId());
+        Pageable pageable = PageRequest.of(page, size);
+        ResponseDto<TruckPageResponseDto> response = truckService.getOwnerTrucks(principal.getId(), pageable);
 
         return ResponseEntity.ok(response);
     }

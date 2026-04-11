@@ -51,7 +51,7 @@ export interface AdminOrderListResponse {
   number: number;
 }
 
-export interface OwnerOrderListResponse {
+export interface OwnerOrderListItemResponse {
   id: number;
   scheduleId: number;
   username?: String;
@@ -62,6 +62,13 @@ export interface OwnerOrderListResponse {
   currency: string;
   menus: OrderItemResponse[];
   createdAt: string;
+}
+
+export interface OwnerOrderListResponse {
+  content: OwnerOrderListItemResponse[];
+  totalPage: number;
+  totalElement: number;
+  number: number;
 }
 
 export interface UserOrderListResponse {

@@ -16,7 +16,7 @@ function TruckCard({name, cuisine, status, location}: Props) {
     <Card>
       <Header>
         <Name>{name}</Name>
-        <Status style={{background: truckStatus.color}}></Status>
+        <Status style={{background: truckStatus.bg}}></Status>
       </Header>
 
       <Cuisine>{cuisine}</Cuisine>

@@ -27,18 +27,6 @@ public class AuthorizationChecker {
     private final TruckRepository truckRepository;
     private final ScheduleRepository scheduleRepository;
 
-    public boolean isUserAuthor(String loginId, Authentication principal) {
-        if (loginId == null || principal == null) return false;
-
-        String login = principal.getName();
-
-        User user = userRepository.findByLoginId(loginId).orElse(null);
-
-        if (user == null) return false;
-
-        return user.getLoginId().equals(loginId);
-    }
-
     public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

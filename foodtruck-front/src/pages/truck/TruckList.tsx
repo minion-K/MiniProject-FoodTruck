@@ -10,9 +10,11 @@ import React, { useEffect, useRef, useState } from "react";
 function TruckList() {
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showActive, setShowActive] = useState(false);
   const [keyword, setKeyword] = useState<string>("");
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState(true);
@@ -41,12 +43,12 @@ function TruckList() {
     return RADIUS * c;
   }
   
-  const fetchTrucks = async () => {
+  const fetchTrucks = async (nextPage: number) => {
     try {
       const res = await truckApi.getTruckList({
-        page,
+        page: nextPage,
         size: 5,
-        keyword: keyword || undefined
+        keyword: searchKeyword || undefined
       });
       let fetchedTrucks = res.content;
       
@@ -58,37 +60,28 @@ function TruckList() {
         );
       }
 
-      if(listRef.current && page !== 0) {
-        const prevScrollHeight = listRef.current.scrollHeight;
-        setTrucks(prev => [...prev, ...fetchedTrucks]);
-        
-        requestAnimationFrame(() => {
-          if(listRef.current) {
-            listRef.current.scrollTop = 
-            listRef.current.scrollHeight - prevScrollHeight + listRef.current.scrollTop;
-          }
-        });
-      } else {
+      if(nextPage === 0) {
         setTrucks(fetchedTrucks);
-        if(listRef.current) listRef.current.scrollTop = 0;
+      } else {
+        setTrucks(prev => [...prev, ...fetchedTrucks]);
       }
-      
       setTotalPage(res.totalPage);
-      setHasMore(page + 1 < res.totalPage);
+      setHasMore(nextPage + 1 < res.totalPage);
 
     } catch (e) {
       setError(getErrorMsg(e));
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    if(myLocation !== null) {
-      setLoading(true);
-      fetchTrucks();
-    }
-  }, [myLocation, page]);
+    if(!myLocation) return;
+
+    setLoading(true);
+    fetchTrucks(0);
+  }, [myLocation, searchKeyword]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -98,8 +91,8 @@ function TruckList() {
         setCenter({lat, lng});
         setMyLocation({lat, lng});
       },
-      (err) => {
-        console.log("위치 가져오기 실패", err);
+      (e) => {
+        alert(getErrorMsg(e));
       },
     )
   }, []);
@@ -132,8 +125,8 @@ function TruckList() {
   const handleSearch = () => {
     setTrucks([]);
     setPage(0);
+    setSearchKeyword(keyword);
     setLoading(true);
-    fetchTrucks();
 
     if(listRef.current) {
       listRef.current.scrollTop = 0;
@@ -142,9 +135,11 @@ function TruckList() {
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
-    if(!hasMore) return;
+    if(!hasMore || loadingMore) return;
 
     if(target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+      setLoadingMore(true);
+      fetchTrucks(page + 1);
       setPage(prev => prev + 1);
     }
   }
@@ -191,17 +186,23 @@ function TruckList() {
           )}
         </MapWrapper>
 
-        <ListWrapper onScroll={handleScroll} ref={listRef}>
-          <SearchInput 
-            value={keyword}
-            onChange={setKeyword}
-            onSearch={handleSearch}
-          />
-          {loading || (myLocation === null && trucks.length > 0) ? (
-            <LoadingMsg>트럭 내역 불러오는 중...</LoadingMsg>
-          ) : (
-            <Trucks trucks={showActive ? trucks.filter(t => t.isActive) : trucks} />
-          )}
+        <ListWrapper>
+          <SearchWrapper>
+            <SearchInput 
+              value={keyword}
+              onChange={setKeyword}
+              onSearch={handleSearch}
+            />
+          </SearchWrapper>
+          <ListScrollArea onScroll={handleScroll} ref={listRef}>
+            {loading  ? (
+              <LoadingMsg>트럭 내역 불러오는 중...</LoadingMsg>
+            ) : (trucks.length === 0) ? (
+              <Empty>등록된 트럭이 없습니다.</Empty>
+            ) : (
+              <Trucks trucks={showActive ? trucks.filter(t => t.isActive) : trucks} />
+            )}
+          </ListScrollArea>
           
         </ListWrapper>
       </Content>
@@ -332,16 +333,33 @@ const ToggleSwitch = styled.label`
   }
 `;
 
+
 const ListWrapper = styled.div`
   flex: 1.2;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   padding: 8px;
   background-color: #fafafa;
   border-radius: 8px;
   min-height: 0;
+  `;
+
+  const SearchWrapper = styled.div`
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #fafafa;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+  `;
+
+const ListScrollArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   overflow-anchor: none;
 `;
 
@@ -356,4 +374,10 @@ const LoadingMsg = styled.div`
 
 const ErrorMsg = styled.div`
   color: #eb2222;
+`;
+
+const Empty = styled.div`
+  text-align: center;
+  color: #888;
+  margin-top: 80px;
 `;

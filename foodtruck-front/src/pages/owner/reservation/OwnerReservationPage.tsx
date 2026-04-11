@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import ReservationTab from "./ReservationTab";
 import OrderTab from "./OrderTab";
 import ReservationDetailModal from "./ReservationDetailModal";
-import { type TruckDetailResponse, type TruckListItemResponse, type TruckListResponse } from "@/types/truck/truck.dto";
+import { type TruckDetailResponse, type TruckListItemResponse } from "@/types/truck/truck.dto";
 import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
@@ -22,19 +22,24 @@ function OwnerReservationPage() {
   const [selectedScheduleId, setSelectScheduleId] = useState<number | null>(initScheduleId ?? null);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [page, setPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
 
   const fetchTrucks = async () => {
       try {
         setLoading(true);
 
-        const res = await truckApi.getOwnerTruckList();
-        setTrucks(res);
+        const res = await truckApi.getOwnerTruckList({
+          page,
+          size: 100
+        });
+        setTrucks(res.content);
 
         const truckIdSelect = 
-          initTruckId && res.some(t => t.id === initTruckId)
+          initTruckId && res.content.some(t => t.id === initTruckId)
             ? initTruckId
-            : res.length > 0
-            ? res[0].id
+            : res.content.length > 0
+            ? res.content[0].id
             : null;
         
         setSelectTruckId(truckIdSelect);
@@ -77,7 +82,7 @@ function OwnerReservationPage() {
     fetchDetail();
   }, [selectedTruckId])
 
-  if(loading || !truckDetail || !selectedScheduleId) {
+  if(loading || !truckDetail) {
     return <Container>로딩 중...</Container>
   }
 
@@ -128,22 +133,27 @@ function OwnerReservationPage() {
           주문
         </Tab>
       </Tabs>
-
-      {activeTab === "reservation" && truckDetail && selectedScheduleId && (
-        <ReservationTab
-          key={refreshKey}
-          scheduleId={selectedScheduleId}
-          onSelect={id =>setSelectedReservationId(id)}
-        />
-      )}
-
-      {activeTab === "order" && truckDetail && selectedScheduleId && (
-        <OrderTab 
-          scheduleId={selectedScheduleId}
-          menus={truckDetail.menu}
-          truckName={truckDetail.name}
-          truckId={selectedTruckId}
-        />
+      {!selectedScheduleId ? (
+        <EmptyText>해당 트럭에 등록된 스케줄이 없습니다. 스케줄을 먼저 등록해주세요.</EmptyText>
+      ) : (
+        <>
+          {activeTab === "reservation" && truckDetail && selectedScheduleId && (
+            <ReservationTab
+              key={refreshKey}
+              scheduleId={selectedScheduleId}
+              onSelect={id =>setSelectedReservationId(id)}
+            />
+          )}  
+    
+          {activeTab === "order" && truckDetail && selectedScheduleId && (
+            <OrderTab 
+              scheduleId={selectedScheduleId}
+              menus={truckDetail.menu}
+              truckName={truckDetail.name}
+              truckId={selectedTruckId}
+            />
+          )}
+        </>
       )}
 
       {selectedReservationId !== null && (
@@ -204,4 +214,11 @@ const Tab = styled.button<{active?: boolean}>`
   &:hover {
     background: ${({active}) => active ? "#2563eb" : "#f3f4f6"}
   }
+`;
+
+const EmptyText = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 14px;
 `;

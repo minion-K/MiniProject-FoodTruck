@@ -145,15 +145,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @PreAuthorize("@authz.isTruckOwner(#truckId)")
-    public ResponseDto<List<OwnerOrderListResponseDto>> getTruckOrders(
-            Long truckId, UserPrincipal principal
+    @PreAuthorize("@authz.isScheduleOwner(#scheduleId, #ownerId)")
+    public ResponseDto<OwnerOrderPageResponseDto> getTruckOrders(
+            Long scheduleId, Long ownerId, Pageable pageable
     ) {
-        List<Order> orders = orderRepository.findByTruckIdFetch(truckId);
+        Page<Order> orderPage = orderRepository.findOwnerOrders(scheduleId, pageable);
 
-        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orders);
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orderPage.getContent());
 
-        List<OwnerOrderListResponseDto> response = orders.stream()
+        List<OwnerOrderListResponseDto> content = orderPage.stream()
                 .map(order -> {
                     String productCode = getProductCode(order);
 
@@ -162,6 +162,13 @@ public class OrderServiceImpl implements OrderService {
                     return OwnerOrderListResponseDto.from(order, paymentStatus);
                 })
                 .toList();
+
+        OwnerOrderPageResponseDto response = new OwnerOrderPageResponseDto(
+                content,
+                orderPage.getTotalPages(),
+                orderPage.getTotalElements(),
+                orderPage.getNumber()
+        );
 
         return ResponseDto.success("운영자용 주문 조회 완료", response);
     }

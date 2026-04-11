@@ -45,6 +45,11 @@ const Input = styled.input`
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
+  outline: none;
+
+  &:focus {
+    border: 1px solid #ff6b00;;
+  }
 `;
 const Button = styled.button`
   padding: 8px 12px;

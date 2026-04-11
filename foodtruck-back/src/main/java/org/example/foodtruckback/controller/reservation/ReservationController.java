@@ -62,12 +62,16 @@ public class ReservationController {
     }
 
     @GetMapping(ReservationApi.OWNER)
-    public ResponseEntity<ResponseDto<List<OwnerReservationListResponseDto>>> getOwnerReservations(
+    public ResponseEntity<ResponseDto<OwnerReservationPageResponseDto>> getOwnerReservations(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam Long scheduleId
+            @RequestParam Long scheduleId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        ResponseDto<List<OwnerReservationListResponseDto>> response =
-                reservationService.getOwnerReservations(principal.getId(), scheduleId);
+        Pageable pageable = PageRequest.of(page, size);
+
+        ResponseDto<OwnerReservationPageResponseDto> response =
+                reservationService.getOwnerReservations(principal.getId(), scheduleId, pageable);
 
         return ResponseEntity.ok(response);
     }

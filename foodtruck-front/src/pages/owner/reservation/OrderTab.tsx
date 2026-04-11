@@ -1,5 +1,5 @@
 import { orderApi } from '@/apis/order/order.api';
-import type { OwnerOrderListResponse } from '@/types/order/order.dto';
+import type { OwnerOrderListItemResponse } from '@/types/order/order.dto';
 import { getErrorMsg } from '@/utils/error';
 import { getOrderSource } from '@/utils/orderSource';
 import { getOrderStatus } from '@/utils/orderStatus';
@@ -11,6 +11,7 @@ import type { MenuListItemResponse } from '@/types/menu/menu.dto';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import PaymentMethodModal from './PaymentMethodModal';
+import Pagination from '@/components/common/Pagination';
 
 interface Props {
   scheduleId: number;
@@ -20,19 +21,27 @@ interface Props {
 }
 
 function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
-  const [orders, setOrders] = useState<OwnerOrderListResponse[]>([]);
+  const [orders, setOrders] = useState<OwnerOrderListItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [editOrder, setEditOrder] = useState<OwnerOrderListResponse | null>(null);
-  const [payOrder, setPayOrder] = useState<OwnerOrderListResponse | null>(null);
+  const [editOrder, setEditOrder] = useState<OwnerOrderListItemResponse | null>(null);
+  const [payOrder, setPayOrder] = useState<OwnerOrderListItemResponse | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
 
-      const res = await orderApi.getTruckOrderList(scheduleId);
-      setOrders(res);
+      const res = await orderApi.getOwnerOrderList({
+        page,
+        size: 10,
+        scheduleId
+      },
+      )
+      setOrders(res.content);
+      setTotalPage(res.totalPage);
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {
@@ -41,10 +50,14 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
   };
 
   useEffect(() => {
+    setPage(0);
+  }, [])
+
+  useEffect(() => {
     if(!scheduleId) return;
 
     fetchOrders();
-  }, [scheduleId]);
+  }, [scheduleId, page]);
 
   const handleCancel = async (id: number) => {
     if(!window.confirm("주문을 취소하시겠습니까?")) return;
@@ -89,15 +102,15 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
           <StyledTable>
             <thead>
               <tr>
-                <th style={{width: "8%"}}>주문 번호</th>
-                <th style={{width: "10%"}}>주문 유형</th>
+                <th style={{width: "10%"}}>주문 번호</th>
+                <th style={{width: "12%"}}>주문 유형</th>
                 <th style={{width: "12%"}}>주문자</th>
                 <th style={{width: "20%"}}>메뉴</th>
-                <th style={{width: "13%"}}>금액</th>
-                <th style={{width: "13%"}}>주문 상태</th>
-                <th style={{width: "13%"}}>결제 상태</th>
-                <th style={{width: "25%"}}>주문일</th>
-                <th style={{width: "10%"}}>관리</th>
+                <th style={{width: "15%"}}>금액</th>
+                <th style={{width: "15%"}}>주문 상태</th>
+                <th style={{width: "15%"}}>결제 상태</th>
+                <th style={{width: "27%"}}>주문일</th>
+                <th style={{width: "25%"}}>관리</th>
               </tr>
             </thead>
             <tbody>
@@ -220,6 +233,11 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
         }}
       />
     )}
+    <Pagination 
+      page={page}
+      totalPage={totalPage}
+      onChange={setPage}
+    />
     </>
   )
 }

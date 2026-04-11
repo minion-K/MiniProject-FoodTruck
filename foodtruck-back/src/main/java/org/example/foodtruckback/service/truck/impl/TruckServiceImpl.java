@@ -101,12 +101,20 @@ public class TruckServiceImpl implements TruckService {
 
     @Override
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks(Long userId) {
+    public ResponseDto<TruckPageResponseDto> getOwnerTrucks(Long userId, Pageable pageable) {
         User owner = authorizationChecker.getCurrentUser();
 
-        List<TruckListItemResponseDto> response = truckRepository.findByOwnerIdOrderByIdDesc(owner.getId()).stream()
+        Page<Truck> truckPage = truckRepository.findByOwnerIdOrderByIdDesc(owner.getId(), pageable);
+
+        List<TruckListItemResponseDto> content = truckPage.stream()
                 .map(TruckListItemResponseDto::from)
                 .toList();
+        TruckPageResponseDto response = new TruckPageResponseDto(
+                content,
+                truckPage.getTotalPages(),
+                truckPage.getTotalElements(),
+                truckPage.getNumber()
+        );
 
         return ResponseDto.success("운영자용 트럭조회 성공", response);
     }
@@ -185,7 +193,7 @@ public class TruckServiceImpl implements TruckService {
     }
 
     private TruckDetailResponseDto toDetailDto(Truck truck) {
-        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckId(truck.getId()).stream()
+        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckIdOrderByStartTimeDesc(truck.getId()).stream()
                 .map(ScheduleItemResponseDto::from)
                 .toList();
 

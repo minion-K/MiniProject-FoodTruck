@@ -38,12 +38,14 @@ export const reservationApi = {
     return res.data.data;
   },
 
-  getOwnerReservations: async (
-    scheduleId: number
-  ): Promise<OwnerReservationListResponse> => {
+  getOwnerReservations: async (params: {
+    scheduleId: number,
+    page: number,
+    size: number
+  }): Promise<OwnerReservationListResponse> => {
     const res = await privateApi.get<ApiResponse<OwnerReservationListResponse>>(
       RESERVATION_PATH.OWNER(),
-      {params: {scheduleId}}
+      {params}
     );
 
     return res.data.data;

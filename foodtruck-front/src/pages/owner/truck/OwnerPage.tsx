@@ -1,4 +1,5 @@
 import { truckApi } from "@/apis/truck/truck.api";
+import Pagination from "@/components/common/Pagination";
 import TruckModal from "@/components/truck/TruckModal";
 import Trucks from "@/components/truck/Trucks";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
@@ -10,18 +11,23 @@ import React, { useEffect, useState } from "react";
 function OwnerPage() {
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
 
   const fetchTruck = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const res = await truckApi.getOwnerTruckList();
+      
+      const res = await truckApi.getOwnerTruckList({
+        page,
+        size: 10
+      });
 
-      setTrucks(res);
+      setTrucks(res.content);
+      setTotalPage(res.totalPage);
     } catch (e) {
-      setError(getErrorMsg(e));
+      alert(getErrorMsg(e));
     } finally {
       setLoading(false);
     }
@@ -29,6 +35,10 @@ function OwnerPage() {
 
   useEffect(() => {
     fetchTruck();
+  }, [page]);
+
+  useEffect(() => {
+    setPage(0);
   }, []);
 
   const handleCreateTruck = async (data: TruckFormData) => {
@@ -39,7 +49,6 @@ function OwnerPage() {
   };
 
   if (loading) return <LoadingMsg>내 트럭 내역 불러오는 중...</LoadingMsg>;
-  if (error) return <ErrorMsg>{error}</ErrorMsg>;
 
   return (
     <Container>
@@ -58,6 +67,11 @@ function OwnerPage() {
         open={open} 
         onClose={() => setOpen(false)}
         onSubmit={handleCreateTruck}
+      />
+      <Pagination 
+        page={page}
+        totalPage={totalPage}
+        onChange={setPage}
       />
     </Container>
   );

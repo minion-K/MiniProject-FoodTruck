@@ -1,9 +1,9 @@
-import type { OwnerOrderListResponse } from '@/types/order/order.dto'
+import type { OwnerOrderListItemResponse } from '@/types/order/order.dto'
 import styled from '@emotion/styled';
 import React from 'react'
 
 interface Props {
-  order: OwnerOrderListResponse;
+  order: OwnerOrderListItemResponse;
   onClose: () => void;
   onSelect: (type: "CARD" | "CASH") => void
 }

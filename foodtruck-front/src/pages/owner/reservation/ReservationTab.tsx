@@ -1,5 +1,6 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
-import type { OwnerReservationListResponse } from '@/types/reservation/reservation.dto';
+import Pagination from '@/components/common/Pagination';
+import type { OwnerReservationListItemResponse, OwnerReservationListResponse } from '@/types/reservation/reservation.dto';
 import { formatPickupRange } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getPaymentStatus } from '@/utils/paymentStatus';
@@ -13,15 +14,23 @@ interface Props {
 }
 
 function ReservationTab({scheduleId, onSelect}: Props) {
-  const [reservations, setReservations] = useState<OwnerReservationListResponse>([]);
+  const [reservations, setReservations] = useState<OwnerReservationListItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
 
   const fetchReservation = async () => {
     try {
       setLoading(true);
 
-      const res = await reservationApi.getOwnerReservations(scheduleId);
-      setReservations(res);
+      const res = await reservationApi.getOwnerReservations({
+        scheduleId,
+        page,
+        size: 10
+      });
+
+      setReservations(res.content);
+      setTotalPage(res.totalPage)
     } catch (e) {
       alert(getErrorMsg(e));
     } finally {
@@ -30,10 +39,14 @@ function ReservationTab({scheduleId, onSelect}: Props) {
   };
 
   useEffect(() => {
+    setPage(0);
+  }, [])
+
+  useEffect(() => {
     if(!scheduleId) return;
 
     fetchReservation();
-  }, [scheduleId]);
+  }, [scheduleId, page]);
 
   if(loading) return <Loading>로딩 중...</Loading>
 
@@ -120,6 +133,11 @@ function ReservationTab({scheduleId, onSelect}: Props) {
         </StyledTable>
       </TableWrapper>
       )}
+      <Pagination 
+        page={page}
+        totalPage={totalPage}
+        onChange={setPage}
+      />
     </>
 
 

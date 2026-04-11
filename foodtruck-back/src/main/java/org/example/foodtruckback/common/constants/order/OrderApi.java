@@ -13,7 +13,7 @@ public class OrderApi {
     public static final String ME = "/me";
 
     //get order owner
-    public static final String TRUCK = "/trucks/{truckId}";
+    public static final String OWNER = "/owner";
 
     // cancel
     public static final String CANCEL = BY_ID + "/cancel";

@@ -28,16 +28,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByReservation(Reservation reservation);
 
-    @Query("""
-        SELECT distinct o
+    @Query(value = """
+        SELECT o
         FROM Order o
-        LEFT JOIN FETCH o.orderItems
-        LEFT JOIN FETCH o.user
-        LEFT JOIN FETCH o.schedule s
-        WHERE s.truck.id = :truckId
+        LEFT JOIN o.orderItems oi
+        LEFT JOIN o.user u
+        LEFT JOIN o.schedule s
+        WHERE s.id = :scheduleId
         ORDER BY o.createdAt DESC
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT  o)
+        FROM Order o
+        JOIN o.schedule s
+        WHERE s.id = :scheduleId
     """)
-    List<Order> findByTruckIdFetch(@Param("truckId") Long truckId);
+    Page<Order> findOwnerOrders(@Param("scheduleId") Long scheduleId, Pageable pageable);
 
     @Query("""
         SELECT DISTINCT o

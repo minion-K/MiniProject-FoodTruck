@@ -22,7 +22,7 @@ public interface TruckService {
 
     ResponseDto<TruckPageResponseDto> getAllTrucks(Pageable pageable, String keyword, TruckStatus status);
 
-    ResponseDto<List<TruckListItemResponseDto>> getOwnerTrucks(Long userId);
+    ResponseDto<TruckPageResponseDto>getOwnerTrucks(Long userId, Pageable pageable);
 
     ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, @Valid TruckUpdateRequestDto request, Long userId);
 

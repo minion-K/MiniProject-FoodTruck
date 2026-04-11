@@ -19,7 +19,7 @@ public interface OrderService {
 
     ResponseDto<List<UserOrderListResponseDto>> getMyOrders(UserPrincipal principal);
 
-    ResponseDto<List<OwnerOrderListResponseDto>> getTruckOrders(Long truckId, UserPrincipal principal);
+    ResponseDto<OwnerOrderPageResponseDto> getTruckOrders(Long scheduleId, Long ownerId, Pageable pageable);
 
     ResponseDto<AdminOrderPageResponseDto> getAllOrders(Long adminId, Pageable pageable, String dateRange, OrderStatus status, String keyword, OrderSource source);
 

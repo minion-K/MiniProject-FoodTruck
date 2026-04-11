@@ -1,6 +1,5 @@
 package org.example.foodtruckback.repository.schedule;
 
-import jakarta.validation.constraints.NotNull;
 import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.entity.truck.Schedule;
@@ -14,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
-    Collection<Schedule> findByTruckId(Long truckId);
+    List<Schedule> findByTruckIdOrderByStartTimeDesc(Long truckId);
 
     List<Schedule> findAllByTruck(Truck truck);
 

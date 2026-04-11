@@ -1,16 +1,16 @@
 import type { TruckStatus } from "@/types/truck/truck.type";
 
 export function getTruckStatus(status?: TruckStatus | null) {
-  if (!status) return { label: "미정", color: "#eee" };
+  if (!status) return { label: "미정", bg: "#eee", color: "#555"};
 
   switch (status.toUpperCase()) {
     case "ACTIVE":
-      return { label: "OPEN", color: "#d1e7dd" };
+      return { label: "OPEN", bg: "#d1e7dd", color: "#0f5132" };
     case "INACTIVE":
-      return { label: "CLOSE", color: "#f8d7da" };
+      return { label: "CLOSE", bg: "#f8d7da", color: "#842029" };
     case "SUSPENDED":
-      return {label: "SUSPENDED", color: "#e2e3ff"}
+      return {label: "SUSPENDED", bg: "#e2e3ff", color: "#3730a3"}
     default:
-      return { label: "미정", color: "#eee" };
+      return { label: "미정", bg: "#eee", color: "#555"};
   }
 }

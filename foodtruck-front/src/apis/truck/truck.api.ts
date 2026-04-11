@@ -24,13 +24,12 @@ export const truckApi = {
     return res.data.data;
   },
 
-  getTruckList: async (params?:{
+  getTruckList: async (params:{
     page: number,
     size: number,
     keyword?: string,
     status?: TruckStatus
-  }
-  ): Promise<TruckListResponse> => {
+  }): Promise<TruckListResponse> => {
     const res = await publicApi.get<ApiResponse<TruckListResponse>>(
       TRUCK_PATH.LIST, {params}
     );
@@ -46,9 +45,12 @@ export const truckApi = {
     return res.data.data;
   },
 
-  getOwnerTruckList: async (): Promise<TruckListItemResponse[]> => {
-    const res = await privateApi.get<ApiResponse<TruckListItemResponse[]>>(
-      TRUCK_PATH.OWNER,
+  getOwnerTruckList: async (params?:{
+    page: number,
+    size: number
+  }): Promise<TruckListResponse> => {
+    const res = await privateApi.get<ApiResponse<TruckListResponse>>(
+      TRUCK_PATH.OWNER,{params}
     );
 
     return res.data.data;

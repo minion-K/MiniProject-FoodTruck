@@ -1,6 +1,6 @@
 import { orderApi } from '@/apis/order/order.api';
 import type { MenuListItemResponse } from '@/types/menu/menu.dto';
-import { type OrderItemResponse, type OwnerOrderListResponse } from '@/types/order/order.dto';
+import { type OrderItemResponse, type OwnerOrderListItemResponse } from '@/types/order/order.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
@@ -10,7 +10,7 @@ interface Props {
   open: boolean;
   scheduleId: number;
   menus: MenuListItemResponse[];
-  initialOrder?: OwnerOrderListResponse | null;
+  initialOrder?: OwnerOrderListItemResponse | null;
   onClose: () => void;
   onSuccess: () => void;
 }

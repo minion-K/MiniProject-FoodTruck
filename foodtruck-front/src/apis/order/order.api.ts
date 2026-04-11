@@ -31,11 +31,15 @@ export const orderApi = {
     return res.data.data;
   },
 
-  getTruckOrderList: async (
-    truckId: number
-  ): Promise<OwnerOrderListResponse[]> => {
-    const res = await privateApi.get<ApiResponse<OwnerOrderListResponse[]>>(
-      ORDER_PATH.TRUCK(truckId)
+  getOwnerOrderList: async (params: {
+    scheduleId: number
+    page: number,
+    size: number
+  },
+  ): Promise<OwnerOrderListResponse> => {
+    const res = await privateApi.get<ApiResponse<OwnerOrderListResponse>>(
+      ORDER_PATH.OWNER(),
+      {params}
     );
 
     return res.data.data;

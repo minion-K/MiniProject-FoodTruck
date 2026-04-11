@@ -4,6 +4,9 @@ import ReservationModal from "@/components/reservation/ReservationModal";
 import { useAuthStore } from "@/stores/auth.store";
 import type { TruckScheduleItemResponse } from "@/types/schedule/schedule.dto";
 import { type TruckDetailResponse } from "@/types/truck/truck.dto";
+import { formatDateTime } from "@/utils/date";
+import { getErrorMsg } from "@/utils/error";
+import { getTruckStatus } from "@/utils/TruckStatus";
 import styled from "@emotion/styled";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,6 +14,8 @@ import { useNavigate, useParams } from "react-router-dom";
 function TruckDetail() {
   const { truckId } = useParams();
   const [truck, setTruck] = useState<TruckDetailResponse | null>(null);
+  const [center, setCenter] = useState<{lat: number, lng: number} | null>(null);
+  const [loading, setLoading] = useState(false);
   const { accessToken, isInitialized } = useAuthStore();
   const [selectedSchedule, setSelectedSchedule] =
     useState<TruckScheduleItemResponse | null>(null);
@@ -41,14 +46,6 @@ function TruckDetail() {
     );
   };
 
-  useEffect(() => {
-    if (!truckId) return;
-
-    truckApi.getTruckById(Number(truckId)).then((data) => {
-      setTruck(data);
-    });
-  }, [truckId]);
-
   const activeSchedule = useMemo(() => {
     if (!truck || truck.schedules.length === 0) return null;
 
@@ -65,90 +62,150 @@ function TruckDetail() {
     );
   }, [truck]);
 
-  if (!truck) return null;
+  useEffect(() => {
+    if (!truckId) return;
+    setLoading(true);
 
-  const center = activeSchedule
-    ? { lat: activeSchedule.latitude, lng: activeSchedule.longitude }
-    : { lat: 35.15776, lng: 129.05657 };
+    const fetchTruck = async () => {
+      try {
+        const res = await truckApi.getTruckById(Number (truckId));
+        setTruck(res);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const markers = activeSchedule ? [{ 
+    fetchTruck();
+  }, [truckId]);
+
+  useEffect(() => {
+    if(activeSchedule) {
+      setCenter({
+        lat: activeSchedule.latitude,
+        lng: activeSchedule.longitude,
+      });
+    }
+  }, [activeSchedule]);
+
+  const markers = center ? [{ 
     lat: center.lat, 
     lng: center.lng,
-    isAcive: truck.status === "ACTIVE"}] : [];
+    isAcive: truck!.status === "ACTIVE"}] : [];
+
+  const handleMoveTruck = () => {
+    if(!activeSchedule) return;
+
+    setCenter({
+      lat: activeSchedule.latitude,
+      lng: activeSchedule.longitude
+    });
+  };
+
+  if (!truck && !loading) return null;  
+  const status = getTruckStatus(truck?.status);
 
   return (
     <Container>
-      <Header>
-        <TitleRow>
-          <TruckName>{truck.name}</TruckName>
-          <Status data-status={truck.status}>{truck.status}</Status>
-        </TitleRow>
-        {truck.cuisine && <Cuisine>{truck.cuisine}</Cuisine>}
-      </Header>
+      {loading ? (
+        <LoadingMsg>트럭 정보를 불러오는 중...</LoadingMsg>
+      ) : ( truck ? (
+        <>
+          <Header>
+            <TitleRow>
+              <TruckName>{truck.name}</TruckName>
+              <Status 
+                style={{
+                  background: status.bg,
+                  color: status.color
+                }}>{status.label}</Status>
+            </TitleRow>
+            {truck.cuisine && <Cuisine>{truck.cuisine}</Cuisine>}
+          </Header>
 
-      <Section>
-        <SectionTitle>위치</SectionTitle>
-        <LocationText>
-          {activeSchedule?.locationName ?? "위치 정보 없음"}
-        </LocationText>
+          <Section>
+            <SectionTitle>위치</SectionTitle>
+            <LocationText>
+              {activeSchedule?.locationName ?? "위치 정보 없음"}
+            </LocationText>
 
-        <MapWrapper>
-          <KakaoMap center={center} markers={markers} />
-        </MapWrapper>
-      </Section>
+            <MapWrapper>
+              {center && (
+                <KakaoMap center={center} markers={markers} />
+              )}
 
-      <Section>
-        <SectionTitle>영업 일정</SectionTitle>
-        <ScheduleList>
-          {truck.schedules.map((schedule, idx) => (
-            <ScheduleItem key={idx}>
-              <div>
-                <div>{schedule.locationName}</div>
-                <ScheduleTime>
-                  {new Date(schedule.startTime).toLocaleString()} ~{" "}
-                  {new Date(schedule.endTime).toLocaleDateString()}
-                </ScheduleTime>
-              </div>
+              <MapControl>
+                <FloatingButton onClick={handleMoveTruck}>📍</FloatingButton>
+              </MapControl>
+              {!activeSchedule && (
+                <MapOverlay>위치 정보가 등록되지 않았습니다.</MapOverlay>
+              )}
+            </MapWrapper>
+          </Section>
 
-              <ScheduleRight>
-                <Badge data-status={schedule.status}>{schedule.status}</Badge>
+          <Section>
+            {truck.schedules.length === 0 ? (
+              <EmptyText>등록된 일정이 업습니다.</EmptyText>
+            ) : (
+              <>
+                <SectionTitle>영업 일정</SectionTitle>
+                <ScheduleList>
+                  {truck.schedules.map((schedule, idx) => (
+                    <ScheduleItem key={idx}>
+                      <div>
+                        <div>{schedule.locationName}</div>
+                        <ScheduleTime>
+                          {formatDateTime(schedule.startTime)} ~{" "}
+                          {formatDateTime(schedule.endTime)}
+                        </ScheduleTime>
+                      </div>
 
-                <ReservationButton
-                  disabled={!isReservation(schedule)}
-                  onClick={() => handleReservationClick(schedule)}
-                >
-                  예약하기
-                </ReservationButton>
-              </ScheduleRight>
-            </ScheduleItem>
-          ))}
-        </ScheduleList>
-      </Section>
+                      <ScheduleRight>
+                        <Badge data-status={schedule.status}>{schedule.status}</Badge>
 
-      <Section>
-        <SectionTitle>메뉴</SectionTitle>
+                        <ReservationButton
+                          disabled={!isReservation(schedule)}
+                          onClick={() => handleReservationClick(schedule)}
+                        >
+                          예약하기
+                        </ReservationButton>
+                      </ScheduleRight>
+                    </ScheduleItem>
+                  ))}
+                </ScheduleList>
+              </>  
+            )}
+          </Section>
 
-        {truck.menu.length === 0 ? (
-          <EmptyText>등록된 메뉴가 없습니다.</EmptyText>
-        ) : (
-          <MenuList>
-            {truck.menu.map((menu) => (
-              <MenuItem key={menu.id}>
-                <MenuName isSoldOut={menu.isSoldOut}>
-                  {menu.name}
-                  {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
-                </MenuName>
-                <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
-              </MenuItem>
-            ))}
-          </MenuList>
-        )}
-      </Section>
+          <Section>
+            <SectionTitle>메뉴</SectionTitle>
 
+            {truck.menu.length === 0 ? (
+              <EmptyText>등록된 메뉴가 없습니다.</EmptyText>
+            ) : (
+              <MenuList>
+                {truck.menu.map((menu) => (
+                  <MenuItem key={menu.id}>
+                    <MenuName isSoldOut={menu.isSoldOut}>
+                      {menu.name}
+                      {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
+                    </MenuName>
+                    <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
+                  </MenuItem>
+                ))}
+              </MenuList>
+            )}
+          </Section>
+        </>      
+      ) : (
+        <EmptyText>트럭 정보가 없습니다.</EmptyText>
+      )
+      )}
       {selectedSchedule && (
         <ReservationModal
           schedule={selectedSchedule}
-          menus={truck.menu}
+          menus={truck!.menu}
           onClose={() => setSelectedSchedule(null)}
         />
       )}
@@ -168,7 +225,8 @@ const Container = styled.div`
 const Header = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 60px;
+  gap: 20px;
+  padding-top: 16px;
 `;
 
 const TitleRow = styled.div`
@@ -180,14 +238,16 @@ const TitleRow = styled.div`
 const TruckName = styled.h1`
   font-size: 22px;
   margin: 0;
+  line-height: 1;
 `;
 
 const Status = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 13px;
   padding: 4px 8px;
   border-radius: 8px;
-  background-color: #e6f7ec;
-  color: #1a7f37;
 `;
 
 const Cuisine = styled.div`
@@ -212,9 +272,52 @@ const LocationText = styled.div`
 `;
 
 const MapWrapper = styled.div`
-  height: 220px;
+  height: 40vh;
+  max-height: 400px;
+  min-height: 260px;
   border-radius: 12px;
   overflow: hidden;
+  position: relative;
+`;
+
+const MapControl = styled.div`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+`;
+
+const FloatingButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+`;
+
+const MapOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10;
 `;
 
 const ScheduleList = styled.div`
@@ -247,16 +350,6 @@ const Badge = styled.span`
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 8px;
-
-  &[data-status="OPEN"] {
-    background-color: #e6f7ec;
-    color: #1a7f37;
-  }
-
-  &[data-status="PLANNED"] {
-    background-color: #e0f2fe;
-    color: #0369a1;
-  }
 `;
 
 const ReservationButton = styled.button<{ disabled?: boolean }>`
@@ -316,4 +409,13 @@ const SoldOutBadge = styled.div`
 const EmptyText = styled.div`
   font-size: 14px;
   color: #888;
+`;
+
+const LoadingMsg = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #555;
 `;

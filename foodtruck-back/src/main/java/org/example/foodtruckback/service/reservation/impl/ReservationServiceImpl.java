@@ -191,8 +191,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseDto<List<OwnerReservationListResponseDto>> getOwnerReservations(
-            Long ownerId, Long scheduleId
+    public ResponseDto<OwnerReservationPageResponseDto> getOwnerReservations(
+            Long ownerId, Long scheduleId, Pageable pageable
     ) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
@@ -201,11 +201,11 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
 
-        List<Reservation> reservations = reservationRepository.findByScheduleIdFetch(scheduleId);
+        Page<Reservation> reservationPage = reservationRepository.findByScheduleId(scheduleId, pageable);
 
-        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservations);
+        Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(reservationPage.getContent());
 
-        List<OwnerReservationListResponseDto> response = reservations.stream()
+        List<OwnerReservationListResponseDto> content = reservationPage.stream()
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
@@ -214,6 +214,13 @@ public class ReservationServiceImpl implements ReservationService {
                     return OwnerReservationListResponseDto.from(reservation, paymentStatus);
                 })
                 .toList();
+
+        OwnerReservationPageResponseDto response = new OwnerReservationPageResponseDto(
+                content,
+                reservationPage.getTotalPages(),
+                reservationPage.getTotalElements(),
+                reservationPage.getNumber()
+        );
 
         return ResponseDto.success("조회 성공", response);
     }

@@ -48,12 +48,16 @@ public class OrderController {
     }
 
     //get order (all) - owner
-    @GetMapping(OrderApi.TRUCK)
-    public ResponseEntity<ResponseDto<List<OwnerOrderListResponseDto>>> getTruckOrders(
-            @PathVariable Long truckId,
-            @AuthenticationPrincipal UserPrincipal principal
+    @GetMapping(OrderApi.OWNER)
+    public ResponseEntity<ResponseDto<OwnerOrderPageResponseDto>> getTruckOrders(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam Long scheduleId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        ResponseDto<List<OwnerOrderListResponseDto>> response = orderService.getTruckOrders(truckId, principal);
+        Pageable pageable = PageRequest.of(page, size);
+
+        ResponseDto<OwnerOrderPageResponseDto> response = orderService.getTruckOrders(scheduleId, principal.getId(), pageable);
 
         return ResponseEntity.ok().body(response);
     }
