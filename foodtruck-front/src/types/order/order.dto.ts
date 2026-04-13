@@ -90,13 +90,13 @@ export interface OrderDetailResponse {
   reservationId?: number;
   source: OrderSource;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  note: string;
   amount: number;
   currency: string;
-
   paidAt?: string;
   createdAt: string;
   updateAt: string;
 
   menus: OrderItemResponse[];
-
 }

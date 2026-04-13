@@ -48,4 +48,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     boolean existsByOrderIdAndStatus(Long orderId, PaymentStatus paymentStatus);
 
     boolean existsByProductCodeAndStatus(String productCode, PaymentStatus paymentStatus);
+
+    Optional<Payment> findFirstByProductCodeOrderByCreatedAtDesc(String productCode);
 }

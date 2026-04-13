@@ -2,6 +2,7 @@ package org.example.foodtruckback.dto.order.response;
 
 import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
+import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.dto.orderItem.response.OrderItemResponseDto;
 import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.entity.order.OrderItem;
@@ -20,7 +21,8 @@ public record OrderDetailResponseDto(
         int amount,
         String currency,
         OrderStatus status,
-
+        PaymentStatus paymentStatus,
+        String note,
         LocalDateTime paidAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
@@ -38,6 +40,32 @@ public record OrderDetailResponseDto(
                 order.getAmount(),
                 order.getCurrency(),
                 order.getStatus(),
+                null,
+                order.getReservation() != null ? order.getReservation().getNote() : null,
+                order.getPaidAt(),
+                order.getCreatedAt(),
+                order.getUpdatedAt(),
+                order.getOrderItems().stream()
+                        .map(OrderItemResponseDto::from)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    public static OrderDetailResponseDto from(
+            Order order, PaymentStatus paymentStatus
+    ) {
+        return new OrderDetailResponseDto(
+                order.getId(),
+                order.getSchedule().getId(),
+                order.getUser() != null ? order.getUser().getId() : null,
+                order.getUser() != null ? order.getUser().getName() : null,
+                order.getSource(),
+                order.getReservation() != null ? order.getReservation().getId() : null,
+                order.getAmount(),
+                order.getCurrency(),
+                order.getStatus(),
+                paymentStatus,
+                order.getReservation() != null ? order.getReservation().getNote() : null,
                 order.getPaidAt(),
                 order.getCreatedAt(),
                 order.getUpdatedAt(),

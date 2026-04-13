@@ -20,11 +20,14 @@ function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
 
   const fetchDetail = async () => {
       try {
-        const res = await reservationApi.getReservationById(reservationId);
+        setLoading(true);
 
+        const res = await reservationApi.getReservationById(reservationId);
         setDetail(res);
       } catch (e) {
         alert(getErrorMsg(e));
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -117,12 +120,11 @@ function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
             </MenuItem>
           ))}
         </MenuSection>
-        {detail.note && (
-            <MenuSection>
-              <Label style={{marginBottom: 6}}>요청 사항</Label>
-              <Value style={{fontSize: 13}}>{detail.note}</Value>
-            </MenuSection>
-          )}
+
+        <MenuSection>
+          <Label style={{marginBottom: 6}}>요청 사항</Label>
+          <Value style={{fontSize: 13}}>{detail.note ? detail.note : "없음"}</Value>
+        </MenuSection>
 
         <Actions>
           <Button 

@@ -1,11 +1,10 @@
 import { reservationApi } from '@/apis/reservation/reservation.api';
 import Pagination from '@/components/common/Pagination';
-import type { OwnerReservationListItemResponse, OwnerReservationListResponse } from '@/types/reservation/reservation.dto';
+import type { OwnerReservationListItemResponse } from '@/types/reservation/reservation.dto';
 import { formatPickupRange } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getPaymentStatus } from '@/utils/paymentStatus';
 import { getReservationStatus } from '@/utils/reservationStatus';
-import type { ClassNames } from '@emotion/react';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 StyleSheet

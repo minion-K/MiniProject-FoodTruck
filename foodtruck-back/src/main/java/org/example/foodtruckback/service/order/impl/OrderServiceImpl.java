@@ -262,14 +262,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication) " +
-                    "or @userOrderAuthz.canChangeOrder(#orderId, authentication)"
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication) "
     )
     public ResponseDto<OrderDetailResponseDto> getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        OrderDetailResponseDto response = OrderDetailResponseDto.from(order);
+        String productCode = getProductCode(order);
+
+        PaymentStatus paymentStatus =
+                paymentRepository.findFirstByProductCodeOrderByCreatedAtDesc(productCode)
+                        .map(Payment::getStatus)
+                        .orElse(PaymentStatus.READY);
+
+        OrderDetailResponseDto response = OrderDetailResponseDto.from(order, paymentStatus);
 
         return ResponseDto.success("주문 상세 조회 완료", response);
     }

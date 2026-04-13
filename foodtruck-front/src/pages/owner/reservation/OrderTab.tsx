@@ -6,29 +6,19 @@ import { getOrderStatus } from '@/utils/orderStatus';
 import { getPaymentStatus } from '@/utils/paymentStatus';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
-import OrderCreateModal from './OrderFormModal';
-import type { MenuListItemResponse } from '@/types/menu/menu.dto';
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
-import PaymentMethodModal from './PaymentMethodModal';
 import Pagination from '@/components/common/Pagination';
 
 interface Props {
   scheduleId: number;
-  menus: MenuListItemResponse[];
-  truckName: string;
-  truckId: number | null;
+  onSelect: (id: number) => void;
 }
 
-function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
+function OrderTab({scheduleId, onSelect}: Props) {
   const [orders, setOrders] = useState<OwnerOrderListItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [editOrder, setEditOrder] = useState<OwnerOrderListItemResponse | null>(null);
-  const [payOrder, setPayOrder] = useState<OwnerOrderListItemResponse | null>(null);
   const [page, setPage] = useState(0);
   const [totalPage, setTotalPage] = useState(1);
-  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     try {
@@ -58,31 +48,6 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
 
     fetchOrders();
   }, [scheduleId, page]);
-
-  const handleCancel = async (id: number) => {
-    if(!window.confirm("주문을 취소하시겠습니까?")) return;
-
-    try {
-      await orderApi.cancelOrder(id);
-
-      fetchOrders();
-      toast.success("주문이 취소되었습니다.")
-    } catch (e) {
-      alert(getErrorMsg(e));
-    }
-  };
-
-  const handleRefund = async (id: number) => {
-    if(!window.confirm("환불하시겠습니까?")) return;
-    try {
-      await orderApi.refundOrder(id);
-
-      fetchOrders();
-      toast.success("성공적으로 환불되었습니다.")
-    } catch (e) {
-      alert(getErrorMsg(e));
-    }
-  };
 
   if(loading) return <Loading>로딩 중...</Loading>
 
@@ -136,7 +101,7 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>{orderSource.label}</td>
-                    <td>{order.username || "-"}</td>
+                    <td>{order.username}</td>
                     <td title={menuText}>{menuSummary}</td>
                     <td>
                       {order.amount.toLocaleString()}{order.currency}
@@ -156,30 +121,9 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
                     </td>
                     <td>
                       <ButtonWrapper>
-                        {order.status === "PENDING" && (
-                          <>
-                            <Button onClick={() => setEditOrder(order)}>
-                              수정
-                            </Button>
-
-                            <Button danger onClick={() => handleCancel(order.id)}>
-                              취소
-                            </Button>
-                          </>
-                          
-                        )}
-
-                        {order.paymentStatus === "READY" && order.status === "PENDING" && (
-                          <Button primary onClick={() => setPayOrder(order)}>
-                            결제
-                          </Button>
-                        )}
-                
-                        {order.paymentStatus === "SUCCESS" && order.status === "PAID" && (
-                          <Button primary onClick={() => handleRefund(order.id)}>
-                            환불
-                          </Button>
-                        )}
+                        <Button onClick={() => onSelect(order.id)}>
+                          상세보기
+                        </Button>
                       </ButtonWrapper>
                     </td>
                   </tr>
@@ -189,50 +133,6 @@ function OrderTab({scheduleId, menus, truckName, truckId}: Props) {
           </StyledTable>
         </TableWrapper>
       )}
-
-      <OrderCreateModal
-        open={createOpen || !!editOrder}
-        scheduleId={scheduleId}
-        menus={menus}
-        initialOrder={editOrder}
-        onClose={() => {
-          setCreateOpen(false)
-          setEditOrder(null);
-        }}
-        onSuccess={fetchOrders}
-      />
-
-    {payOrder && (
-      <PaymentMethodModal 
-        order={payOrder}
-        onClose={() => setPayOrder(null)}
-        onSelect={onsiteType => {
-          navigate("/pay/onsite", {
-            state: {
-              targetId: payOrder.id,
-              targetType: "ONSITE",
-              productCode: `ORD-${payOrder.id}`,
-              productName: truckName,
-              amount: payOrder.amount,
-              method: "MOCK",
-              onsiteType,
-              selectedTruckId: truckId,
-              selectedScheduleId: scheduleId,
-              activeTab: "order",
-
-              displayInfo: {
-                menus: payOrder.menus?.map(menu => ({
-                  name: menu.menuItemName,
-                  quantity: menu.qty
-                }))
-              }
-            }
-          });
-
-          setPayOrder(null);
-        }}
-      />
-    )}
     <Pagination 
       page={page}
       totalPage={totalPage}
@@ -296,7 +196,7 @@ const Status = styled.span`
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  min-width: 80px;
+  width: 80px;
   padding: 2px 6px;
   border-radius: 8px;
   text-align: center;

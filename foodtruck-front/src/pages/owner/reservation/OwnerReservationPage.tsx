@@ -10,6 +10,7 @@ import { formatDateTime } from "@/utils/date";
 import { useLocation } from "react-router-dom";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import { getScheduleStatus } from "@/utils/ScheduleStatus";
+import OrderDetailModal from "./OrderDetailModal";
 
 
 function OwnerReservationPage() {
@@ -17,6 +18,7 @@ function OwnerReservationPage() {
   const {selectedTruckId: initTruckId, selectedScheduleId: initScheduleId, activeTab: initTab} = location.state || {};
   const [activeTab, setActiveTab] = useState<"reservation" | "order">(initTab ?? "reservation");
   const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
   const [selectedTruckId, setSelectTruckId] = useState<number | null>(initTruckId ?? null);
   const [truckDetail, setTruckDetail] = useState<TruckDetailResponse | null>(null);
@@ -177,16 +179,14 @@ function OwnerReservationPage() {
             <ReservationTab
               key={refreshKey}
               scheduleId={selectedScheduleId}
-              onSelect={id =>setSelectedReservationId(id)}
+              onSelect={(id) => setSelectedReservationId(id)}
             />
           )}  
     
           {activeTab === "order" && truckDetail && selectedScheduleId && (
             <OrderTab 
               scheduleId={selectedScheduleId}
-              menus={truckDetail.menu}
-              truckName={truckDetail.name}
-              truckId={selectedTruckId}
+              onSelect={(id) => setSelectedOrderId(id)}
             />
           )}
         </>
@@ -196,6 +196,18 @@ function OwnerReservationPage() {
         <ReservationDetailModal 
           reservationId={selectedReservationId}
           onClose={() => setSelectedReservationId(null)}
+          onUpdated={() => setRefreshKey(prev => prev + 1)}
+        />
+      )}
+
+      {selectedOrderId !== null && (
+        <OrderDetailModal 
+          orderId={selectedOrderId}
+          menus={truckDetail.menu}
+          truckName={truckDetail.name}
+          truckId={selectedTruckId}
+          scheduleId={selectedScheduleId}
+          onClose={() => setSelectedOrderId(null)}
           onUpdated={() => setRefreshKey(prev => prev + 1)}
         />
       )}
