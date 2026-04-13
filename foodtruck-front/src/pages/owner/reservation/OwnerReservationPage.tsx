@@ -11,6 +11,7 @@ import { useLocation } from "react-router-dom";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import { getScheduleStatus } from "@/utils/ScheduleStatus";
 import OrderDetailModal from "./OrderDetailModal";
+import OrderFormModal from "./OrderFormModal";
 
 
 function OwnerReservationPage() {
@@ -25,6 +26,7 @@ function OwnerReservationPage() {
   const [selectedScheduleId, setSelectScheduleId] = useState<number | null>(initScheduleId ?? null);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [useInit, setUseInit] = useState(false);
 
@@ -184,9 +186,11 @@ function OwnerReservationPage() {
           )}  
     
           {activeTab === "order" && truckDetail && selectedScheduleId && (
-            <OrderTab 
+            <OrderTab
+              refreshKey={refreshKey}
               scheduleId={selectedScheduleId}
               onSelect={(id) => setSelectedOrderId(id)}
+              onCreate={() => setCreateOpen(true)}
             />
           )}
         </>
@@ -210,6 +214,19 @@ function OwnerReservationPage() {
           onClose={() => setSelectedOrderId(null)}
           onUpdated={() => setRefreshKey(prev => prev + 1)}
         />
+      )}
+
+      {createOpen && selectedScheduleId && truckDetail && (
+        <OrderFormModal 
+          open={createOpen}
+          scheduleId={selectedScheduleId}
+          menus={truckDetail.menu}
+          onClose={() => setCreateOpen(false)}
+          onSuccess={() => {
+            setRefreshKey(prev => prev + 1);
+            setCreateOpen(false);
+          }}
+        /> 
       )}
     </Container>
   )

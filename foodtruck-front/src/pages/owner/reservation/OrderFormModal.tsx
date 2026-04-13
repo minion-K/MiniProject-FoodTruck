@@ -121,8 +121,8 @@ function OrderFormModal({open, scheduleId, menus, initialOrder, onClose, onSucce
   };
 
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Header>{isEdit ? "주문 수정" : "현장 주문 등록"}</Header>
 
         <MenuList>
@@ -130,14 +130,23 @@ function OrderFormModal({open, scheduleId, menus, initialOrder, onClose, onSucce
             const selected = items.find(i => i.menuItemId === menu.id);
 
             return (
-              <MenuItem key={menu.id} isSoldOut={menu.isSoldOut}>
+              <MenuItem key={menu.id} >
+                
                 <MenuInfo>
-                  <MenuName>{menu.name}</MenuName>
-                  <Price>{menu.price.toLocaleString()}KRW</Price>
+                  <MenuRow>
+                    <MenuName isSoldOut={menu.isSoldOut}>
+                      {menu.name}
+                      {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
+                    </MenuName>
+                    <Price>{menu.price.toLocaleString()}KRW</Price>
+                  </MenuRow>
                 </MenuInfo>
 
                 <QuantityWrapper>
-                  <QtyButton onClick={() => removeItem(menu.id)}>
+                  <QtyButton 
+                    onClick={() => removeItem(menu.id)}
+                    disabled={menu.isSoldOut}
+                  >
                     -
                   </QtyButton>
                   <Qty>{selected?.qty ?? 0}</Qty>
@@ -192,7 +201,7 @@ export default OrderFormModal
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -201,7 +210,8 @@ const Overlay = styled.div`
 
 const Modal = styled.div`
   width: 100%;
-  max-width: 440px;
+  max-width: 560px;
+  height: 80vh;
   background: #fff;
   border-radius: 14px;
   padding: 22px;
@@ -226,7 +236,7 @@ const MenuList = styled.div`
   padding-right: 4px;
 `;
 
-const MenuItem = styled.div<{isSoldOut: boolean}>`
+const MenuItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -234,8 +244,12 @@ const MenuItem = styled.div<{isSoldOut: boolean}>`
   border-radius: 10px;
   background: #fafafa;
   border: 1px solid #eee;
+`;
 
-  opacity: ${({isSoldOut}) => (isSoldOut ? 0.5 : 1)};
+const MenuRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const MenuInfo = styled.div`
@@ -244,9 +258,23 @@ const MenuInfo = styled.div`
   gap: 4px;
 `;
 
-const MenuName = styled.div`
+const MenuName = styled.div<{isSoldOut: boolean}>`
   font-size: 15px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: ${({ isSoldOut }) => (isSoldOut ? "rgba(0,0,0,0.5)" : "#000")};
+`;
+
+const SoldOutBadge = styled.div`
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffe5e5;
+  color: #ff4d4f;
+  white-space: nowrap;
 `;
 
 const Price = styled.span`

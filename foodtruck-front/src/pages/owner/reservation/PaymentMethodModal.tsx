@@ -10,8 +10,8 @@ interface Props {
 
 function PaymentMethodModal({order, onClose, onSelect}: Props) {
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Title>결제수단 선택</Title>
 
         <Summary>
@@ -47,12 +47,12 @@ const Overlay = styled.div`
 
 const Modal = styled.div`
   background: white;
-  padding: 24px;
-  border-radius: 12px;
-  width: 320px;
+  padding: 32px;
+  border-radius: 16px;
+  width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 `;
 
 const Title = styled.h3`

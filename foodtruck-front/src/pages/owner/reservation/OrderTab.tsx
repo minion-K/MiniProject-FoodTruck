@@ -9,11 +9,13 @@ import React, { useEffect, useState } from 'react'
 import Pagination from '@/components/common/Pagination';
 
 interface Props {
+  refreshKey: number;
   scheduleId: number;
   onSelect: (id: number) => void;
+  onCreate: () => void;
 }
 
-function OrderTab({scheduleId, onSelect}: Props) {
+function OrderTab({refreshKey, scheduleId, onSelect, onCreate}: Props) {
   const [orders, setOrders] = useState<OwnerOrderListItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -47,7 +49,7 @@ function OrderTab({scheduleId, onSelect}: Props) {
     if(!scheduleId) return;
 
     fetchOrders();
-  }, [scheduleId, page]);
+  }, [scheduleId, page, refreshKey]);
 
   if(loading) return <Loading>로딩 중...</Loading>
 
@@ -55,7 +57,7 @@ function OrderTab({scheduleId, onSelect}: Props) {
     <>
       <Header>
         <Title>주문 관리</Title>
-        <Button primary onClick={() => setCreateOpen(true)}>
+        <Button primary onClick={onCreate}>
           주문 등록
         </Button>
       </Header>
@@ -71,11 +73,11 @@ function OrderTab({scheduleId, onSelect}: Props) {
                 <th style={{width: "12%"}}>주문 유형</th>
                 <th style={{width: "12%"}}>주문자</th>
                 <th style={{width: "20%"}}>메뉴</th>
-                <th style={{width: "15%"}}>금액</th>
-                <th style={{width: "15%"}}>주문 상태</th>
-                <th style={{width: "15%"}}>결제 상태</th>
-                <th style={{width: "27%"}}>주문일</th>
-                <th style={{width: "25%"}}>관리</th>
+                <th style={{width: "15%"}} className="center">금액</th>
+                <th style={{width: "15%"}} className="center">주문 상태</th>
+                <th style={{width: "15%"}} className="center">결제 상태</th>
+                <th style={{width: "27%"}} className="center">주문일</th>
+                <th style={{width: "25%"}} className="center">관리</th>
               </tr>
             </thead>
             <tbody>
@@ -103,24 +105,28 @@ function OrderTab({scheduleId, onSelect}: Props) {
                     <td>{orderSource.label}</td>
                     <td>{order.username}</td>
                     <td title={menuText}>{menuSummary}</td>
-                    <td>
+                    <td className="center">
                       {order.amount.toLocaleString()}{order.currency}
                     </td>
-                    <td>
-                      <Status style={{background: status.color}}>
-                        {status.label}
-                      </Status>
+                    <td className="center">
+                      <StatusWrapper>
+                        <Status style={{background: status.color}} >
+                          {status.label}
+                        </Status>
+                      </StatusWrapper>
                     </td>
-                    <td>
-                      <Status style={{background: paymentStatus.color}}>
-                        {paymentStatus.label}
-                      </Status>
+                    <td className="center">
+                      <StatusWrapper>
+                        <Status style={{background: paymentStatus.color}}>
+                          {paymentStatus.label}
+                        </Status>
+                      </StatusWrapper>
                     </td>
-                    <td>
+                    <td className="center">
                       {new Date(order.createdAt).toLocaleString()}
                     </td>
-                    <td>
-                      <ButtonWrapper>
+                    <td className="center">
+                      <ButtonWrapper >
                         <Button onClick={() => onSelect(order.id)}>
                           상세보기
                         </Button>
@@ -148,7 +154,6 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
 `;
 
 const Title = styled.h1`
@@ -178,6 +183,10 @@ const StyledTable = styled.table`
     white-space: nowrap;
   }
 
+  th.center, td.center {
+    text-align: center;
+  }
+
   th {
     background: #f3f4f6;
     font-weight: 600;
@@ -188,6 +197,12 @@ const StyledTable = styled.table`
   tbody tr:hover {
     background: #f9fafb;
   }
+`;
+
+const StatusWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
 `;
 
 const Status = styled.span`
@@ -206,26 +221,24 @@ const Status = styled.span`
 
 const ButtonWrapper = styled.div`
   display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  justify-content: center;
+  width: 100%;
+  flex-wrap: wrap;
 `;
 
-const Button = styled.button<{
-  primary?: boolean;
-  danger?: boolean;
-}>`
+const Button = styled.button<{primary?: boolean}>`
   padding: 5px 10px;
   font-size: 12px;
   cursor: pointer;
   border-radius: 8px;
   border: none;
 
-  background: ${({primary, danger}) => primary ? "#ff6b00" : danger ? "#ef4444" : "white"};
-  color: ${({primary, danger}) => primary || danger ? "white" : "#374151"};
-  border: ${({primary, danger}) => primary || danger ? "none" : "1px solid #d1d5db"};
+  background: ${({primary}) => primary ? "#ff6b00" : "white"};
+  color: ${({primary}) => primary ? "white" : "#374151"};
+  border: ${({primary}) => primary ? "none" : "1px solid #d1d5db"};
 
   &:hover {
-    opacity: 0.9;
+    opacity: 0.5;
   }
 `;
 

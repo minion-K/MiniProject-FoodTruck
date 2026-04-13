@@ -60,6 +60,7 @@ function OrderDetailModal({
   
         toast.success("주문이 취소되었습니다.");
         onClose();
+        onUpdated?.();
       } catch (e) {
         alert(getErrorMsg(e));
       }
@@ -72,6 +73,7 @@ function OrderDetailModal({
   
         toast.success("성공적으로 환불되었습니다.");
         onClose();
+        onUpdated?.();
       } catch (e) {
         alert(getErrorMsg(e));
       }
@@ -85,6 +87,8 @@ function OrderDetailModal({
   const canCancel = detail.status === "PENDING";
   const canPay = detail.paymentStatus === "READY" && detail.status === "PENDING";
   const canRefund = detail.paymentStatus === "SUCCESS" && detail.status === "PAID";
+
+  if(loading) return <Modal>로딩 중...</Modal>
 
   return (
     <Overlay onClick={onClose}>
@@ -178,7 +182,9 @@ function OrderDetailModal({
             onClose={() => setEditOrder(null)}
             onSuccess={() => {
               fetchDetail();
-              onUpdated?.()
+              onUpdated?.();
+              setEditOrder(null);
+              onClose();
             }}
           />
         )}
