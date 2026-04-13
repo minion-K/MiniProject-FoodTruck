@@ -40,7 +40,10 @@ function CreateLocation({initialValue, onSuccess, onClose}: Props) {
   const searchRef = useRef<any>(null);
 
   useEffect(() => {
-    if(isEdit) return;
+    if(isEdit) {
+      setMapLoading(false);
+      return;
+    }
 
     if(!navigator.geolocation) return;
 

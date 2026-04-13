@@ -156,7 +156,8 @@ const Overlay = styled.div`
 `;
 
 const Modal = styled.div`
-  width: 320px;
+  width: 380px;
+  max-width: 80vh;
   background: white;
   border-radius: 14px;
   padding: 20px;
@@ -174,6 +175,10 @@ const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+  padding-right: 5px
 `;
 
 const Item = styled.div`
