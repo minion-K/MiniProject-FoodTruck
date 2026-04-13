@@ -197,106 +197,110 @@ function ReservationModal({
           <CloseButton onClick={onClose}>X</CloseButton>
         </Header>
 
-        {schedule && (
+        <Content>
+          {schedule && (
+            <Section>
+              <LocationRow>
+                <Label>픽업 장소</Label>
+                <Value>{schedule.locationName}</Value>
+              </LocationRow>
+            </Section>
+          )}
           <Section>
-            <Label>픽업 장소</Label>
-            <Value>{schedule.locationName}</Value>
+            <Label>픽업 시간</Label>
+            <TimeSlotGrid>
+              {timeSlots.map((slot) => (
+                <TimeSlotButton
+                  key={toKstString(slot.start)}
+                  disabled={slot.disabled}
+                  data-selected={selectedTime?.getTime() === slot.start.getTime()}
+                  onClick={() => setSelectedTime(slot.start)}
+                >
+                  {formatTime(slot.start)} ~ {formatTime(slot.end)}
+                </TimeSlotButton>
+              ))}
+            </TimeSlotGrid>
           </Section>
-        )}
 
-        <Section>
-          <Label>픽업 시간</Label>
-          <TimeSlotGrid>
-            {timeSlots.map((slot) => (
-              <TimeSlotButton
-                key={slot.start.toISOString()}
-                disabled={slot.disabled}
-                data-selected={selectedTime?.getTime() === slot.start.getTime()}
-                onClick={() => setSelectedTime(slot.start)}
-              >
-                {formatTime(slot.start)} ~ {formatTime(slot.end)}
-              </TimeSlotButton>
-            ))}
-          </TimeSlotGrid>
-        </Section>
+          {menus && (
+            <Section>
+              <Label>메뉴</Label>
+              <MenuList>
+                {menus.map((menu) => {
+                  const qty = menuQty[menu.id] ?? 0;
 
-        {menus && (
-          <Section>
-            <Label>메뉴</Label>
-            <MenuList>
-              {menus.map((menu) => {
-                const qty = menuQty[menu.id] ?? 0;
-
-                return (
-                  <MenuItem key={menu.id}>
-                    <div>
-                      <NameRow>
-                        <MenuName isSoldOut={menu.isSoldOut}>
-                          {menu.name}
-                        </MenuName>
-                        {menu.isSoldOut && (
-                          <SoldOut>품절</SoldOut>
+                  return (
+                    <MenuItem key={menu.id}>
+                      <MenuLeft>
+                        <NameRow>
+                          <MenuName isSoldOut={menu.isSoldOut}>
+                            {menu.name}
+                          </MenuName>
+                          {menu.isSoldOut && (
+                            <SoldOut>품절</SoldOut>
+                          )}
+                        </NameRow>
+                        {menu.optionText && (
+                          <MenuOption>선택사항: {menu.optionText}</MenuOption>
                         )}
-                      </NameRow>
-                      {menu.optionText && (
-                        <MenuOption>선택사항: {menu.optionText}</MenuOption>
-                      )}
-                    </div>
+                      </MenuLeft>
+                      <MenuRight>
+                        <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
 
-                    <MenuRight>
-                      <QtyControl>
-                        <QtyButton
-                          disabled={qty === 0 || menu.isSoldOut}
-                          onClick={() =>
-                            setMenuQty((prev) => ({
-                              ...prev,
-                              [menu.id]: qty - 1,
-                            }))
-                          }
-                        >
-                          -
-                        </QtyButton>
+                        <QtyControl>
+                          <QtyButton
+                            disabled={qty === 0 || menu.isSoldOut}
+                            onClick={() =>
+                              setMenuQty((prev) => ({
+                                ...prev,
+                                [menu.id]: qty - 1,
+                              }))
+                            }
+                            isSoldOut={menu.isSoldOut}
+                          >
+                            -
+                          </QtyButton>
 
-                        <Qty>{qty}</Qty>
+                          <Qty>{qty}</Qty>
 
-                        <QtyButton
-                          disabled={menu.isSoldOut}
-                          onClick={() =>
-                            setMenuQty((prev) => ({
-                              ...prev,
-                              [menu.id]: qty + 1,
-                            }))
-                          }
-                        >
-                          +
-                        </QtyButton>
-                      </QtyControl>
+                          <QtyButton
+                            disabled={menu.isSoldOut}
+                            onClick={() =>
+                              setMenuQty((prev) => ({
+                                ...prev,
+                                [menu.id]: qty + 1,
+                              }))
+                            }
+                            isSoldOut={menu.isSoldOut}
+                          >
+                            +
+                          </QtyButton>
+                        </QtyControl>
+                      </MenuRight>
+                    </MenuItem>
+                  );
+                })}
+              </MenuList>
+            </Section>
+          )}
 
-                      <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
-                    </MenuRight>
-                  </MenuItem>
-                );
-              })}
-            </MenuList>
+          <Section>
+            <Label>요청사항 (선택)</Label>
+            <NoteInput
+              placeholder="요청사항을 입력해주세요"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </Section>
-        )}
 
-        <Section>
-          <Label>요청사항 (선택)</Label>
-          <NoteInput
-            placeholder="요청사항을 입력해주세요"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </Section>
-
-        <Footer>
-          <SubmitButton disabled={!canSubmit} onClick={handleSubmit}>
-            {mode === "EDIT"
-              ? "예약 수정"
-              : `${totalAmount.toLocaleString()} KRW · 예약하기`}
-          </SubmitButton>
-        </Footer>
+          <Footer>
+            <SubmitButton disabled={!canSubmit} onClick={handleSubmit}>
+              {mode === "EDIT"
+                ? "예약 수정"
+                : `${totalAmount.toLocaleString()} KRW · 예약하기`}
+            </SubmitButton>
+          </Footer>
+        </Content>
       </Modal>
     </Overlay>
   );
@@ -317,12 +321,22 @@ const Overlay = styled.div`
 const Modal = styled.div`
   width: 100%;
   max-width: 420px;
+  height: 80vh;
   background-color: white;
   border-radius: 16px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+`;
+
+const Content = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
 `;
 
 const Header = styled.div`
@@ -350,6 +364,13 @@ const Section = styled.div`
   gap: 4px;
 `;
 
+const LocationRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+`;
+
 const Label = styled.span`
   font-size: 14px;
   color: #111;
@@ -357,6 +378,7 @@ const Label = styled.span`
 
 const Value = styled.div`
   font-size: 14px;
+  font-weight: 600;
   color: #111;
 `;
 
@@ -389,11 +411,36 @@ const MenuList = styled.div`
 const MenuItem = styled.div`
   display: flex;
   justify-content: space-between;
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 10px;
   background-color: #fafafa;
   border: 1px solid #eee;
+  align-items: center;
 `;
+
+const MenuLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+`;
+
+const MenuRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  min-width: 90px;
+`;
+
+const MenuPrice = styled.div`
+  font-size: 13px;
+  font-weight: 500;
+  color: #111;
+`;
+
 const NameRow = styled.div`
   display: flex;
   align-items: center;
@@ -401,7 +448,7 @@ const NameRow = styled.div`
 `;
 
 const SoldOut = styled.div`
-  font-size: 12px;
+  font-size: 11px;
   padding: 2px 8px;
   border-radius: 999px;
   background: #ffe5e5;
@@ -420,36 +467,25 @@ const MenuOption = styled.div`
   color: #777;
 `;
 
-const MenuRight = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-`;
-
 const QtyControl = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 `;
 
-const QtyButton = styled.button`
-  width: 24px;
-  height: 24px;
+const QtyButton = styled.button<{isSoldOut: boolean}>`
+  width: 22px;
+  height: 22px;
   border-radius: 6px;
   border: 1px solid #ddd;
+  font-size: 12px;
 
-  cursor: pointer;
+  cursor: ${({isSoldOut}) => isSoldOut ? "not-allowed" : "pointer"};
 `;
 
 const Qty = styled.span`
   min-width: 20px;
   text-align: center;
-`;
-
-const MenuPrice = styled.div`
-  font-size: 14px;
-  font-weight: 500;
 `;
 
 const NoteInput = styled.textarea`
