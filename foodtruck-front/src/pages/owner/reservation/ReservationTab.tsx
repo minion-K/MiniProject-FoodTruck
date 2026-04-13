@@ -5,6 +5,7 @@ import { formatPickupRange } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getPaymentStatus } from '@/utils/paymentStatus';
 import { getReservationStatus } from '@/utils/reservationStatus';
+import type { ClassNames } from '@emotion/react';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
 StyleSheet
@@ -64,13 +65,13 @@ function ReservationTab({scheduleId, onSelect}: Props) {
           <thead>
             <tr>
               <th style={{width: "12%"}}>예약자</th>
-              <th style={{width: "18%"}}>픽업 시간</th>
-              <th style={{width: "22%"}}>주문 메뉴</th>
-              <th style={{width: "8%"}}>수량</th>
-              <th style={{width: "10%"}}>금액</th>
-              <th style={{width: "10%"}}>예약 상태</th>
-              <th style={{width: "10%"}}>결제 상태</th>
-              <th style={{width: "10%"}}>관리</th>
+              <th style={{width: "15%"}}>픽업 시간</th>
+              <th style={{width: "18%"}}>주문 메뉴</th>
+              <th style={{width: "8%"}} className="center">수량</th>
+              <th style={{width: "12%"}} className="center">금액</th>
+              <th style={{width: "10%"}} className="center">예약 상태</th>
+              <th style={{width: "10%"}} className="center">결제 상태</th>
+              <th style={{width: "10%"}} className="center">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -107,19 +108,23 @@ function ReservationTab({scheduleId, onSelect}: Props) {
                   <td>{reservation.userName}</td>
                   <td>{formatPickupRange(reservation.pickupTime)}</td>
                   <td title={menuText}>{menuSummary}</td>
-                  <td>{totalQuantity}개</td>
-                  <td>{totalAmount.toLocaleString()}KRW</td>
-                  <td>
-                    <Status style={{background: reservationStatus.color}}>
-                      {reservationStatus.label}
-                    </Status>
+                  <td className="center">{totalQuantity}개</td>
+                  <td className="center">{totalAmount.toLocaleString()}KRW</td>
+                  <td className="center">
+                    <StatusWrapper>
+                      <Status style={{background: reservationStatus.color}}>
+                        {reservationStatus.label}
+                      </Status>
+                    </StatusWrapper>
                   </td>
-                  <td>
-                    <Status style={{background: paymentStatus.color}}>
-                      {paymentStatus.label}
-                    </Status>
+                  <td className="center">
+                    <StatusWrapper>
+                      <Status style={{background: paymentStatus.color}}>
+                        {paymentStatus.label}
+                      </Status>
+                    </StatusWrapper>
                   </td>
-                  <td>
+                  <td className="center">
                     <ButtonWrapper>
                       <Button onClick={() => onSelect(reservation.id)}>
                         상세보기
@@ -180,6 +185,10 @@ const StyledTable = styled.table`
     white-space: nowrap;
   }
 
+  th.center, td.center {
+    text-align: center;
+  }
+
   th {
     background: #f3f4f6;
     font-weight: 600;
@@ -190,6 +199,12 @@ const StyledTable = styled.table`
   tbody tr:hover {
     background: #f9fafb;
   }
+`;
+
+const StatusWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
 `;
 
 const Status = styled.span`
@@ -208,7 +223,8 @@ const Status = styled.span`
 
 const ButtonWrapper = styled.div`
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  width: 100%;
   flex-wrap: wrap;
 `;
 

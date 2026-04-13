@@ -6,6 +6,7 @@ import { getPaymentStatus } from '@/utils/paymentStatus';
 import { getReservationStatus } from '@/utils/reservationStatus';
 import styled from '@emotion/styled';
 import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast';
 
 interface Props {
   reservationId: number;
@@ -39,6 +40,7 @@ function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
 
       await reservationApi.updateStatus(detail.id, {status: "CONFIRMED"});
 
+      toast.success("예약이 확정되었습니다.");
       onUpdated?.();
       onClose();
     } catch (e) {
@@ -56,6 +58,7 @@ function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
 
       await reservationApi.cancelReservation(detail.id);
 
+      toast.success("예약이 취소되었습니다.");
       onUpdated?.();
       onClose();
     } catch (e) {
@@ -107,13 +110,19 @@ function ReservationDetailModal({reservationId, onClose, onUpdated}: Props) {
         </Row>
 
         <MenuSection>
-          <SectionTitle>메뉴</SectionTitle>
+          <Label style={{marginBottom: 6}}>메뉴</Label>
           {detail.menus?.map(item => (
             <MenuItem key={item.menuItemId}>
               <span>{item.name} {item.quantity}개</span>
             </MenuItem>
           ))}
         </MenuSection>
+        {detail.note && (
+            <MenuSection>
+              <Label style={{marginBottom: 6}}>요청 사항</Label>
+              <Value style={{fontSize: 13}}>{detail.note}</Value>
+            </MenuSection>
+          )}
 
         <Actions>
           <Button 
@@ -189,11 +198,6 @@ const Status = styled.span`
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 8px;
-`;
-
-const SectionTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: 6px;
 `;
 
 const MenuSection = styled.div`

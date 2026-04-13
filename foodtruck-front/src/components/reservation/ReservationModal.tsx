@@ -343,19 +343,31 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  padding: 4px 0;
 `;
 
 const Title = styled.h2`
   font-size: 18px;
   margin: 0 auto;
-  margin-bottom: 16px;
+  flex: 1;
+  text-align: center;
 `;
 
 const CloseButton = styled.button`
-  background: none;
+  position: absolute;
+  padding: 4px 8px;
+  right: 0;
+  border-radius: 8px;
   border: none;
-  font-size: 18px;
+  background: transparent;
+  font-weight: bold;
   cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+    border-radius: 4px;
+  }
 `;
 
 const Section = styled.div`

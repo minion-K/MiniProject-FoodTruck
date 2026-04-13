@@ -24,6 +24,7 @@ function OwnerReservationPage() {
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [page, setPage] = useState(0);
+  const [useInit, setUseInit] = useState(false);
 
   const fetchTrucks = async () => {
       try {
@@ -69,23 +70,21 @@ function OwnerReservationPage() {
         setTruckDetail(res);
 
         const scheduleSelect = 
-          initScheduleId && res.schedules.some(s => s.scheduleId === initScheduleId)
+          !useInit && initScheduleId && res.schedules.some(s => s.scheduleId === initScheduleId)
             ? initScheduleId
             : res.schedules.length > 0
             ? res.schedules[0].scheduleId
             : null;
 
-        setSelectScheduleId(prev => {
-          if(prev !== null) return prev;
-
-          return scheduleSelect;
-        });
+        setSelectScheduleId(scheduleSelect);
+        setUseInit(true);
       } catch (e) {
         alert(getErrorMsg(e));
       } finally {
         setLoading(false);
       }
     };
+
 
     fetchDetail();
   }, [selectedTruckId]);
@@ -108,7 +107,10 @@ function OwnerReservationPage() {
       <DropdownContainer>
         <Select
           value={selectedTruckId ?? ""}
-          onChange={(e) => setSelectTruckId(Number(e.target.value))}
+          onChange={(e) => {
+            setSelectTruckId(Number(e.target.value));
+            setSelectScheduleId(null);
+          }}
         >
           {trucks.map(truck => (
             <option key={truck.id} value={truck.id}>
