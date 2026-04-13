@@ -137,7 +137,7 @@ function OwnerStatisticspage() {
     const fetchTrucks = async () => {
       try {
         const trucks = await truckApi.getOwnerTruckList();
-        setTruckList(trucks);
+        setTruckList(trucks.content);
       } catch (e) {
         alert(getErrorMsg(e));
       }

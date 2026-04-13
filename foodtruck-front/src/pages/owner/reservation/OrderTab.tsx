@@ -117,9 +117,11 @@ function OrderTab({refreshKey, scheduleId, onSelect, onCreate}: Props) {
                     </td>
                     <td className="center">
                       <StatusWrapper>
-                        <Status style={{background: paymentStatus.color}}>
-                          {paymentStatus.label}
-                        </Status>
+                        {order.status !== "CANCELED" && (
+                          <Status style={{background: paymentStatus.color}}>
+                            {paymentStatus.label}
+                          </Status>
+                        )}
                       </StatusWrapper>
                     </td>
                     <td className="center">

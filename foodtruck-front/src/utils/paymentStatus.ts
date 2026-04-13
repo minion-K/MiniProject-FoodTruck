@@ -1,7 +1,7 @@
 import type { PaymentStatus } from "@/types/payment/payment.type";
 
 export function getPaymentStatus(status?: PaymentStatus | null) {
-  if (!status) return { label: "결제대기", color: "#fff3cd" };
+  if (!status) return { label: "미결제", color: "#f1f3f5" };
 
   switch (status.toUpperCase()) {
     case "READY":
@@ -15,6 +15,6 @@ export function getPaymentStatus(status?: PaymentStatus | null) {
     case "REFUNDED":
       return { label: "환불완료", color: "#e2e3ff" };
     default:
-      return { label: "결제대기", color: "#fff3cd" };
+      return { label: "미결제", color: "#f1f3f5" };
   }
 }

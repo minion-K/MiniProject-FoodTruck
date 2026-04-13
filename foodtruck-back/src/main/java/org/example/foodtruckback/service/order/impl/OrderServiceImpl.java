@@ -135,7 +135,7 @@ public class OrderServiceImpl implements OrderService {
         List<UserOrderListResponseDto> response = orders.stream()
                 .map(order -> {
                     String productCode = getProductCode(order);
-                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
 
                     return UserOrderListResponseDto.from(order, paymentStatus);
                 })
@@ -157,7 +157,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(order -> {
                     String productCode = getProductCode(order);
 
-                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
 
                     return OwnerOrderListResponseDto.from(order, paymentStatus);
                 })
@@ -190,7 +190,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(order -> {
                     String productCode = getProductCode(order);
 
-                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
 
                     return AdminOrderListResponseDto.from(order, paymentStatus);
                 }).toList();

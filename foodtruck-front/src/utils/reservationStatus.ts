@@ -1,6 +1,8 @@
 import type { ReservationStatus } from "@/types/reservation/reservation.type";
 
 export function getReservationStatus(status?: ReservationStatus | null) {
+  if (!status) return { label: "-", color: "#f1f3f5" };
+
   switch (status) {
     case "PENDING":
       return { label: "예약완료", color: "#fff3cd" };

@@ -78,6 +78,7 @@ function ReservationTab({scheduleId, onSelect}: Props) {
               const reservationStatus = getReservationStatus(reservation.status);
               const paymentStatus = getPaymentStatus(reservation.paymentStatus);
               const menuItems = reservation.menus ?? [];
+              console.log(reservation.status);
 
 
               const totalAmount = menuItems.reduce(
@@ -118,9 +119,11 @@ function ReservationTab({scheduleId, onSelect}: Props) {
                   </td>
                   <td className="center">
                     <StatusWrapper>
-                      <Status style={{background: paymentStatus.color}}>
-                        {paymentStatus.label}
-                      </Status>
+                      {reservation.status !== "CANCELED" && (
+                        <Status style={{background: paymentStatus.color}}>
+                          {paymentStatus.label}
+                        </Status>
+                      )}
                     </StatusWrapper>
                   </td>
                   <td className="center">

@@ -164,8 +164,8 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
   }
 
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Title>
           {isEdit ? "스케줄 수정" : "스케줄 추가"}
         </Title>

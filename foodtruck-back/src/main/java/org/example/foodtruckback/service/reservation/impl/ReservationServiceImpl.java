@@ -173,7 +173,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
-                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
 
                     return ReservationListResponseDto.from(reservation, paymentStatus);
                 }).toList();
@@ -209,7 +209,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
-                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
 
                     return OwnerReservationListResponseDto.from(reservation, paymentStatus);
                 })
@@ -242,7 +242,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .map(reservation -> {
                     String productCode = "RES-" + reservation.getId();
 
-                    PaymentStatus paymentStatus = paymentStatusMap.getOrDefault(productCode, PaymentStatus.READY);
+                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
 
                     return AdminReservationListResponseDto.from(reservation, paymentStatus);
                 }).toList();

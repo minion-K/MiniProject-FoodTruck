@@ -7,7 +7,7 @@ import { type TruckDetailResponse, type TruckListItemResponse } from "@/types/tr
 import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getTruckStatus } from "@/utils/TruckStatus";
 import { getScheduleStatus } from "@/utils/ScheduleStatus";
 import OrderDetailModal from "./OrderDetailModal";
@@ -29,6 +29,7 @@ function OwnerReservationPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [useInit, setUseInit] = useState(false);
+  const navigate = useNavigate();
 
   const fetchTrucks = async () => {
       try {
@@ -93,6 +94,17 @@ function OwnerReservationPage() {
     fetchDetail();
   }, [selectedTruckId]);
 
+  const handleMoveToDetail = () => {
+    if(!selectedTruckId) return;
+
+    navigate(`/owner/trucks/${selectedTruckId}`, {
+      state: {
+        selectedTruckId,
+        selectedScheduleId
+      }
+    });
+  }
+
   const selectedSchedule = truckDetail?.schedules.find(
     schedule => schedule.scheduleId === selectedScheduleId
   );
@@ -143,7 +155,9 @@ function OwnerReservationPage() {
         </Select>
       </DropdownContainer>
       {selectedSchedule && (
-        <SchedulePreview>
+        <SchedulePreview
+          onClick={handleMoveToDetail}
+        >
           <PreviewTitle>📍 {selectedSchedule.locationName}</PreviewTitle>
 
           <PreviewTime>
@@ -278,6 +292,14 @@ const SchedulePreview = styled.div`
   gap: 6px;
   width: fit-content;
   max-width: 420px;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    transform: translateY(-2px);
+  }
 `;
 
 const PreviewTitle = styled.div`
