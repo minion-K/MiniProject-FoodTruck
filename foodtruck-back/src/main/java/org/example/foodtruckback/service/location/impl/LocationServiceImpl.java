@@ -57,8 +57,10 @@ public class LocationServiceImpl implements LocationService {
     // get location (All)
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public ResponseDto<List<LocationListItemResponseDto>> getAllLocation() {
-        List<LocationListItemResponseDto> response = locationRepository.findAll().stream()
+    public ResponseDto<List<LocationListItemResponseDto>> getAllLocation(
+            String keyword
+    ) {
+        List<LocationListItemResponseDto> response = locationRepository.findAll(keyword).stream()
                 .map(LocationListItemResponseDto::from)
                 .toList();
 

@@ -8,6 +8,7 @@ import { formatDateTime } from '@/utils/date';
 import toast from 'react-hot-toast';
 import type { ScheduleStatus } from '@/types/schedule/schedule.type';
 import { getScheduleStatus } from '@/utils/ScheduleStatus';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   truckId: number;
@@ -19,11 +20,7 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
   const [selected, setSelected] = useState<TruckScheduleItemResponse | null>(null);
   const [open, setOpen] = useState(false);
   const [statusPopup, setStatusPopup] = useState< number | null>(null);
-  const [localSchedule, setLocalSchedule] = useState<TruckScheduleListResponse>(schedules);
-
-  useEffect(() => {
-    setLocalSchedule(schedules);
-  }, [schedules]);
+  const navigate = useNavigate();
 
   const handleAdd = () => {
     setSelected(null);
@@ -66,32 +63,27 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
   };
 
   const handleStatusChange = async (schedule: TruckScheduleItemResponse, newStatus: ScheduleStatus) => {
-    const prevStatus = schedule.status;
-
-    setLocalSchedule(prev =>
-      prev.map(s => s.scheduleId === schedule.scheduleId
-        ? {...s, status: newStatus}
-        : s
-      )
-    );
-
     setStatusPopup(null);
     
     try {
       await scheduleApi.updateScheduleStatus(schedule.scheduleId, {status : newStatus});
       
       toast.success("상태가 변경되었습니다.");
+      onUpdate()
     } catch (e) {
-      setLocalSchedule(prev => 
-        prev.map(s => s.scheduleId === schedule.scheduleId
-          ? {...s, status: prevStatus}
-          : s
-        )
-      );
-
       alert(getErrorMsg(e));
     }
   };
+
+  const handleScheduleClick = (scheduleId: number) => {
+    navigate("/owner/reservations", {
+      state : {
+        selectedTruckId: truckId,
+        selectedScheduleId: scheduleId,
+        activeTab: "reservation"
+      }
+    });
+  }
 
   const availableStatuses: ScheduleStatus[] = ["PLANNED", "OPEN", "CLOSED", "CANCELED"];
 
@@ -103,15 +95,18 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
         </AddButton>
       </Header>
 
-      {localSchedule.length === 0 ? (
+      {schedules.length === 0 ? (
         <EmptyText>등록된 스케줄이 없습니다.</EmptyText>
       ) : (
         <List>
-        {localSchedule.map(schedule => {
+        {schedules.map(schedule => {
           const status = getScheduleStatus(schedule.status);
           
           return (
-            <Item key={schedule.scheduleId}>
+            <Item 
+              key={schedule.scheduleId}
+              onClick={() => handleScheduleClick(schedule.scheduleId)}
+            >
               <Info>
                 <LocationStatus>
                   <Location>{schedule.locationName ?? "장소 미지정"}</Location>
@@ -125,7 +120,10 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
                         color: status.color,
                         borderColor: status.color
                       }}
-                      onClick={() => handleStatusClick(schedule.scheduleId)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusClick(schedule.scheduleId);
+                      }}
                     >
                       {status.label}
                     </Status>
@@ -146,6 +144,7 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
                                 }}
                                 onMouseDown={(e) => {
                                   e.preventDefault();
+                                  e.stopPropagation();
                                   handleStatusChange(schedule, status)
                                 }}
                               >
@@ -164,12 +163,20 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
 
 
               <Actions>
-                <ActionButton onClick={() => {handleEdit(schedule)}}>
+                <ActionButton 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(schedule);
+                  }}
+                >
                   수정
                 </ActionButton>
-                <ActionButton onClick={() => {
-                  handleDelete(schedule.scheduleId)
-                }}>
+                <ActionButton 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(schedule.scheduleId);
+                  }}
+                >
                   삭제
                 </ActionButton>
               </Actions>
@@ -218,6 +225,10 @@ const AddButton = styled.button`
   background: #ff6b00;
   color: white;
   cursor: pointer;
+
+  &:hover {
+    background-color: #e65a00;
+  }
 `;
 
 const List = styled.div`
@@ -249,6 +260,14 @@ const Item = styled.div`
   background: #fafafa;
   padding: 10px 12px;
   border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
 `;
 
 const Info = styled.div`

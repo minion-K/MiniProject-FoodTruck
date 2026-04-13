@@ -170,6 +170,14 @@ public class TruckServiceImpl implements TruckService {
                     throw new BusinessException(ErrorCode.TRUCK_ACTIVATION_INVALID);
                 }
             }
+
+            if(newStatus == TruckStatus.INACTIVE) {
+                List<Schedule> openSchedules = scheduleRepository.findByTruckIdAndStatus(truckId, ScheduleStatus.OPEN);
+
+                openSchedules.forEach(schedule ->
+                        schedule.changeStatus(ScheduleStatus.CLOSED));
+            }
+
             truck.changeStatus(newStatus);
         } else if(isAdmin) {
             truck.changeStatus(newStatus);
@@ -193,8 +201,20 @@ public class TruckServiceImpl implements TruckService {
     }
 
     private TruckDetailResponseDto toDetailDto(Truck truck) {
-        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckIdOrderByStartTimeDesc(truck.getId()).stream()
+        List<ScheduleItemResponseDto> schedules = scheduleRepository.findByTruckId(truck.getId()).stream()
                 .map(ScheduleItemResponseDto::from)
+                .sorted((a, b) -> {
+                    int p1 = getPriority(a);
+                    int p2 = getPriority(b);
+
+                    if(p1 != p2) return p1 - p2;
+
+                    if(p1 ==1 || p1 ==2 ) {
+                        return a.startTime().compareTo(b.startTime());
+                    }
+
+                    return b.startTime().compareTo(a.startTime());
+                })
                 .toList();
 
         List<MenuItemDetailResponseDto> menuItems = menuItemRepository.findByTruckId(truck.getId()).stream()
@@ -202,5 +222,22 @@ public class TruckServiceImpl implements TruckService {
                 .toList();
 
         return TruckDetailResponseDto.from(truck, schedules, menuItems);
+    }
+
+    private int getPriority(ScheduleItemResponseDto dto) {
+        if(dto.status() == ScheduleStatus.OPEN) return 0;
+
+        if(dto.status() == ScheduleStatus.PLANNED) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime soon = now.plusHours(24);
+
+            if(!dto.startTime().isAfter(soon)) {
+                return 1;
+            }
+
+            return 2;
+        }
+
+        return 3;
     }
 }

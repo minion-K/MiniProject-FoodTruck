@@ -8,12 +8,13 @@ import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
 import { useLocation } from "react-router-dom";
+import { getTruckStatus } from "@/utils/TruckStatus";
+import { getScheduleStatus } from "@/utils/ScheduleStatus";
 
 
 function OwnerReservationPage() {
   const location = useLocation();
   const {selectedTruckId: initTruckId, selectedScheduleId: initScheduleId, activeTab: initTab} = location.state || {};
-
   const [activeTab, setActiveTab] = useState<"reservation" | "order">(initTab ?? "reservation");
   const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
@@ -41,7 +42,11 @@ function OwnerReservationPage() {
             ? res.content[0].id
             : null;
         
-        setSelectTruckId(truckIdSelect);
+        setSelectTruckId(prev => {
+          if(prev !== null) return prev;
+
+          return truckIdSelect;
+        });
       } catch (e) {
         alert(getErrorMsg(e));
       } finally {
@@ -70,7 +75,11 @@ function OwnerReservationPage() {
             ? res.schedules[0].scheduleId
             : null;
 
-        setSelectScheduleId(scheduleSelect);
+        setSelectScheduleId(prev => {
+          if(prev !== null) return prev;
+
+          return scheduleSelect;
+        });
       } catch (e) {
         alert(getErrorMsg(e));
       } finally {
@@ -79,8 +88,13 @@ function OwnerReservationPage() {
     };
 
     fetchDetail();
-  }, [selectedTruckId])
+  }, [selectedTruckId]);
 
+  const selectedSchedule = truckDetail?.schedules.find(
+    schedule => schedule.scheduleId === selectedScheduleId
+  );
+
+  const status = getScheduleStatus(selectedSchedule?.status);
   if(loading || !truckDetail) {
     return <Container>로딩 중...</Container>
   }
@@ -105,18 +119,39 @@ function OwnerReservationPage() {
         <Select
           value={selectedScheduleId ?? ""}
           onChange={(e) => setSelectScheduleId(Number(e.target.value))}
+          disabled={!truckDetail?.schedules.length}
         >
-          {truckDetail?.schedules.map(schedule => (
-            <option 
-              key={schedule.scheduleId}
-              value={schedule.scheduleId}
-            >
-              {formatDateTime(schedule.startTime)} ~ {""} 
-              {formatDateTime(schedule.endTime)}
-            </option>
-          ))}
+          {truckDetail?.schedules.length === 0 ? (
+            <option value="">등록된 스케줄 없음</option>
+          ) : (
+            truckDetail?.schedules.map(schedule => (
+              <option
+                key={schedule.scheduleId}
+                value={schedule.scheduleId}
+              >
+                {formatDateTime(schedule.startTime, "compact")} ~ {""} 
+                {formatDateTime(schedule.endTime, "compact")}
+              </option>
+            ))
+          )}
         </Select>
       </DropdownContainer>
+      {selectedSchedule && (
+        <SchedulePreview>
+          <PreviewTitle>📍 {selectedSchedule.locationName}</PreviewTitle>
+
+          <PreviewTime>
+            ⏰ {formatDateTime(selectedSchedule.startTime)} ~ {""}  
+            {formatDateTime(selectedSchedule.endTime)}
+          </PreviewTime>
+
+          <PreviewBadge
+            style={{color: status.color, borderColor: status.color}}
+          >
+            {status.label}
+          </PreviewBadge>
+        </SchedulePreview>
+      )}
 
       <Tabs>
         <Tab 
@@ -188,14 +223,49 @@ const Title = styled.h2`
 
 const DropdownContainer = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 10px;
+  align-items: flex-start;
 `;
 
 const Select = styled.select`
   padding: 6px;
   font-size: 14px;
+  width: 320px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
 `;
 
+const SchedulePreview = styled.div`
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: fit-content;
+  max-width: 420px;
+`;
+
+const PreviewTitle = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+`;
+
+const PreviewTime = styled.div`
+  font-size: 12px;
+  color: #666;
+`;
+
+const PreviewBadge = styled.div`
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 999px;
+  width: fit-content;
+`;
 const Tabs = styled.div`
   display: flex;
   gap: 10px;

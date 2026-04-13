@@ -1,6 +1,6 @@
 import { locationApi } from '@/apis/location/location.api';
 import { scheduleApi } from '@/apis/schedule/schdule.api';
-import { type LocationListResponse } from '@/types/location/location.dto';
+import { type LocationListItemResponse, type LocationListResponse } from '@/types/location/location.dto';
 import type { TruckScheduleItemResponse } from '@/types/schedule/schedule.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
@@ -11,6 +11,7 @@ import { toKstString } from '@/utils/date';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ko } from 'date-fns/locale';
+import { Autocomplete, TextField } from '@mui/material';
 
 interface Props {
   truckId: number;
@@ -31,6 +32,8 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
   const [loading, setLoading] = useState(false);
   const [isAdviceOpen, setIsAdviceOpen] = useState(false);
   const [maxReservations, setMaxReservations] = useState<number | null>(null);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [selectedLocation, setSelectedLocation] = useState<LocationListItemResponse | null>(null);
 
   useEffect(() => {
     if(!schedule) {
@@ -69,6 +72,50 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
       fetchDetail();
   }, [schedule]);
 
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await locationApi.getLocationList({inputValue});
+
+        setLocations(res);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    };
+    
+    fetchLocations();
+  }, []);
+
+  useEffect(() => {
+    if(!schedule) {
+      const today = new Date();
+
+      setStartTime(today);
+      setEndTime(today);
+    }
+  }, [schedule]);
+
+  
+  useEffect(() => {
+    if(!startTime) return;
+
+    if(endTime && endTime < startTime) {
+      setEndTime(startTime);
+    }
+  }, [startTime]);
+
+  useEffect(() => {
+    if(!schedule || locations.length === 0) return;
+
+    const found = locations.find(
+      location => location.id === locationId
+    );
+
+    if(found) {
+      setSelectedLocation(found);
+    }
+  }, [locations, schedule, locationId]);
+
   const handleSubmit = async () => {
     if(!startTime || !endTime || !locationId) {
       alert("시간과 위치를 지정해주세요");
@@ -105,29 +152,6 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const res = await locationApi.getLocationList();
-
-        setLocations(res);
-      } catch (e) {
-        alert(getErrorMsg(e));
-      }
-    };
-    
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    if(!schedule) {
-      const today = new Date();
-
-      setStartTime(today);
-      setEndTime(today);
-    }
-  }, [schedule]);
 
   const handleEndTime = () => {
     if(!startTime || !endTime) {
@@ -179,7 +203,7 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
               timeCaption="시간"
               locale={ko}
               calendarStartDay={1}
-              minDate={new Date()}
+              minDate={startTime ?? new Date()}
               minTime={handleEndTime()}
               maxTime={new Date(0, 0, 0, 23, 59, 59)}
             />
@@ -188,22 +212,40 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
 
         <Field>
           <Label>장소</Label>
-            <Select
-              value={locationId ?? ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setLocationId(value ? Number(value) : null);
+            <Autocomplete 
+              options={locations}
+              getOptionLabel={option => 
+                option.name + (option.address ? `(${option.address})` : "")
               }
-              }
-            >
-              <option value="">장소 선택</option>
-              {locations.map(location => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                  {location.address ? ` (${location.address})` : ""}
-                </option>
-              ))}
-            </Select>
+              value={selectedLocation}
+              inputValue={inputValue}
+              onInputChange={(e, newInputValue) => setInputValue(newInputValue)}
+              onChange={(e, newValue) => {
+                setSelectedLocation(newValue);
+                setLocationId(newValue ? newValue.id : null);
+              }}
+              renderOption={(props, option) => (
+                <li {...props} style={{padding: "8px 10px"}}>
+                  <div style={{display: "flex", flexDirection: "column"}}>
+                    <span style={{fontSize: 14, fontWeight: 600}}>
+                      {option.name}
+                    </span>
+                    {option.address && (
+                      <span style={{fontSize: 11, color: "#999"}}>
+                        {option.address}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              )}
+              renderInput={params => (
+                <StyledTextField 
+                  {...params}
+                  placeholder="장소 검색"
+                  size="small"               
+                />
+              )}
+            />
 
           <LocationWrapper>
             <SubButton onClick={() => setIsOpen(true)}>
@@ -291,7 +333,7 @@ const Overlay = styled.div`
 `;
 
 const Modal = styled.div`
-  width: 300px;
+  width: 380px;
   background: white;
   border-radius: 14px;
   padding: 20px;
@@ -382,19 +424,14 @@ const SubmitButton = styled.button`
   }
 `;
 
-const Select = styled.select`
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  font-size: 13px;
-  color: #333;
-
-  &:focus {
-    outline: none;
-    border-color: #ff6b00;
+const StyledTextField = styled(TextField)`
+  & .MuiOutlinedInput-root {
+    &.Mui-focused fieldset {
+      border-color: #ff6b00;
+    }
   }
 
-  option {
+  & .MuiInputBase-input {
     font-size: 13px;
   }
 `;

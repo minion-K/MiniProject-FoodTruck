@@ -44,10 +44,7 @@ function TruckDetail() {
   const activeSchedule = useMemo(() => {
     if (!truck || truck.schedules.length === 0) return null;
 
-    return (
-      truck.schedules.find((schedule) => 
-        schedule.status == "OPEN") ?? truck.schedules[0]
-    );
+    return truck.schedules[0];
   }, [truck]);
 
   useEffect(() => {

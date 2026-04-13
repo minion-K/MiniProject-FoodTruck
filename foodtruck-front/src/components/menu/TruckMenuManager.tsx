@@ -117,6 +117,10 @@ const AddButton = styled.button`
   border-radius: 6px;
   border: none;
   cursor: pointer;
+
+  &:hover {
+    background-color: #e65a00;
+  }
 `;
 
 const List = styled.div`

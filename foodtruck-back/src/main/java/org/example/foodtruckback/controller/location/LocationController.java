@@ -35,8 +35,10 @@ public class LocationController {
 
     // get location (all)
     @GetMapping
-    public ResponseEntity<ResponseDto<List<LocationListItemResponseDto>>> getAllLocation() {
-        ResponseDto<List<LocationListItemResponseDto>> response = locationService.getAllLocation();
+    public ResponseEntity<ResponseDto<List<LocationListItemResponseDto>>> getAllLocation(
+            @RequestParam(required = false) String keyword
+    ) {
+        ResponseDto<List<LocationListItemResponseDto>> response = locationService.getAllLocation(keyword);
 
         return ResponseEntity.status(response.getStatus()).body(response);
     }

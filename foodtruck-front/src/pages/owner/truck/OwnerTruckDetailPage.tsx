@@ -41,10 +41,7 @@ function OwnerTruckDetailPage() {
   const activeSchedule = useMemo(() => {
       if (!truck || truck.schedules.length === 0) return null;
   
-      return (
-        truck.schedules.find(schedule => 
-          schedule.status == "OPEN") ?? truck.schedules[0]
-      );
+      return truck.schedules[0];
     }, [truck]);
 
   useEffect(() => {
@@ -84,6 +81,7 @@ function OwnerTruckDetailPage() {
       toast.success(
         `${newStatus === "ACTIVE" ? "OPEN" : "CLOSE"}로 변경되었습니다.`
       );
+      fetchTruck();
     } catch (e) {
       setTruck({...truck, status: truck.status});
       alert(getErrorMsg(e));
@@ -117,6 +115,15 @@ function OwnerTruckDetailPage() {
       alert(getErrorMsg(e));
     }
   }
+
+  const handleMoveTruck = () => {
+    if(!activeSchedule) return;
+
+    setCenter({
+      lat: activeSchedule.latitude,
+      lng: activeSchedule.longitude
+    });
+  };
 
   if (loading) return <Loading>트럭 정보 불러오는 중...</Loading>;
 
@@ -174,7 +181,9 @@ function OwnerTruckDetailPage() {
           ) : (
             <Loading>현재 위치 확인 중...</Loading>
           )}
-
+          <MapControl>
+            <FloatingButton onClick={handleMoveTruck}>📍</FloatingButton>
+          </MapControl>
           {truck.schedules.length === 0 && (
             <MapOverlay>위치 정보가 등록되지 않았습니다.</MapOverlay>
           )}
@@ -330,6 +339,33 @@ const MapWrapper = styled.div`
   border-radius: 12px;
   overflow: hidden;
   position: relative;
+`;
+
+const MapControl = styled.div`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+`;
+
+const FloatingButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+
+  &:hover {
+    background: #f0f0f0;
+  }
 `;
 
 const MapOverlay = styled.div`

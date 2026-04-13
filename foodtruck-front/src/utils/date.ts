@@ -26,7 +26,7 @@ export const formatPickupRange = (pickupTime: string | Date) => {
   return `${formatTime(start)} - ${formatTime(end)}`;
 };
 
-type DateFormatType = "full" | "date" | "time";
+type DateFormatType = "full" | "date" | "time" | "compact";
 
 export function formatDateTime(
   date: string | Date,
@@ -56,7 +56,11 @@ export function formatDateTime(
     return timeStr;
   }
 
-  return `${year}. ${month}.${day} (${weekday}) ${timeStr}`
+  if(type === "compact") {
+    return `${month}.${day} (${weekday}) ${timeStr}`;
+  }
+
+  return `${year}. ${month}.${day} (${weekday}) ${timeStr}`;
 }
 
 export function DateAndHour(date: string, hour: string) {

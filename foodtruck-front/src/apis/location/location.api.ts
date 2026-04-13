@@ -12,9 +12,12 @@ export const locationApi = {
     return res.data.data;
   },
 
-  getLocationList: async (): Promise<LocationListResponse> => {
+  getLocationList: async (params?:
+    {inputValue: string }
+  ): Promise<LocationListResponse> => {
     const res = await privateApi.get<ApiResponse<LocationListResponse>> (
-      LOCATION_PATH.LIST
+      LOCATION_PATH.LIST,
+      {params}
     );
 
     return res.data.data;

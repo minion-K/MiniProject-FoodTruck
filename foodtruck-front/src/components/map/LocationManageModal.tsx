@@ -85,8 +85,8 @@ function LocationManageModal({ onUpdated, onClose}: Props) {
   }
 
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Title>위치 관리</Title>
 
         <List>

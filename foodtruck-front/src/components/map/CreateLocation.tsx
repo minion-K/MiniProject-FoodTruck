@@ -5,11 +5,20 @@ import styled from '@emotion/styled';
 import React, { useEffect, useRef, useState } from 'react'
 import KakaoMap from './KakaoMap';
 import SearchInput from '../common/SearchInput';
+import { Autocomplete, TextField } from '@mui/material';
 
 interface Props {
   initialValue?: LocationDetailResponse | null;
   onSuccess: (location: LocationDetailResponse) => void;
   onClose: () => void;
+}
+
+interface Place {
+  place_name: string;
+  road_address_name?: string;
+  address_name: string;
+  x: string;
+  y: string;
 }
 
 function CreateLocation({initialValue, onSuccess, onClose}: Props) {
@@ -25,8 +34,9 @@ function CreateLocation({initialValue, onSuccess, onClose}: Props) {
       : {lat: 37.5665, lng: 126.9780}
   );
   const [loading, setLoading] = useState(false);
-  const [keyword, setKeyword] = useState("");
-
+  const [mapLoading, setMapLoading] = useState(true);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [locations, setLocations] = useState<Place[]>([]);
   const searchRef = useRef<any>(null);
 
   useEffect(() => {
@@ -41,10 +51,12 @@ function CreateLocation({initialValue, onSuccess, onClose}: Props) {
         setCenter({lat: latitude, lng: longitude});
         setLat(latitude);
         setLng(longitude);
+        setMapLoading(false);
       },
 
       () => {
-        alert("위치 정보를 가져올 수 없습니다. 기본 위치(부산 서면)로 설정됩니다.");
+        alert("위치 정보를 가져올 수 없습니다.");
+        setMapLoading(false);
       },
 
       {enableHighAccuracy: true}
@@ -70,26 +82,24 @@ function CreateLocation({initialValue, onSuccess, onClose}: Props) {
     searchRef.current = new window.kakao.maps.services.Places();
   }, [])
 
-  const handleSearch = () => {
-    if(!keyword.trim()) return;
+  useEffect(() => {
+    if(!inputValue.trim()) {
+      setLocations([]);
+      return;
+    }
 
-    searchRef.current.keywordSearch(keyword, (data: any, status: any) => {
-      if(status !== window.kakao.maps.services.Status.OK) {
-        alert("검색 결과가 없습니다.");
+    if(!searchRef.current) return;
 
-        return;
-      }
+    const delay = setTimeout(() => {
+      searchRef.current.keywordSearch(inputValue, (data: any, status: any) => {
+        if(status === window.kakao.maps.services.Status.OK) {
+          setLocations(data);
+        }
+      });
+    }, 300);
 
-      const first = data[0];
-      const lat = Number(first.y);
-      const lng = Number(first.x);
-
-      setCenter({lat, lng});
-      setLat(lat);
-      setLng(lng);
-      setAddress(first.road_address_name || first.address_name);
-    });
-  }
+    return () => clearTimeout(delay);
+  }, [inputValue])
 
   const handleMapClick = (lat: number, lng: number) => {
     setLat(lat);
@@ -142,25 +152,77 @@ function CreateLocation({initialValue, onSuccess, onClose}: Props) {
     }
   };
 
+  const handleMoveTruck = () => {
+    if(!lat || !lng) return;
+    setCenter({lat, lng})
+  };
+
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Title>{isEdit ? "위치 수정" : "신규 위치 등록"}</Title>
 
-        <SearchInput 
-          value={keyword}
-          onChange={setKeyword}
-          onSearch={handleSearch}
-          placeholder="장소 또는 주소 검색"
+        <Autocomplete 
+          options={locations}
+          noOptionsText="검색 결과 없음"
+          getOptionLabel={option => 
+            option.place_name  +
+              (option.road_address_name 
+                ? ` (${option.road_address_name})` 
+                : "")
+          }
+          inputValue={inputValue}
+          onInputChange={(e, newInputValue) => setInputValue(newInputValue)}
+          onChange={(e, newValue) => {
+            if(!newValue) return;
+
+            const lat = Number(newValue.y);
+            const lng = Number(newValue.x);
+
+            setCenter({lat, lng});
+            setLat(lat);
+            setLng(lng);
+            setAddress(
+              newValue.road_address_name || newValue.address_name
+            )
+          }}
+          renderOption={(props, option) => (
+            <li {...props}>
+              <div style={{display: "flex", flexDirection: "column"}}>
+                <span style={{fontWeight: 600}}>
+                  {option.place_name}
+                </span>
+                <span style={{fontSize: 12, color: "#999"}}>
+                  {option.road_address_name || option.address_name}
+                </span>
+              </div>
+            </li>
+          )}
+          renderInput={(params) => (
+            <StyledTextField 
+              {...params}
+              placeholder="장소 또는 주소 검색"
+              size="small"
+            />
+          )}
         />
 
         <MapWrapper>
-          <KakaoMap 
-            center={center}
-            markers={lat && lng ? [{lat, lng}] : []}
-            level={4}
-            onClick={handleMapClick}
-          />
+          {mapLoading ? (
+            <Loading>위치 불러오는 중...</Loading>
+          ) : (
+            <>
+              <KakaoMap 
+                center={center}
+                markers={lat && lng ? [{lat, lng, isActive: true}] : []}
+                level={4}
+                onClick={handleMapClick}
+              />
+              <MapControl>
+                <FloatingButton onClick={handleMoveTruck}>📍</FloatingButton>
+              </MapControl>
+            </>
+          )}
         </MapWrapper>
 
         <Field>
@@ -206,7 +268,9 @@ const Overlay = styled.div`
 `;
 
 const Modal = styled.div`
-  width: 320px;
+  width: 600px;
+  max-width: 90vw;
+  height: 80vh;
   background: white;
   border-radius: 14px;
   padding: 20px;
@@ -222,10 +286,38 @@ const Title = styled.h2`
 
 const MapWrapper = styled.div`
   width: 100%;
-  height: 200px;
+  height: 350px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #eee;
+  position: relative;
+`;
+
+const MapControl = styled.div`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+`;
+
+const FloatingButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+
+  &:hover {
+    background: #f0f0f0;
+  }
 `;
 
 const Field = styled.div`
@@ -244,6 +336,23 @@ const Input = styled.input`
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: #ff6b00;
+  }
+`;
+
+const StyledTextField = styled(TextField)`
+  & .MuiOutlinedInput-root {
+    &.Mui-focused fieldset {
+      border-color: #ff6b00;
+    }
+  }
+
+  & .MuiInputBase-input {
+    font-size: 13px;
+  }
 `;
 
 const Actions = styled.div`
@@ -273,4 +382,12 @@ const SubmitButton = styled.button`
     opacity: 0.5;
     cursor: pointer;
   }
+`;
+
+const Loading = styled.div`
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
 `;

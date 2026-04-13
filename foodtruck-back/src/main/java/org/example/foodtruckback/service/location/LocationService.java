@@ -15,7 +15,7 @@ public interface LocationService {
 
     ResponseDto<LocationDetailResponseDto> createLocation(UserPrincipal principal, @Valid LocationCreateRequestDto request);
 
-    ResponseDto<List<LocationListItemResponseDto>> getAllLocation();
+    ResponseDto<List<LocationListItemResponseDto>> getAllLocation(String keyword);
 
     ResponseDto<LocationDetailResponseDto> getLocationById(Long locationId);
 

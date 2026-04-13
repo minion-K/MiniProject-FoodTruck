@@ -151,6 +151,12 @@ public class ScheduleServiceImpl implements ScheduleService {
             if(existOpen && schedule.getStatus() != ScheduleStatus.OPEN) {
                 throw new BusinessException(ErrorCode.ALREADY_OPEN_SCHEDULE_EXISTS);
             }
+
+            LocalDateTime now = LocalDateTime.now();
+
+            if(schedule.getEndTime().isBefore(now)) {
+                throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+            }
         }
 
         schedule.changeStatus(request.status());
