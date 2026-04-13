@@ -3,7 +3,7 @@ package org.example.foodtruckback.service.menu;
 import jakarta.validation.Valid;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemCreateRequestDto;
-import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldoutRequestDto;
+import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldOutRequestDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemUpdateRequestDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 
@@ -20,5 +20,5 @@ public interface MenuItemService {
 
     ResponseDto<?> deleteMenu(Long menuId);
 
-    ResponseDto<MenuItemDetailResponseDto> setSoldOut(Long menuId, @Valid MenuItemIsSoldoutRequestDto request);
+    ResponseDto<MenuItemDetailResponseDto> setSoldOut(Long menuId, @Valid MenuItemIsSoldOutRequestDto request);
 }

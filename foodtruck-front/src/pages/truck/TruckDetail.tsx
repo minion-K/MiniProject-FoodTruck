@@ -409,10 +409,12 @@ const MenuPrice = styled.div`
   font-weight: 500;
 `;
 const SoldOutBadge = styled.div`
-  color: red;
   font-size: 12px;
-  font-weight: 600;
-  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffe5e5;
+  color: #ff4d4f;
+  white-space: nowrap;
 `;
 
 const EmptyText = styled.div`

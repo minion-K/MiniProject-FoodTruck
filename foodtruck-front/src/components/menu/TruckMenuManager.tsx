@@ -3,7 +3,7 @@ import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useState } from "react";
 import MenuModal from "./MenuModal";
-import type { MenuListItemResponse, MenuListResponse } from "@/types/menu/menu.dto";
+import type { MenuIsSoldOutRequest, MenuListItemResponse, MenuListResponse } from "@/types/menu/menu.dto";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -51,6 +51,21 @@ function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
     }
   };
 
+  const handleToggleSoldOut = async (
+    menuId: number, 
+    request: MenuIsSoldOutRequest
+  ) => {
+    try {
+      await menuApi.toggleSoldOut(menuId, request);
+
+      toast.success("상태가 변경되었습니다.");
+
+      onUpdate();
+    } catch (e) {
+      alert(getErrorMsg(e));
+    }
+  }
+
   return (
     <Container>
       <Header>
@@ -63,10 +78,20 @@ function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
         <List>
           {menuList.map((menu) => (
             <Item key={menu.id}>
-              <Info>
-                <MenuName isSoldOut={menu.isSoldOut}>{menu.name}</MenuName>
+              <Row>
+                <Info>
+                  <MenuName isSoldOut={menu.isSoldOut}>
+                    {menu.name}
+                  </MenuName>
+                  <Status 
+                    isSoldOut={menu.isSoldOut}
+                    onClick={() => handleToggleSoldOut(menu.id, {isSoldOut: !menu.isSoldOut})}
+                  >
+                    {menu.isSoldOut ? "품절" :"판매 중"}
+                  </Status>
+                </Info>
                 <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
-              </Info>
+              </Row>
 
               <Actions>
                 <ActionButton onClick={() => handleEdit(menu)}>
@@ -140,13 +165,29 @@ const Item = styled.div`
 
 const Info = styled.div`
   display: flex;
+  gap: 6px;
+  align-items: center;
+  `;
+
+const Row = styled.div`
+  display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 `;
 
 const MenuName = styled.div<{ isSoldOut?: boolean }>`
   flex: 1;
   color: ${({ isSoldOut }) => (isSoldOut ? "#999" : "#000")};
+`;
+
+const Status = styled.div<{isSoldOut: boolean}>`
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+
+  background: ${({isSoldOut}) => isSoldOut ? "#ffe5e5" : "#e6f7ff"};
+  color: ${({isSoldOut}) => isSoldOut ? "#ff4d4f" : "#1890ff"};
 `;
 
 const MenuPrice = styled.div`

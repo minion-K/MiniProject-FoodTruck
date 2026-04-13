@@ -9,5 +9,5 @@ export const MENU_PATH = {
   UPDATE: (menuId: number) => `${MENU_FREFIX}/${menuId}`,
   DELETE: (menuId: number) => `${MENU_FREFIX}/${menuId}`,
   
-  SOLD_OUT: (menuId: number) => `${MENU_FREFIX}/${menuId}/soldout`
+  SOLD_OUT: (menuId: number) => `${MENU_FREFIX}/${menuId}/soldOut`
 }

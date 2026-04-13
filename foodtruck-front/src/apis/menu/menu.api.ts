@@ -6,6 +6,7 @@ import type {
   MenuCreateRequest,
   MenuUpdateRequest,
   MenuDetailResponse,
+  MenuIsSoldOutRequest,
 } from "@/types/menu/menu.dto";
 
 export const menuApi = {
@@ -27,10 +28,13 @@ export const menuApi = {
     return res.data.data;
   },
 
-  updateMenu: async (menuId: number, body: MenuUpdateRequest): Promise<MenuDetailResponse> => {
+  updateMenu: async (
+    menuId: number,
+    request: MenuUpdateRequest
+  ): Promise<MenuDetailResponse> => {
     const res = await privateApi.put<ApiResponse<MenuDetailResponse>>(
       MENU_PATH.UPDATE(menuId),
-      body
+      request
     );
 
     return res.data.data;
@@ -40,9 +44,13 @@ export const menuApi = {
     await privateApi.delete<ApiResponse<void>>(MENU_PATH.DELETE(menuId));
   },
 
-  toggleSoldOut: async (menuId: number): Promise<MenuDetailResponse> => {
+  toggleSoldOut: async (
+    menuId: number,
+    request: MenuIsSoldOutRequest
+  ): Promise<MenuDetailResponse> => {
     const res = await privateApi.put<ApiResponse<MenuDetailResponse>>(
-      MENU_PATH.SOLD_OUT(menuId)
+      MENU_PATH.SOLD_OUT(menuId),
+      request
     );
 
     return res.data.data;

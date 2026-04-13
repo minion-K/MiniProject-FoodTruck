@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.constants.menu.MenuApi;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemCreateRequestDto;
-import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldoutRequestDto;
+import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldOutRequestDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemUpdateRequestDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.service.menu.MenuItemService;
@@ -70,7 +70,7 @@ public class MenuItemController {
     @PutMapping(MenuApi.SOLD_OUT)
     public ResponseEntity<ResponseDto<MenuItemDetailResponseDto>> toggleSoldOut(
             @PathVariable Long menuId,
-            @Valid @RequestBody MenuItemIsSoldoutRequestDto request
+            @Valid @RequestBody MenuItemIsSoldOutRequestDto request
     ) {
         ResponseDto<MenuItemDetailResponseDto> data = menuItemService.setSoldOut(menuId, request);
 

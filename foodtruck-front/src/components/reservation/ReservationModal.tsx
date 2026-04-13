@@ -228,11 +228,18 @@ function ReservationModal({
                 const qty = menuQty[menu.id] ?? 0;
 
                 return (
-                  <MenuItem key={menu.id} data-soldout={menu.isSoldOut}>
+                  <MenuItem key={menu.id}>
                     <div>
-                      <MenuName>{menu.name}</MenuName>
+                      <NameRow>
+                        <MenuName isSoldOut={menu.isSoldOut}>
+                          {menu.name}
+                        </MenuName>
+                        {menu.isSoldOut && (
+                          <SoldOut>품절</SoldOut>
+                        )}
+                      </NameRow>
                       {menu.optionText && (
-                        <MenuOption>{menu.optionText}</MenuOption>
+                        <MenuOption>선택사항: {menu.optionText}</MenuOption>
                       )}
                     </div>
 
@@ -386,15 +393,26 @@ const MenuItem = styled.div`
   border-radius: 10px;
   background-color: #fafafa;
   border: 1px solid #eee;
-
-  &[data-soldout="true"] {
-    opacity: 0.5;
-  }
+`;
+const NameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
 `;
 
-const MenuName = styled.div`
+const SoldOut = styled.div`
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffe5e5;
+  color: #ff4d4f;
+  white-space: nowrap;
+`;
+
+const MenuName = styled.div<{isSoldOut: boolean}>`
   font-size: 14px;
   font-weight: 600;
+  color: ${({ isSoldOut }) => (isSoldOut ? "#999" : "#000")}; 
 `;
 
 const MenuOption = styled.div`

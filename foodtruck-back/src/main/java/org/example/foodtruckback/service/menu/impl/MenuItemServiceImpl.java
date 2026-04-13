@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemCreateRequestDto;
-import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldoutRequestDto;
+import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldOutRequestDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemUpdateRequestDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.entity.truck.MenuItem;
@@ -81,9 +81,12 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
-        boolean existsMenu = menuItemRepository.existsByName(request.name());
-        if(existsMenu) {
-            throw new BusinessException(ErrorCode.DUPLICATE_MENU);
+        if(!menuItem.getName().equals(request.name())) {
+            boolean existsMenu = menuItemRepository.existsByName(request.name());
+
+            if(existsMenu) {
+                throw new BusinessException(ErrorCode.DUPLICATE_MENU);
+            }
         }
 
         menuItem.update(
@@ -110,7 +113,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     @Override
     @Transactional
     public ResponseDto<MenuItemDetailResponseDto> setSoldOut(
-            Long menuId, MenuItemIsSoldoutRequestDto request
+            Long menuId, MenuItemIsSoldOutRequestDto request
     ) {
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));

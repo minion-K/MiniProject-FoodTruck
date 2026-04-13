@@ -10,6 +10,10 @@ export interface MenuUpdateRequest {
   optionText?: string;
 }
 
+export interface MenuIsSoldOutRequest {
+  isSoldOut: boolean;
+}
+
 export interface MenuDetailResponse {
   id: number;
   truckId: number;
