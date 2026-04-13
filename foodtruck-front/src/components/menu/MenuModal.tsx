@@ -38,14 +38,14 @@ function MenuModal({ truckId, menu, onClose, onSuccess }: Props) {
         await menuApi.updateMenu(menu.id, {
           name,
           price: numericPrice,
-          optionText: optionText || undefined
+          optionText: optionText || ""
         });
       } else {
         await menuApi.createMenu({
           truckId,
           name,
           price: numericPrice,
-          optionText: optionText || undefined
+          optionText: optionText || ""
         })
       }
 
@@ -85,7 +85,7 @@ function MenuModal({ truckId, menu, onClose, onSuccess }: Props) {
         </Field>
 
         <Field>
-          <Label>옵션</Label>
+          <Label>선택사향</Label>
           <Input 
             value={optionText}
             onChange={(e) => setOptionText(e.target.value)}

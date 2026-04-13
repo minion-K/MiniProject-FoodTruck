@@ -90,6 +90,9 @@ function TruckMenuManager({ truckId, menuList, onUpdate }: Props) {
                     {menu.isSoldOut ? "품절" :"판매 중"}
                   </Status>
                 </Info>
+                <MenuOption>
+                  선택사항: {menu.optionText?.trim() ? menu.optionText : "없음"}
+                </MenuOption>
                 <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
               </Row>
 
@@ -188,6 +191,11 @@ const Status = styled.div<{isSoldOut: boolean}>`
 
   background: ${({isSoldOut}) => isSoldOut ? "#ffe5e5" : "#e6f7ff"};
   color: ${({isSoldOut}) => isSoldOut ? "#ff4d4f" : "#1890ff"};
+`;
+
+const MenuOption = styled.div`
+  font-size: 12px;
+  color: #888;
 `;
 
 const MenuPrice = styled.div`

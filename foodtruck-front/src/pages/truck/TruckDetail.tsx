@@ -194,10 +194,17 @@ function TruckDetail() {
               <MenuList>
                 {truck.menu.map((menu) => (
                   <MenuItem key={menu.id}>
-                    <MenuName isSoldOut={menu.isSoldOut}>
-                      {menu.name}
-                      {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
-                    </MenuName>
+                    <MenuRow>
+                      <MenuName isSoldOut={menu.isSoldOut}>
+                        {menu.name}
+                        {menu.isSoldOut && <SoldOutBadge>품절</SoldOutBadge>}
+                      </MenuName>
+                      {menu.optionText?.trim() && (
+                        <MenuOption>
+                          선택사향: {menu.optionText}
+                        </MenuOption>
+                      )}
+                    </MenuRow>
                     <MenuPrice>{menu.price.toLocaleString()} KRW</MenuPrice>
                   </MenuItem>
                 ))}
@@ -397,12 +404,23 @@ const MenuItem = styled.div`
   border: 1px solid #eee;
 `;
 
+const MenuRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
 const MenuName = styled.div<{ isSoldOut?: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
 
   color: ${({ isSoldOut }) => (isSoldOut ? "rgba(0,0,0,0.5)" : "#000")};
+`;
+
+const MenuOption = styled.div`
+  font-size: 12px;
+  color: #888;
 `;
 
 const MenuPrice = styled.div`

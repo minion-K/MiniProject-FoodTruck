@@ -83,6 +83,7 @@ public enum ErrorCode {
     INVALID_MENU(HttpStatus.BAD_REQUEST, "M002", "해당 트럭의 메뉴가 아닙니다.", "Invalid menu this truck"),
     MENU_SOLD_OUT(HttpStatus.CONFLICT, "M003", "해당 메뉴는 품절 상태입니다.", "Menu is Sold out"),
     DUPLICATE_MENU(HttpStatus.CONFLICT, "M004", "이미 등록된 메뉴입니다.", "Duplicate menuItem"),
+    MENU_NOT_CHANGE(HttpStatus.CONFLICT, "M004", "수정된 메뉴 정보가 없습니다.", "MenuItem not change"),
 
     // ===========================
     // truck (Txxx)

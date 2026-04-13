@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -46,8 +47,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         );
 
         MenuItem saved = menuItemRepository.save(menuItem);
+        MenuItemDetailResponseDto response = MenuItemDetailResponseDto.from(saved);
 
-        return ResponseDto.success(MenuItemDetailResponseDto.from(saved));
+        return ResponseDto.success(response);
     }
 
     @Override
@@ -56,7 +58,9 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
-        return ResponseDto.success(MenuItemDetailResponseDto.from(menuItem));
+        MenuItemDetailResponseDto response = MenuItemDetailResponseDto.from(menuItem);
+
+        return ResponseDto.success(response);
     }
 
     @Override
@@ -65,12 +69,12 @@ public class MenuItemServiceImpl implements MenuItemService {
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
-        List<MenuItemDetailResponseDto> menuList =
+        List<MenuItemDetailResponseDto> response =
                 menuItemRepository.findAllByTruck(truck).stream()
                         .map(MenuItemDetailResponseDto::from)
                         .toList();
 
-        return ResponseDto.success(menuList);
+        return ResponseDto.success(response);
     }
 
     @Override
@@ -81,21 +85,33 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
-        if(!menuItem.getName().equals(request.name())) {
-            boolean existsMenu = menuItemRepository.existsByName(request.name());
+        String newName = request.name().trim();
+
+        if(!menuItem.getName().equals(newName)) {
+            boolean existsMenu = menuItemRepository.existsByName(newName);
 
             if(existsMenu) {
                 throw new BusinessException(ErrorCode.DUPLICATE_MENU);
             }
         }
 
+        if(
+            menuItem.getName().equals(newName) &&
+            menuItem.getPrice() == request.price() &&
+            Objects.equals(menuItem.getOptionText(), request.optionText())
+        ) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+
         menuItem.update(
-                request.name(),
+                newName,
                 request.price(),
                 request.optionText()
         );
 
-        return ResponseDto.success(MenuItemDetailResponseDto.from(menuItem));
+        MenuItemDetailResponseDto response = MenuItemDetailResponseDto.from(menuItem);
+
+        return ResponseDto.success(response);
     }
 
     @Override
@@ -120,6 +136,8 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         menuItem.setSoldOut(request.isSoldOut());
 
-        return ResponseDto.success(MenuItemDetailResponseDto.from(menuItem));
+        MenuItemDetailResponseDto response = MenuItemDetailResponseDto.from(menuItem);
+
+        return ResponseDto.success(response);
     }
 }
