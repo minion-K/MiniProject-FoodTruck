@@ -8,7 +8,6 @@ import { truckApi } from "@/apis/truck/truck.api";
 import { getErrorMsg } from "@/utils/error";
 import { formatDateTime } from "@/utils/date";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getTruckStatus } from "@/utils/TruckStatus";
 import { getScheduleStatus } from "@/utils/ScheduleStatus";
 import OrderDetailModal from "./OrderDetailModal";
 import OrderFormModal from "./OrderFormModal";

@@ -106,11 +106,13 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
                (
                    SELECT COUNT(*)
                    FROM users
+                   WHERE created_at BETWEEN ?2 AND ?3
                ),
 
                (
                    SELECT COUNT(*)
                    FROM trucks
+                   WHERE created_at BETWEEN ?2 AND ?3
                ),
 
                (

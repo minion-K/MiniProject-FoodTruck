@@ -9,10 +9,7 @@ import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
-import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
-import org.example.foodtruckback.dto.user.response.UserListResponseDto;
-import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
-import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
+import org.example.foodtruckback.dto.user.response.*;
 import org.example.foodtruckback.entity.user.Role;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
@@ -222,5 +219,22 @@ public class UserServiceImpl implements UserService {
         UserStatusUpdateResponseDto response = new UserStatusUpdateResponseDto(user.getId(), status.name());
 
         return ResponseDto.success("유저 상태가 변경되었습니다.", response);
+    }
+
+    @Override
+    public ResponseDto<UserCountResponseDto> getUserCount(UserPrincipal principal) {
+        long total = userRepository.count();
+        long user = userRepository.countUserRole();
+        long owner = userRepository.countOwnerRole();
+        long admin = userRepository.countAdminRole();
+
+        UserCountResponseDto response = new UserCountResponseDto(
+                total,
+                user,
+                owner,
+                admin
+        );
+
+        return ResponseDto.success("유저 수 조회 완료", response);
     }
 }

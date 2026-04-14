@@ -2,7 +2,7 @@ import { userApi } from '@/apis/user/user.api';
 import Pagination from '@/components/common/Pagination';
 import SearchInput from '@/components/common/SearchInput';
 import type { RoleType } from '@/types/role/role.type';
-import type { UserListItemResponse } from '@/types/user/user.dto';
+import type { UserCountResponse, UserListItemResponse } from '@/types/user/user.dto';
 import { formatDateTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
 import { getRoleInfo } from '@/utils/role';
@@ -21,6 +21,7 @@ function AdminUserPage() {
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
+  const [count, setCount] = useState<UserCountResponse>();
   const [users, setUsers] = useState<UserListItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +48,20 @@ function AdminUserPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      try {
+        const res = await userApi.userCount();
+
+        setCount(res);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    };
+
+    fetchUserCount();
+  }, []);
 
   useEffect(() => {
     setPage(0);
@@ -102,6 +117,38 @@ function AdminUserPage() {
     <Container>
       <HeaderRow>
         <Title>유저 관리</Title>
+
+        <RightInfo>
+          <CountWrapper>
+            <CountItem>
+              <Label>
+                전체: 
+              </Label>
+              <CountValue>{count?.total ?? 0}</CountValue>
+            </CountItem>
+            <Divider>|</Divider>
+            <CountItem>
+              <Label>
+                유저: 
+              </Label>
+              <CountValue>{count?.user ?? 0}</CountValue>
+            </CountItem>
+            <Divider>|</Divider>
+            <CountItem>
+              <Label>
+                운영자: 
+              </Label>
+              <CountValue>{count?.owner ?? 0}</CountValue>
+            </CountItem>
+            <Divider>|</Divider>
+            <CountItem>
+              <Label>
+                관리자: 
+              </Label>
+              <CountValue>{count?.admin ?? 0}</CountValue>
+            </CountItem>
+          </CountWrapper>
+        </RightInfo>
       </HeaderRow>
 
       <Tabs>
@@ -164,9 +211,9 @@ function AdminUserPage() {
               <th style={{width:"10%"}}>이름</th>
               <th style={{width:"20%"}}>이메일</th>
               <th style={{width:"15%"}}>휴대폰번호</th>
-              <th style={{width:"10%"}}>상태</th>
-              <th style={{width:"15%"}}>권한</th>
-              <th style={{width:"15%"}}>가입일</th>
+              <th style={{width:"10%"}} className="center">상태</th>
+              <th style={{width:"15%"}} className="center">권한</th>
+              <th style={{width:"15%"}} className="center">가입일</th>
             </tr>
           </thead>
           <tbody>
@@ -196,14 +243,16 @@ function AdminUserPage() {
                         <td>{user.name}</td>
                         <td>{user.email}</td>
                         <td>{user.phone ?? "-"}</td>
-                        <td>
-                          <StatusButton 
-                            style={{background: statusInfo.color}}
-                            onClick={() => handleChangeStatus(user)}>
-                            {statusInfo.label}
-                          </StatusButton>
+                        <td className="center">
+                          <StatusWrapper>
+                            <StatusButton 
+                              style={{background: statusInfo.color}}
+                              onClick={() => handleChangeStatus(user)}>
+                              {statusInfo.label}
+                            </StatusButton>
+                          </StatusWrapper>
                         </td>
-                        <td>
+                        <td className="center">
                           <RoleSelect
                             style={{background: roleInfo.color}}
                             role={primaryRole}
@@ -221,7 +270,7 @@ function AdminUserPage() {
                             })}
                           </RoleSelect>
                         </td>
-                        <td>{formatDateTime(user.createdAt)}</td>
+                        <td className="center">{formatDateTime(user.createdAt)}</td>
                       </tr>
                     )
                   })
@@ -254,6 +303,41 @@ const HeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+`;
+
+const RightInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const CountWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+`;
+
+const CountItem = styled.div`
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  font-size: 13px;
+`;
+
+const Label = styled.div`
+  font-size: 13px;
+  color: #666;
+`;
+
+const CountValue = styled.div`
+  color: #111827;
+  font-weight: 600;
+`;
+
+const Divider = styled.span`
+  font-size: 13px;
+  color: #666;
 `;
 
 const Title = styled.h2`
@@ -326,6 +410,10 @@ const StyledTable = styled.table`
     white-space: nowrap;
   }
 
+  th.center, td.center {
+    text-align: center;
+  }
+
   th {
     background: #f3f4f6;
     font-weight: 600;
@@ -336,6 +424,12 @@ const StyledTable = styled.table`
   tbody tr:hover {
     background: #f9fafb;
   }
+`;
+
+const StatusWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
 `;
 
 const StatusButton = styled.button`

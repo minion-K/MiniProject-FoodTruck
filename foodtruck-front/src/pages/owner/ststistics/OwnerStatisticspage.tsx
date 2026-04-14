@@ -36,6 +36,7 @@ function OwnerStatisticspage() {
   const [selectedTruckId, setSelectedTruckId] = useState<number | null>(null);
 
   const [schedulePage, setSchedulePage] = useState(0);
+  const [page, setPage] = useState(0);
   const [scheduleHasMore, setScheduleHasMore] = useState(true);
   const schedulePageSize = 10;
 
@@ -136,7 +137,10 @@ function OwnerStatisticspage() {
   useEffect(() => {
     const fetchTrucks = async () => {
       try {
-        const trucks = await truckApi.getOwnerTruckList();
+        const trucks = await truckApi.getOwnerTruckList({
+          page,
+          size: 100
+        });
         setTruckList(trucks.content);
       } catch (e) {
         alert(getErrorMsg(e));
@@ -235,7 +239,7 @@ function OwnerStatisticspage() {
   }))
 
   const total = orderTypes.reduce((sum, e) => sum + e.count, 0);
-
+  const isAllZero = weeklySales.every(item => item.sales === 0);
   return (
     <Container>
       <Header>
@@ -352,11 +356,11 @@ function OwnerStatisticspage() {
                 tickMargin={10}
                 domain={[
                   (min: number) => min * 0.9,
-                  (max: number) => max * 1.1
+                  (max: number) => max === 0 ? 100 : max * 1.1
                 ]}
-                tick={({x, y, payload, index}) => {
+                tick={isAllZero ? false : ({x, y, payload, index}) => {
                   if(index === 0) return null;
-
+                  
                   return (
                     <text 
                       x={x}

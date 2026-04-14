@@ -12,10 +12,9 @@ function PaymentFilter({ status, onStatusChange }: Props) {
     <FilterWrapper>
       <select value={status} onChange={(e) => onStatusChange(e.target.value as PaymentStatus | "ALL")}>
         <option value="ALL">전체</option>
-        <option value="READY">결제 대기</option>
+        <option value="READY">미결제</option>
         <option value="SUCCESS">결제 완료</option>
-        <option value="FAILED">결제 실패</option>
-        <option value="CANCELLED_REFUNDED">결제 취소</option>
+        <option value="REFUNDED">환불</option>
       </select>
     </FilterWrapper>
   );

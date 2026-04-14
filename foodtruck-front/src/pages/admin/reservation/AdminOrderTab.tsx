@@ -66,8 +66,8 @@ function AdminOrderTab({keyword, dateRange, status, source}: Props) {
         <StyledTable>
           <thead>
             <tr>
-              <th style={{width: "18%"}}>주문정보</th>
-              <th style={{width: "15%"}}>메뉴</th>
+              <th style={{width: "18%"}} className="left">주문정보</th>
+              <th style={{width: "13%"}}>메뉴</th>
               <th style={{width: "15%"}}>금액</th>
               <th style={{width: "15%"}}>상태</th>
               <th style={{width: "20%"}}>주문일</th>
@@ -109,7 +109,7 @@ function AdminOrderTab({keyword, dateRange, status, source}: Props) {
                     .join(", ");
                 return (
                   <tr  key={order.id}>
-                    <td>
+                    <td className="left">
                       <InfoBox>
                         <TopRow>
                           <TruckName>
@@ -211,10 +211,14 @@ const StyledTable = styled.table`
 
   th, td {
     padding: 12px 16px;
-    text-align: left;
+    text-align: center;
     font-size: 14px;
     border-bottom: 1px solid #f1f1f1;
     white-space: nowrap;
+  }
+
+  th.left, td.left {
+    text-align: left;
   }
 
   th {
@@ -282,6 +286,8 @@ const Price = styled.div`
 const StatusWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 4px;
 `;
 

@@ -13,5 +13,6 @@ export const USER_PATH = {
   
   ROLEADD: (userId: number) => `${USER_PREFIX}/${userId}`,
   ROLEDELETE: (userId: number, roleName: string) => `${USER_PREFIX}/${userId}/roles/${roleName}`,
-  TOGGLE_STATUS: (userId: number) => `${USER_PREFIX}/${userId}/status`
+  TOGGLE_STATUS: (userId: number) => `${USER_PREFIX}/${userId}/status`,
+  COUNT: `${USER_PREFIX}/count`
 };

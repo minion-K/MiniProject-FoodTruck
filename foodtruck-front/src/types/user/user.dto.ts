@@ -2,6 +2,17 @@ import type { AuthProvider } from "../auth/auth.type";
 import type { RoleType } from "../role/role.type";
 import type { UserStatus } from "./user.type";
 
+export interface AdminUserUpdateRequest {
+  name?: string;
+  email?: string;
+  phone?: string | null;
+}
+
+export interface UserUpdateRequest {
+  name?: string;
+  phone?: string | null;
+}
+
 export interface UserDetailResponse {
   id: number;
   name: string;
@@ -35,13 +46,9 @@ export interface UserStatusUpdateResponse {
   status: string;
 }
 
-export interface UserUpdateRequest {
-  name?: string;
-  phone?: string | null;
-}
-
-export interface AdminUserUpdateRequest {
-  name?: string;
-  email?: string;
-  phone?: string | null;
+export interface UserCountResponse {
+  total: number;
+  user: number;
+  owner: number;
+  admin: number;
 }

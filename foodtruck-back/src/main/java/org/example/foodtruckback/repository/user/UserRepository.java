@@ -48,4 +48,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllByRoleWithFilter(RoleType roleType, Pageable pageable, String keyword, UserStatus status, String sortKey);
 
     Optional<User> findByNameAndLoginIdAndEmail(@NotBlank String name, @NotBlank String s, @Email String email);
+
+    @Query("""
+        SELECT DISTINCT COUNT(u)
+        FROM User u
+        JOIN u.userRoles r
+        WHERE r.role.name = 'USER'
+    """)
+    long countUserRole();
+
+    @Query("""
+        SELECT DISTINCT COUNT(u)
+        FROM User u
+        JOIN u.userRoles r
+        WHERE r.role.name = 'OWNER'
+    """)
+    long countOwnerRole();
+
+    @Query("""
+        SELECT DISTINCT COUNT(u)
+        FROM User u
+        JOIN u.userRoles r
+        WHERE r.role.name = 'ADMIN'
+    """)
+    long countAdminRole();
 }

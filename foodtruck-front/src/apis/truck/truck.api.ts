@@ -50,7 +50,8 @@ export const truckApi = {
     size: number
   }): Promise<TruckListResponse> => {
     const res = await privateApi.get<ApiResponse<TruckListResponse>>(
-      TRUCK_PATH.OWNER,{params}
+      TRUCK_PATH.OWNER,
+      {params}
     );
 
     return res.data.data;

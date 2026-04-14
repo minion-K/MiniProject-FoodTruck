@@ -110,10 +110,10 @@ function AdminTruckPage() {
               <th style={{width: "10%"}}>트럭명</th>
               <th style={{width: "10%"}}>음식 종류</th>
               <th style={{width: "15%"}}>운영자 ID</th>
-              <th style={{width: "10%"}}>운영자 이름</th>
-              <th style={{width: "10%"}}>상태</th>
-              <th style={{width: "20%"}}>생성일</th>
-              <th style={{width: "10%"}}>관리</th>
+              <th style={{width: "10%"}} className="center">운영자 이름</th>
+              <th style={{width: "10%"}} className="center">상태</th>
+              <th style={{width: "20%"}} className="center">생성일</th>
+              <th style={{width: "10%"}} className="center">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -139,15 +139,21 @@ function AdminTruckPage() {
                       <td>{truck.id}</td>
                       <td>{truck.name}</td>
                       <td>{truck.cuisine || "-"}</td>
-                      <td>{truck.ownerLoginId}</td>
-                      <td>{truck.ownerName}</td>
                       <td>
-                        <StatusBadge style={{background: status.color}}>
-                          {status.label}
-                        </StatusBadge>
+                        <EllipsisText title={truck.ownerLoginId}>
+                          {truck.ownerLoginId}
+                        </EllipsisText>
                       </td>
-                      <td>{formatDateTime(truck.createdAt)}</td>
-                      <td>
+                      <td title={truck.ownerLoginId} className="center">{truck.ownerName}</td>
+                      <td className="center">
+                        <StatusWrapper>
+                          <StatusBadge style={{background: status.bg, color: status.color}}>
+                            {status.label}
+                          </StatusBadge>
+                        </StatusWrapper>
+                      </td>
+                      <td className="center">{formatDateTime(truck.createdAt)}</td>
+                      <td className="center">
                         {truck.status === "SUSPENDED" ? (
                           <ActionButton
                             disabled={loading}
@@ -246,6 +252,10 @@ const StyledTable = styled.table`
     border-bottom: 1px solid #f1f1f1;
     white-space: nowrap;
   }
+  
+  th.center, td.center {
+    text-align: center;
+  }
 
   th {
     background: #f3f4f6;
@@ -257,6 +267,20 @@ const StyledTable = styled.table`
   tbody tr:hover {
     background: #f9fafb;
   }
+`;
+
+const EllipsisText = styled.div`
+  display: inline-block;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const StatusWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100%;
 `;
 
 const StatusBadge = styled.span`

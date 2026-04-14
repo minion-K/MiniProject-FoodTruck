@@ -8,6 +8,7 @@ import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
+import org.example.foodtruckback.dto.user.response.UserCountResponseDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
@@ -31,4 +32,5 @@ public interface UserService {
 
     ResponseDto<UserStatusUpdateResponseDto> toggleUserStatus(Long id, Long userId);
 
+    ResponseDto<UserCountResponseDto> getUserCount(UserPrincipal principal);
 }

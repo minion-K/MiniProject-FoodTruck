@@ -10,6 +10,7 @@ import org.example.foodtruckback.dto.role.request.RoleAddRequestDto;
 import org.example.foodtruckback.dto.role.response.RoleAddResponseDto;
 import org.example.foodtruckback.dto.user.request.AdminUserUpdateRequestDto;
 import org.example.foodtruckback.dto.user.request.UserUpdateRequestDto;
+import org.example.foodtruckback.dto.user.response.UserCountResponseDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
@@ -119,4 +120,14 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping(UserApi.COUNT)
+    public ResponseEntity<ResponseDto<UserCountResponseDto>> getUserCount(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        ResponseDto<UserCountResponseDto> response = userService.getUserCount(principal);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

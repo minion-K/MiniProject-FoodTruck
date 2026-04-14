@@ -1,5 +1,6 @@
 import type {
   AdminUserUpdateRequest,
+  UserCountResponse,
   UserDetailResponse,
   UserListResponse,
   UserStatusUpdateResponse,
@@ -85,6 +86,14 @@ export const userApi = {
   toggleStatus: async (userId: number): Promise<UserStatusUpdateResponse> => {
     const res = await privateApi.put<ApiResponse<UserStatusUpdateResponse>>(
       USER_PATH.TOGGLE_STATUS(userId)
+    );
+
+    return res.data.data;
+  },
+
+  userCount: async (): Promise<UserCountResponse> => {
+    const res = await privateApi.get<ApiResponse<UserCountResponse>>(
+      USER_PATH.COUNT
     );
 
     return res.data.data;

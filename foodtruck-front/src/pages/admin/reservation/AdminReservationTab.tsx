@@ -71,12 +71,12 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
         <StyledTable>
           <thead>
             <tr>
-              <th style={{width: "15%"}}>예약정보</th>
-              <th style={{width: "15%"}}>메뉴</th>
-              <th style={{width: "15%"}}>금액</th>
-              <th style={{width: "15%"}}>상태</th>
-              <th style={{width: "20%"}}>예약일</th>
-              <th style={{width: "10%"}}>관리</th>
+              <th style={{width: "13%"}}>예약정보</th>
+              <th style={{width: "12%"}} className="center">메뉴</th>
+              <th style={{width: "15%"}} className="center">금액</th>
+              <th style={{width: "15%"}} className="center">상태</th>
+              <th style={{width: "20%"}} className="center">예약일</th>
+              <th style={{width: "10%"}} className="center">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -122,13 +122,13 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
                         <InfoSub>픽업: {formatPickupRange(reservation.pickupTime)}</InfoSub>
                         <InfoSub>예약자: {reservation.userName}</InfoSub>
                       </td>
-                      <td>
+                      <td className="center">
                         <Menu title={menuText}>{menuSummary}</Menu>
                       </td>
-                      <td>
+                      <td className="center">
                         <Price>{totalAmount} KRW</Price>
                       </td>
-                      <td>
+                      <td className="center">
                         <StatusWrapper>
                           <StatusBadge style={{background: reservationStatus.color}}>
                             {reservationStatus.label}
@@ -138,8 +138,8 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
                           </PaymentBadge>
                         </StatusWrapper>
                       </td>
-                      <td>{formatDateTime(reservation.createdAt)}</td>
-                      <td>
+                      <td className="center">{formatDateTime(reservation.createdAt)}</td>
+                      <td className="center">
                         {reservation.status !== "CANCELED" && (
                           <CancelButton
                             onClick={() => handleForceCancel(reservation.id)}
@@ -202,6 +202,10 @@ const StyledTable = styled.table`
     white-space: nowrap;
   }
 
+  th.center, td.center {
+    text-align: center;
+  }
+
   th {
     background: #f3f4f6;
     font-weight: 600;
@@ -241,6 +245,8 @@ const Price = styled.div`
 const StatusWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 4px;
 `;
 

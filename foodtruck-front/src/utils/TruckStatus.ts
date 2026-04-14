@@ -9,7 +9,7 @@ export function getTruckStatus(status?: TruckStatus | null) {
     case "INACTIVE":
       return { label: "CLOSE", bg: "#f8d7da", color: "#842029" };
     case "SUSPENDED":
-      return {label: "SUSPENDED", bg: "#e2e3ff", color: "#3730a3"}
+      return {label: "운영정지", bg: "#e2e3ff", color: "#3730a3"}
     default:
       return { label: "미정", bg: "#eee", color: "#555"};
   }
