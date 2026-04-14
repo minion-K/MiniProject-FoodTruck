@@ -5,6 +5,7 @@ import type {
   TruckUpdateRequest,
   TruckStatusUpdateRequest,
   TruckListItemResponse,
+  TruckCountResponse,
 } from "@/types/truck/truck.dto";
 
 import { privateApi, publicApi } from "../common/axiosInstance";
@@ -88,4 +89,12 @@ export const truckApi = {
 
     return res.data.data;
   },
+
+  truckCount: async (): Promise<TruckCountResponse> => {
+    const res = await privateApi.get<ApiResponse<TruckCountResponse>>(
+      TRUCK_PATH.COUNT
+    );
+
+    return res.data.data;
+  }
 };

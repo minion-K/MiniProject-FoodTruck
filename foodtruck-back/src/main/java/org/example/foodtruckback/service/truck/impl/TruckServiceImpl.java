@@ -10,6 +10,7 @@ import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.dto.truck.request.TruckCreateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
+import org.example.foodtruckback.dto.truck.response.TruckCountResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
@@ -198,6 +199,21 @@ public class TruckServiceImpl implements TruckService {
         truckRepository.delete(truck);
 
         return ResponseDto.success("트럭이 삭제되었습니다.");
+    }
+
+    @Override
+    public ResponseDto<TruckCountResponseDto> getTruckCount(UserPrincipal principal) {
+        long total = truckRepository.count();
+        long active = truckRepository.countTruckActive();
+        long suspended = truckRepository.countTruckSuspended();
+
+        TruckCountResponseDto response = new TruckCountResponseDto(
+                total,
+                active,
+                suspended
+        );
+
+        return ResponseDto.success("트럭 수 조회", response);
     }
 
     private TruckDetailResponseDto toDetailDto(Truck truck) {

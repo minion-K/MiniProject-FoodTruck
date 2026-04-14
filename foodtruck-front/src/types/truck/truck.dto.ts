@@ -51,3 +51,9 @@ export interface TruckDetailResponse {
   menu: MenuListItemResponse[];
   schedules: TruckScheduleItemResponse[];
 }
+
+export interface TruckCountResponse {
+  total: number;
+  active: number;
+  suspended: number;
+}

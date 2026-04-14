@@ -21,4 +21,18 @@ public interface TruckRepository extends JpaRepository<Truck,Long> {
             AND (:keyword IS NULL OR t.name LIKE %:keyword% OR t.cuisine LIKE %:keyword%)
     """)
     Page<Truck> findAllWithFilter(Pageable pageable, String keyword, TruckStatus status);
+
+    @Query("""
+        SELECT DISTINCT COUNT(t)
+        FROM Truck t
+        WHERE t.status IN ('ACTIVE', 'INACTIVE')
+    """)
+    long countTruckActive();
+
+    @Query("""
+        SELECT DISTINCT COUNT(t)
+        FROM Truck t
+        WHERE t.status = 'SUSPENDED'
+    """)
+    long countTruckSuspended();
 }

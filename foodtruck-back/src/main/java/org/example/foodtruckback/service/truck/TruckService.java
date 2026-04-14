@@ -6,6 +6,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.truck.request.TruckCreateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
+import org.example.foodtruckback.dto.truck.response.TruckCountResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
@@ -30,4 +31,5 @@ public interface TruckService {
 
     ResponseDto<Void> updateTruckStatus(Long truckId, TruckStatusUpdateRequestDto request, UserPrincipal principal);
 
+    ResponseDto<TruckCountResponseDto> getTruckCount(UserPrincipal principal);
 }

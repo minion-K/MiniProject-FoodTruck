@@ -1,7 +1,7 @@
 import { truckApi } from '@/apis/truck/truck.api';
 import Pagination from '@/components/common/Pagination';
 import SearchInput from '@/components/common/SearchInput';
-import { type TruckListItemResponse } from '@/types/truck/truck.dto';
+import { type TruckCountResponse, type TruckListItemResponse } from '@/types/truck/truck.dto';
 import type { TruckStatus } from '@/types/truck/truck.type';
 import { formatDateTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
@@ -18,6 +18,7 @@ function AdminTruckPage() {
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
+  const [count, setCount] = useState<TruckCountResponse>();
   const [loading, setLoading] = useState(false);
 
   const fetchTrucks = async () => {
@@ -39,6 +40,20 @@ function AdminTruckPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const fetchTruckCount = async () => {
+      try {
+        const res = await truckApi.truckCount();
+
+        setCount(res);
+      } catch (e) {
+        alert(getErrorMsg(e));
+      }
+    }
+
+    fetchTruckCount();
+  } ,[]);
 
   useEffect(()=> {
     setPage(0);
@@ -76,6 +91,36 @@ function AdminTruckPage() {
     <Container>
       <HeaderRow>
         <Title>트럭 관리</Title>
+        <RightInfo>
+          <CountWrapper>
+            <CountItem>
+              <Label>
+                전체:
+              </Label>
+              <CountValue>
+                {count?.total ?? 0}
+              </CountValue>
+            </CountItem>
+            <Divider>|</Divider>
+            <CountItem>
+              <Label>
+                운영중:
+              </Label>
+              <CountValue>
+                {count?.active ?? 0}
+              </CountValue>
+            </CountItem>
+            <Divider>|</Divider>
+            <CountItem>
+              <Label>
+                정지:
+              </Label>
+              <CountValue>
+                {count?.suspended ?? 0}
+              </CountValue>
+            </CountItem>
+          </CountWrapper>
+        </RightInfo>
       </HeaderRow>
 
       <FilterRow>
@@ -201,6 +246,42 @@ const HeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+`;
+
+const RightInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const CountWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+`;
+
+const CountItem = styled.div`
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  font-size: 13px;
+`;
+
+const Label = styled.div`
+  font-size: 13px;
+  color: #666;
+  margin-right: 3px;
+`;
+
+const CountValue = styled.div`
+  color: #111827;
+  font-weight: 600;
+`;
+
+const Divider = styled.span`
+  font-size: 13px;
+  color: #666;
 `;
 
 const Title = styled.h2`

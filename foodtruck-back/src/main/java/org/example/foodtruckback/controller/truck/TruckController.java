@@ -8,6 +8,7 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.truck.request.TruckCreateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
+import org.example.foodtruckback.dto.truck.response.TruckCountResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
@@ -101,6 +102,15 @@ public class TruckController {
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         ResponseDto<Void> response = truckService.deleteTruck(truckId, principal.getId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(TruckApi.COUNT)
+    public ResponseEntity<ResponseDto<TruckCountResponseDto>> getTruckCount(
+            @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        ResponseDto<TruckCountResponseDto> response = truckService.getTruckCount(principal);
 
         return ResponseEntity.ok(response);
     }

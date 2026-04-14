@@ -14,6 +14,7 @@ export const TRUCK_PATH = {
   UPDATE: (truckId: number) => `${TRUCK_PREFIX}/${truckId}`,
   STATUSUPDATE: (truckId: number) =>`${TRUCK_PREFIX}/${truckId}/status`,
   DELETE: (truckId: number) => `${TRUCK_PREFIX}/${truckId}`,
+  COUNT: `${TRUCK_PREFIX}/count`,
 
   TRUCK_MENU: (truckId: number) => `${TRUCK_PREFIX}/${truckId}/menu`,
   SCHEDULE_ROOT: (truckId: number) => `${TRUCK_PREFIX}/${truckId}/schedules`,

@@ -315,7 +315,7 @@ const CountWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 `;
 
 const CountItem = styled.div`
@@ -328,6 +328,7 @@ const CountItem = styled.div`
 const Label = styled.div`
   font-size: 13px;
   color: #666;
+  margin-right: 3px;
 `;
 
 const CountValue = styled.div`
