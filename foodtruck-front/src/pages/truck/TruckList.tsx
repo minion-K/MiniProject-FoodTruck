@@ -3,18 +3,21 @@ import SearchInput from "@/components/common/SearchInput";
 import KakaoMap from "@/components/map/KakaoMap";
 import Trucks from "@/components/truck/Trucks";
 import type { TruckListItemResponse } from "@/types/truck/truck.dto";
+import type { TruckStatus } from "@/types/truck/truck.type";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 function TruckList() {
   const [trucks, setTrucks] = useState<TruckListItemResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showActive, setShowActive] = useState(false);
   const [keyword, setKeyword] = useState<string>("");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [sortType, setSortType] = useState<"DISTANCE" | "STATUS">("DISTANCE");
+  const [statusFilter, setStatusFilter] = useState<TruckStatus | "ALL">("ALL");
   const [page, setPage] = useState<number>(0);
   const [totalPage, setTotalPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState(true);
@@ -48,17 +51,12 @@ function TruckList() {
       const res = await truckApi.getTruckList({
         page: nextPage,
         size: 5,
-        keyword: searchKeyword || undefined
+        keyword: searchKeyword || undefined,
+        status: statusFilter === "ALL" ? undefined : statusFilter
       });
-      let fetchedTrucks = res.content;
-      
-      if(myLocation) {
-        fetchedTrucks = [...fetchedTrucks]
-          .sort((a, b) => 
-            getDistance(myLocation.lat, myLocation.lng, a.latitude!, a.longitude!)
-            - getDistance(myLocation.lat, myLocation.lng, b.latitude!, b.longitude!)
-        );
-      }
+      let fetchedTrucks = res.content.filter(
+        truck => truck.status !== "SUSPENDED"
+      );
 
       if(nextPage === 0) {
         setTrucks(fetchedTrucks);
@@ -80,8 +78,61 @@ function TruckList() {
     if(!myLocation) return;
 
     setLoading(true);
+    setPage(0);
     fetchTrucks(0);
   }, [myLocation, searchKeyword]);
+
+  const sortedTruck = React.useMemo(() => {
+    let sorted = [...trucks];
+
+    sorted.sort((a, b) => {
+      if(sortType === "STATUS") {
+        const prirority = {ACTIVE: 0, INACTIVE: 1};
+        const statusDiff = 
+          (prirority[a.status as "ACTIVE" | "INACTIVE"] ?? 99)
+          - (prirority[b.status as "ACTIVE" | "INACTIVE"] ?? 99)
+
+        if(statusDiff !== 0) return statusDiff
+      }
+
+      if(myLocation) {
+        return (
+          getDistance(myLocation.lat, myLocation.lng, a.latitude!, a.longitude!)
+          - getDistance(myLocation.lat, myLocation.lng, b.latitude!, b.longitude!)
+        );
+      }
+
+        return 0;
+    });
+
+    return sorted;
+  }, [trucks, sortType, myLocation]);
+
+  const visibleTrucks = React.useMemo(() => {
+    return showActive 
+    ? sortedTruck.filter(truck => truck.isActive) 
+    : sortedTruck;
+  }, [sortedTruck, showActive]);
+
+  const isReady = myLocation !== null && !loading;
+
+  useEffect(() => {
+    if(loading || loadingMore) return;
+    if(!hasMore) return;;
+
+    if(visibleTrucks.length < 5) {
+      const nextPage = page + 1;
+      setLoadingMore(true);
+      setPage(nextPage);
+      fetchTrucks(nextPage);
+    }
+  }, [visibleTrucks]);
+
+  useEffect(() => {
+    if(listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }, [showActive, sortType, searchKeyword]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -97,7 +148,7 @@ function TruckList() {
     )
   }, []);
 
-  const markers = trucks
+  const markers = visibleTrucks
     .filter(
       (
         truck,
@@ -188,6 +239,13 @@ function TruckList() {
 
         <ListWrapper>
           <SearchWrapper>
+            <Select
+              value={sortType}
+              onChange={(e) => setSortType(e.target.value as ("DISTANCE" | "STATUS"))}
+            >
+              <option value="DISTANCE">거리순</option>
+              <option value="STATUS">상태순</option>
+            </Select>
             <SearchInput 
               value={keyword}
               onChange={setKeyword}
@@ -195,15 +253,14 @@ function TruckList() {
             />
           </SearchWrapper>
           <ListScrollArea onScroll={handleScroll} ref={listRef}>
-            {loading  ? (
+            {!isReady ? (
               <LoadingMsg>트럭 내역 불러오는 중...</LoadingMsg>
             ) : (trucks.length === 0) ? (
               <Empty>등록된 트럭이 없습니다.</Empty>
             ) : (
-              <Trucks trucks={showActive ? trucks.filter(t => t.isActive) : trucks} />
+              <Trucks trucks={visibleTrucks} />
             )}
           </ListScrollArea>
-          
         </ListWrapper>
       </Content>
     </Container>
@@ -344,14 +401,32 @@ const ListWrapper = styled.div`
   min-height: 0;
   `;
 
-  const SearchWrapper = styled.div`
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: #fafafa;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-  `;
+const SearchWrapper = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fafafa;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+`;
+
+const Select = styled.select`
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #e65a00;
+  }
+`;
 
 const ListScrollArea = styled.div`
   flex: 1;
