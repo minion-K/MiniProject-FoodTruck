@@ -70,6 +70,14 @@ public class ReservationServiceImpl implements ReservationService {
         Schedule schedule = scheduleRepository.findById(request.scheduleId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
+        if(schedule.getStatus() != ScheduleStatus.OPEN) {
+            throw new BusinessException(ErrorCode.SCHEDULE_NOT_OPEN);
+        }
+
+        if(schedule.getTruck().getStatus() != TruckStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.TRUCK_NOT_OPEN);
+        }
+
         if(!schedule.isReservation()) {
             throw new BusinessException(ErrorCode.INVALID_SCHEDULE);
         }

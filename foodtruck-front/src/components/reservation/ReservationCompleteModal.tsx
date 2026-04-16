@@ -123,7 +123,7 @@ const Overlay = styled.div`
 const Container = styled.div`
   background-color: white;
   width: 100%;
-  max-width: 360px;
+  max-width: 440px;
   border-radius: 16px;
   padding: 24px;
   text-align: center;

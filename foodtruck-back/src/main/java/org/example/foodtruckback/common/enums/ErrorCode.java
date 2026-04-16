@@ -65,6 +65,7 @@ public enum ErrorCode {
     INVALID_SCHEDULE_STATUS(HttpStatus.BAD_REQUEST, "S005", "잘못된 스케줄 상태 변경입니다.", "Invalid schedule status transition"),
     INVALID_SCHEDULE_REQUEST(HttpStatus.BAD_REQUEST, "S006", "유효하지 않은 스케줄 요청입니다.", "Invalid schedule request"),
     ALREADY_OPEN_SCHEDULE_EXISTS(HttpStatus.BAD_REQUEST, "S007", "이미 OPEN 상태인 스케줄이 존재합니다.", "Already open Schedule exists"),
+    SCHEDULE_NOT_OPEN(HttpStatus.BAD_REQUEST, "S008", "현재 예약이 불가능한 스케줄입니다.", "Schedule not open"),
 
     // ===========================
     // reservation (Rxxx)
@@ -90,6 +91,7 @@ public enum ErrorCode {
     // ===========================
     TRUCK_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "해당 트럭을 찾을 수 없습니다.", "Truck not found"),
     TRUCK_ACTIVATION_INVALID(HttpStatus.BAD_REQUEST, "T002", "메뉴와 스케줄을 모두 등록해야 트럭을 활성화할 수 있습니다.", "Truck must have at least one menu and schedule to activate"),
+    TRUCK_NOT_OPEN(HttpStatus.BAD_REQUEST, "T003", "현재 운영 중인 트럭이 아닙니다.", "Truck not open"),
 
     // ===========================
     // payment (Pxxx)

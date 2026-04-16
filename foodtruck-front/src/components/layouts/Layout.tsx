@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Header from "./Header";
-import Navibar from "./Navibar";
 import Sidebar from "./Sidebar";
 import styled from "@emotion/styled";
 
@@ -10,7 +9,7 @@ interface LayoutProps {
   role?: "OWNER" | "ADMIN";
 }
 
-function Layout({ children, showSidebar =false, role}: LayoutProps) {
+function Layout({ children, showSidebar = false, role}: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   const handleToggleSidebar = () => {

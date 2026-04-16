@@ -134,8 +134,11 @@ public class OrderServiceImpl implements OrderService {
 
         List<UserOrderListResponseDto> response = orders.stream()
                 .map(order -> {
-                    String productCode = getProductCode(order);
-                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
+                    PaymentStatus paymentStatus = paymentStatusMap.get("ORD-" + order.getId());
+
+                    if(paymentStatus == null && order.getReservation() != null) {
+                        paymentStatus = paymentStatusMap.get("RES-" + order.getReservation().getId());
+                    }
 
                     return UserOrderListResponseDto.from(order, paymentStatus);
                 })
@@ -155,9 +158,11 @@ public class OrderServiceImpl implements OrderService {
 
         List<OwnerOrderListResponseDto> content = orderPage.stream()
                 .map(order -> {
-                    String productCode = getProductCode(order);
+                    PaymentStatus paymentStatus = paymentStatusMap.get("ORD-" + order.getId());
 
-                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
+                    if(paymentStatus == null && order.getReservation() != null) {
+                        paymentStatus = paymentStatusMap.get("RES-" + order.getReservation().getId());
+                    }
 
                     return OwnerOrderListResponseDto.from(order, paymentStatus);
                 })
@@ -188,9 +193,11 @@ public class OrderServiceImpl implements OrderService {
 
         List<AdminOrderListResponseDto> content = orderPage.stream()
                 .map(order -> {
-                    String productCode = getProductCode(order);
+                    PaymentStatus paymentStatus = paymentStatusMap.get("ORD-" + order.getId());
 
-                    PaymentStatus paymentStatus = paymentStatusMap.get(productCode);
+                    if(paymentStatus == null && order.getReservation() != null) {
+                        paymentStatus = paymentStatusMap.get("RES-" + order.getReservation().getId());
+                    }
 
                     return AdminOrderListResponseDto.from(order, paymentStatus);
                 }).toList();
@@ -268,10 +275,17 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        String productCode = getProductCode(order);
+        List<String> productCodes = new ArrayList<>();
+        productCodes.add("ORD-" + order.getId());
+
+        if(order.getReservation() != null) {
+            productCodes.add("RES-" + order.getReservation().getId());
+        }
 
         PaymentStatus paymentStatus =
-                paymentRepository.findFirstByProductCodeOrderByCreatedAtDesc(productCode)
+                paymentRepository.findByProductCodeInOrderByCreatedAtDesc(productCodes)
+                        .stream()
+                        .findFirst()
                         .map(Payment::getStatus)
                         .orElse(PaymentStatus.READY);
 
@@ -326,10 +340,10 @@ public class OrderServiceImpl implements OrderService {
         List<String> productCodes = new ArrayList<>();
 
         for(Order order: orders) {
-            if(order.getSource() == OrderSource.RESERVATION && order.getReservation() != null) {
+            productCodes.add("ORD-" + order.getId());
+
+            if(order.getReservation() != null) {
                 productCodes.add("RES-" + order.getReservation().getId());
-            } else {
-                productCodes.add("ORD-" + order.getId());
             }
         }
 

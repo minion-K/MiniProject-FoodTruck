@@ -1,6 +1,6 @@
 import { orderApi } from '@/apis/order/order.api';
 import Pagination from '@/components/common/Pagination';
-import type { AdminOrderListItemResponse, OrderDetailResponse } from '@/types/order/order.dto';
+import type { AdminOrderListItemResponse } from '@/types/order/order.dto';
 import type { OrderSource, OrderStatus } from '@/types/order/order.type';
 import { formatDateTime } from '@/utils/date';
 import { getErrorMsg } from '@/utils/error';
@@ -50,11 +50,11 @@ function AdminOrderTab({keyword, dateRange, status, source}: Props) {
 
   useEffect(() => {
     setPage(0);
-  }, [status, keyword, dateRange, source]);
+  }, [keyword, dateRange, status, source]);
 
   useEffect(() => {
     fetchOrders()
-  }, [page, status, keyword, dateRange, source])
+  }, [page, keyword, status, dateRange, source])
 
   return (
     <>

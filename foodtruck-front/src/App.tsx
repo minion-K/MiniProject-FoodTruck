@@ -1,11 +1,9 @@
-import { useState } from "react";
 import "./App.css";
 import { GlobalStyle } from "./styles/Global";
 import MainRouter from "./router/MainRouter";
 import { Toaster } from "react-hot-toast";
 
 function App() {
-  const [count, setCount] = useState(0);
 
   return (
     <>

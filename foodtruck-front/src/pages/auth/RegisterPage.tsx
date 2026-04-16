@@ -4,7 +4,7 @@ import type { SignupRequest } from "@/types/auth/auth.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import { useMutation } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 ``
 function RegisterPage() {
@@ -13,6 +13,7 @@ function RegisterPage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const {form, step, setField, setStep, reset} = useRegisterStore();
   const [touched, setTouched] = useState<Partial<Record<keyof SignupRequest, boolean>>>({});
+  const hasVerifiedRef = useRef(false);
 
   const isVerified = step === "VERIFIED";
 
@@ -43,7 +44,7 @@ function RegisterPage() {
         else if(!/^\S+@\S+\.\S+$/.test(value)) msg = "올바른 이메일 형식으로 입력해주세요."
         break;
       case "phone":
-        if(value && !/^\d{10,11}$/.test(value)) msg = "휴대폰 번호는 10~11자리로 입력해주세요."
+        if(value && !/^\d{11}$/.test(value)) msg = "휴대폰 번호는 11자리로 입력해주세요."
         break;
     }
 
@@ -90,7 +91,7 @@ function RegisterPage() {
       navigate("/register/pending", {replace: true})
     },
     onError: (err) => {
-      setErrorMsg(getErrorMsg(err));
+      setGlobalError(getErrorMsg(err));
     }
   });
 
@@ -114,6 +115,9 @@ function RegisterPage() {
   }
 
   useEffect(() => {
+    if(hasVerifiedRef.current) return;
+    hasVerifiedRef.current = true;
+
     const verify = async () => {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("token");
@@ -137,12 +141,11 @@ function RegisterPage() {
       } else {
         reset();
         setStep("FORM");
-        sessionStorage.clear();
       }
     };
 
     verify();
-  }, [setStep, reset]);
+  }, []);
 
   return (
     <Container>
@@ -247,6 +250,7 @@ function RegisterPage() {
             </Button>
           </InputWrapper>
           {errorMsg.email && <ErrorText>{errorMsg.email}</ErrorText>}
+          {globalError && <ErrorText>{globalError}</ErrorText>}
           {step === "VERIFIED" && (<span style={{color: "green", marginTop: "4px"}}>이메일 인증 완료</span>)}
         </InputContainer>
 

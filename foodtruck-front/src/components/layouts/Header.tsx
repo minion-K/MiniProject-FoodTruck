@@ -12,7 +12,7 @@ function Header({ onToggleSidebar }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isLogged = accessToken ? true : false;
+  const isLogged = !!accessToken;
   const roles = user?.roles ?? [];
 
   const isOwner = isLogged && (roles.includes("OWNER"));

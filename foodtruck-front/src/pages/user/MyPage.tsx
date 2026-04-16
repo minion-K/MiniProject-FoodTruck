@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import React, { useEffect, useState, type ReactNode } from "react";
+import React, { useEffect, useState } from "react";
 import Profile from "./Profile";
 import MyReservation from "./MyReservation";
 import MyPageSide from "./MyPageSide";

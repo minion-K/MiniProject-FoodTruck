@@ -29,18 +29,18 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByReservation(Reservation reservation);
 
     @Query(value = """
-        SELECT o
+        SELECT DISTINCT o
         FROM Order o
         LEFT JOIN o.orderItems oi
         LEFT JOIN o.user u
-        LEFT JOIN o.schedule s
+        JOIN o.schedule s
         WHERE s.id = :scheduleId
         ORDER BY o.createdAt DESC
     """,
     countQuery = """
-        SELECT COUNT(DISTINCT  o)
+        SELECT COUNT(DISTINCT  o.id)
         FROM Order o
-        JOIN o.schedule s
+        LEFT JOIN o.schedule s
         WHERE s.id = :scheduleId
     """)
     Page<Order> findOwnerOrders(@Param("scheduleId") Long scheduleId, Pageable pageable);
@@ -59,21 +59,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 //    TODO: orderItems N + 1 최적화 필요(IN 쿼리)
     @Query(value = """
-        SELECT o
+        SELECT DISTINCT o
         FROM Order o
         LEFT JOIN FETCH o.user u
-        JOIN FETCH o.schedule s
-        JOIN FETCH s.truck t
+        JOIN o.schedule s
+        JOIN s.truck t
         WHERE (:status IS NULL OR o.status = :status)
             AND (:keyword IS NULL OR u.name LIKE %:keyword% OR t.name LIKE %:keyword%)
             AND (:source IS NULL OR o.source = :source)
             AND (:startDate IS NULL OR o.createdAt >= :startDate)
             AND (:endDate IS NULL OR o.createdAt <= :endDate)
+        ORDER BY o.createdAt DESC 
     """,
     countQuery = """
-        SELECT COUNT(o)
+        SELECT COUNT(DISTINCT o)
         FROM Order o
-        JOIN o.user u
+        LEFT JOIN o.user u
         JOIN o.schedule s
         JOIN s.truck t
         WHERE (:status IS NULL OR o.status = :status)

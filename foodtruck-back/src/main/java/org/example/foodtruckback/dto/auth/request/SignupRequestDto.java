@@ -38,8 +38,8 @@ public record SignupRequestDto(
 
     @Size(max = 30)
     @Pattern(
-            regexp = "^\\d{10,11}$",
-            message = "휴대폰 번호는 10~11자리 숫자만 가능합니다."
+            regexp = "^$|^\\d{11}$",
+            message = "휴대폰 번호는 11자리 숫자만 가능합니다."
     )
     String phone
 

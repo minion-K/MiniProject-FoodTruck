@@ -77,6 +77,21 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     """)
     Page<Reservation> findAdminReservations(Pageable pageable, LocalDateTime startDate, LocalDateTime endDate, ReservationStatus status, String keyword);
 
+    @Query(value = """
+        SELECT DISTINCT r
+        FROM Reservation r
+        JOIN r.schedule s
+        JOIN s.truck t
+        WHERE s.id = :scheduleId
+        ORDER BY r.createdAt DESC
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT r)
+        FROM Reservation r
+        JOIN r.schedule s
+        WHERE s.id = :scheduleId
+    """)
+    Page<Reservation> findByScheduleId(@Param("scheduleId") Long scheduleId, Pageable pageable);
 
     @Query("""
         SELECT r
@@ -88,22 +103,4 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         WHERE r.id = :reservationId
     """)
     Optional<Reservation> findDetail(@Param("reservationId") Long reservationId);
-
-    @Query(value = """
-        SELECT r
-        FROM Reservation r
-        JOIN r.schedule s
-        JOIN s.truck t
-        JOIN s.location l
-        LEFT JOIN r.menuItems m
-        WHERE s.id = :scheduleId
-        ORDER BY r.createdAt DESC
-    """,
-    countQuery = """
-        SELECT COUNT(DISTINCT r)
-        FROM Reservation r
-        JOIN r.schedule s
-        WHERE s.id = :scheduleId
-    """)
-    Page<Reservation> findByScheduleId(@Param("scheduleId") Long scheduleId, Pageable pageable);
 }

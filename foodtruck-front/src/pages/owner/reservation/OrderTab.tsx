@@ -18,7 +18,6 @@ interface Props {
 function OrderTab({refreshKey, scheduleId, onSelect, onCreate}: Props) {
   const [orders, setOrders] = useState<OwnerOrderListItemResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [totalPage, setTotalPage] = useState(1);
 
@@ -30,8 +29,7 @@ function OrderTab({refreshKey, scheduleId, onSelect, onCreate}: Props) {
         page,
         size: 10,
         scheduleId
-      },
-      )
+      });
       setOrders(res.content);
       setTotalPage(res.totalPage);
     } catch (e) {
@@ -42,14 +40,15 @@ function OrderTab({refreshKey, scheduleId, onSelect, onCreate}: Props) {
   };
 
   useEffect(() => {
-    setPage(0);
-  }, [])
-
-  useEffect(() => {
     if(!scheduleId) return;
 
     fetchOrders();
   }, [scheduleId, page, refreshKey]);
+  
+  useEffect(() => {
+    setPage(0);
+  }, [])
+
 
   if(loading) return <Loading>로딩 중...</Loading>
 

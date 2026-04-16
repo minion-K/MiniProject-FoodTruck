@@ -58,7 +58,7 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
                        ON o.schedule_id = s.id
                    JOIN locations l
                        ON l.id = s.location_id
-                   WHERE o.status != 'REFUNDED'
+                   WHERE o.status IN ('PENDING', 'PAID')
                        AND o.created_at BETWEEN ?2 AND ?3
                        AND (
                            ?1 = 'ALL'
@@ -530,6 +530,11 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
                     AND p.approved_at BETWEEN ?2 AND ?3
                     AND (?1 = 'ALL' OR l.name LIKE CONCAT('%', ?1, '%')
                            OR l.address LIKE CONCAT('%', ?1, '%'))
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM orders o2
+                        WHERE o2.reservation_id = r.id
+                    )
             ),
             order_union AS (
                 SELECT DISTINCT

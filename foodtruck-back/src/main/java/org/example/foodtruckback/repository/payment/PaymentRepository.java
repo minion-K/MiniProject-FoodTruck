@@ -49,5 +49,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     boolean existsByProductCodeAndStatus(String productCode, PaymentStatus paymentStatus);
 
-    Optional<Payment> findFirstByProductCodeOrderByCreatedAtDesc(String productCode);
+    @Query("""
+        SELECT p
+        FROM Payment p
+        WHERE p.productCode IN :productCodes
+        ORDER BY p.createdAt DESC
+    """)
+    List<Payment> findByProductCodeInOrderByCreatedAtDesc(List<String> productCodes);
 }

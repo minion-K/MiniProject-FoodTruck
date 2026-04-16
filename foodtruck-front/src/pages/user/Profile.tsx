@@ -16,12 +16,12 @@ function Profile() {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const data = await userApi.me();
+        const res = await userApi.me();
 
-        setUser(data);
-        setUpdatedtUser(data);
-      } catch (err) {
-        getErrorMsg(err);
+        setUser(res);
+        setUpdatedtUser(res);
+      } catch (e) {
+        alert(getErrorMsg(e));
       } finally {
         setLoading(false);
       }
@@ -47,7 +47,7 @@ function Profile() {
       };
     });
 
-    setMode("edit");
+    setMode("view");
   }, []);
 
   useEffect(() => {

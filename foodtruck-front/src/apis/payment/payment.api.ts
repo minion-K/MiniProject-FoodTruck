@@ -44,7 +44,7 @@ export const paymentApi = {
     return res.data.data;
   },
 
-  getMyPayments: async (params:{
+  getMyPayments: async (params?:{
     page: number;
     size: number;
     keyword?: string;

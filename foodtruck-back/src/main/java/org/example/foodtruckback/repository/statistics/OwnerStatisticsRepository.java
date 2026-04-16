@@ -44,7 +44,10 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
              FROM Order o
              JOIN o.schedule s
              JOIN s.truck t
-             WHERE o.status != org.example.foodtruckback.common.enums.OrderStatus.REFUNDED
+             WHERE o.status IN (
+                 org.example.foodtruckback.common.enums.OrderStatus.PENDING,
+                 org.example.foodtruckback.common.enums.OrderStatus.PAID
+                 )
                  AND t.owner.id = :ownerId
                  AND (:truckId IS NULL OR t.id= :truckId)
                  AND o.createdAt BETWEEN :fromDate AND :toDate
@@ -134,6 +137,11 @@ public interface OwnerStatisticsRepository extends JpaRepository<Schedule, Long>
             WHERE t.owner_id = :ownerId
                 AND (:truckId IS NULL OR t.id = :truckId)
                 AND pr.id IS NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM orders o
+                    WHERE o.reservation_id = r.id
+                    )
         ) tmp
         GROUP BY name
         ORDER BY totalQty DESC

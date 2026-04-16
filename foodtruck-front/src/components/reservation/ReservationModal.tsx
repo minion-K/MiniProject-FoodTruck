@@ -2,7 +2,7 @@ import { reservationApi } from "@/apis/reservation/reservation.api";
 import type { TruckScheduleItemResponse } from "@/types/schedule/schedule.dto";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { formatTime, ONE_HOUR, toKstString } from "@/utils/date";
 import type {
@@ -71,6 +71,8 @@ function ReservationModal({
 
   const [note, setNote] = useState(initialNote);
   const [loading, setLoading] = useState(false);
+  const PAGE_SIZE = 6;
+  const [page, setPage] = useState(0);
 
   const timeSlots: TimeSlot[] = useMemo(() => {
     if (!schedule) return [];
@@ -97,6 +99,51 @@ function ReservationModal({
 
     return slots;
   }, [schedule]);
+
+  const enablePaging = useMemo(() => {
+    if(!schedule) return false;
+
+    return timeSlots.length > PAGE_SIZE;
+  }, [timeSlots]);
+
+  const pageSlots = useMemo(() => {
+    if(!enablePaging) return timeSlots;
+
+    const start = page * PAGE_SIZE;
+
+    return timeSlots.slice(start, start + PAGE_SIZE);
+  }, [timeSlots, page, enablePaging]);
+
+  const handlePrev = () => {
+    setPage(prev => Math.max(prev - 1, 0));
+  }
+
+  const handleNext = () => {
+    setPage(prev => {
+      const maxPage = Math.floor((timeSlots.length - 1) / PAGE_SIZE);
+
+      return Math.min(prev + 1, maxPage)
+    });
+  };
+
+  useEffect(() => {
+    if(initialPickupTime) {
+      setSelectedTime(new Date(initialPickupTime));
+    }
+  }, [initialPickupTime]);
+
+  useEffect(() => {
+    if(!selectedTime) return;
+    if(!enablePaging) return;
+
+    const idx = timeSlots.findIndex(slot => 
+      slot.start.getTime() === selectedTime.getTime()
+    );
+
+    if(idx !== -1) {
+      setPage(Math.floor(idx / PAGE_SIZE));
+    }
+  }, [selectedTime, timeSlots, enablePaging]);
 
   const totalAmount =
     menus?.reduce((sum, menu) => {
@@ -185,13 +232,14 @@ function ReservationModal({
     }
   };
 
+
   if (step === "COMPLETE" && summary) {
     return <ReservationCompleteModal summary={summary} onClose={onClose} />;
   }
 
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Header>
           <Title>{mode === "EDIT" ? "예약 수정" : "예약 하기"}</Title>
           <CloseButton onClick={onClose}>X</CloseButton>
@@ -208,8 +256,24 @@ function ReservationModal({
           )}
           <Section>
             <Label>픽업 시간</Label>
+            {enablePaging && (
+              <SliderHeader>
+                <NavButton onClick={handlePrev} disabled={page === 0}>
+                  ◀
+                </NavButton>
+
+                <RangeLabel>
+                  {formatTime(pageSlots[0].start)} ~{" "}
+                  {formatTime(pageSlots.at(-1)!.end)}
+                </RangeLabel>
+
+                <NavButton onClick={handleNext} disabled={(page + 1) * PAGE_SIZE >= timeSlots.length}>
+                  ▶
+                </NavButton>
+              </SliderHeader>
+            )}
             <TimeSlotGrid>
-              {timeSlots.map((slot) => (
+              {pageSlots.map((slot) => (
                 <TimeSlotButton
                   key={toKstString(slot.start)}
                   disabled={slot.disabled}
@@ -223,7 +287,7 @@ function ReservationModal({
           </Section>
 
           {menus && (
-            <Section>
+            <MenuSection>
               <Label>메뉴</Label>
               <MenuList>
                 {menus.map((menu) => {
@@ -281,7 +345,7 @@ function ReservationModal({
                   );
                 })}
               </MenuList>
-            </Section>
+            </MenuSection>
           )}
 
           <Section>
@@ -320,8 +384,8 @@ const Overlay = styled.div`
 
 const Modal = styled.div`
   width: 100%;
-  max-width: 420px;
-  height: 80vh;
+  max-width: 520px;
+  height: 90vh;
   background-color: white;
   border-radius: 16px;
   padding: 16px;
@@ -335,7 +399,7 @@ const Content = styled.div`
   flex-direction: column;
   gap: 16px;
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding-right: 10px;
 `;
 
@@ -376,6 +440,15 @@ const Section = styled.div`
   gap: 4px;
 `;
 
+const MenuSection = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
 const LocationRow = styled.div`
   display: flex;
   align-items: center;
@@ -392,6 +465,32 @@ const Value = styled.div`
   font-size: 14px;
   font-weight: 600;
   color: #111;
+`;
+
+const SliderHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 10px;
+`;
+
+const NavButton = styled.button`
+  border: none;
+  background: #f3f4f6;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+`;
+
+const RangeLabel = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
 `;
 
 const TimeSlotGrid = styled.div`
@@ -511,7 +610,8 @@ const NoteInput = styled.textarea`
 `;
 
 const Footer = styled.div`
-  margin-top: 8px;
+  margin-top: auto;
+  padding-top: 8px;
 `;
 
 const SubmitButton = styled.button`

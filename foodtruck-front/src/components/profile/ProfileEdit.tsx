@@ -7,7 +7,7 @@ import styled from '@emotion/styled'
 import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   user: UserDetailResponse;
@@ -35,7 +35,6 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
   });
 
   const navigate = useNavigate();
-  const location = useLocation();
   const verifyRef = useRef(false);
 
   const isProfileChanged = 
@@ -102,7 +101,7 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
         setEmailVerified(true);
         alert("이메일 인증 완료");
 
-        window.history.replaceState({}, "", "/mypage");
+        navigate("/mypage", {replace: true});
       } catch (e) {
         alert(getErrorMsg(e));
       }

@@ -29,16 +29,22 @@ function TruckDetail() {
     if (!isInitialized) return;
 
     if (!isLoggedIn) {
-      alert("예약은 로그인 후에 가능합니다.");
+      const moveLogin = confirm("예약은 로그인 후 가능합니다. 로그인 페이지로 이동하시겠습니까?");
 
-      return navigate("/login");
+      if(moveLogin) {
+        return navigate("/login");
+      }
+
+      return ;
     }
 
     setSelectedSchedule(schedule);
   };
 
   const isReservation = (schedule: TruckScheduleItemResponse) => {
-    return schedule.status === "OPEN"
+    if(!truck) return false;
+
+    return schedule.status === "OPEN" && truck.status === "ACTIVE";
   };
 
   const activeSchedule = useMemo(() => {

@@ -1,6 +1,6 @@
 import { reservationApi } from "@/apis/reservation/reservation.api";
 import type { ReservationDetailResponse } from "@/types/reservation/reservation.dto";
-import { formatPickupRange, ONE_HOUR } from "@/utils/date";
+import { formatDateTime, formatPickupRange, ONE_HOUR } from "@/utils/date";
 import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useState } from "react";
@@ -18,20 +18,26 @@ interface Props {
 function ReservationDetail({ reservationId }: Props) {
   const [reservation, setReservation] =
     useState<ReservationDetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [center, setCenter] = useState<{lat: number, lng: number} | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!reservationId) return;
+    setLoading(true);
 
     const fetchReservation = async () => {
       try {
-        const data = await reservationApi.getReservationById(
+        const res = await reservationApi.getReservationById(
           Number(reservationId),
         );
 
-        setReservation(data);
+        setReservation(res);
+        setCenter({
+          lat: res.latitude,
+          lng: res!.longitude
+        });
       } catch (err) {
         alert(getErrorMsg(err));
       } finally {
@@ -45,6 +51,15 @@ function ReservationDetail({ reservationId }: Props) {
   const handleUpdateReservation = (update: ReservationDetailResponse) => {
     setReservation(update);
     setIsEdit(false);
+  };
+
+  const handleMoveTruck = () => {
+    if(!reservation) return;
+
+    setCenter({
+      lat: reservation.latitude,
+      lng: reservation.longitude
+    });
   };
 
   const handleCancelReservation = async () => {
@@ -164,12 +179,17 @@ function ReservationDetail({ reservationId }: Props) {
           <Label>위치: {reservation.locationName}</Label>
         </InfoRow>
         <MapWrapper>
-          <KakaoMap
-            center={{ lat: reservation.latitude, lng: reservation.longitude }}
-            markers={[
-              { lat: reservation.latitude, lng: reservation.longitude },
-            ]}
-          />
+          {center && (
+            <KakaoMap
+              center={center}
+              markers={[
+                { lat: reservation.latitude, lng: reservation.longitude },
+              ]}
+            />
+          )}
+          <MapControl>
+            <FloatingButton onClick={handleMoveTruck}>📍</FloatingButton>
+          </MapControl>
         </MapWrapper>
       </Section>
 
@@ -240,10 +260,10 @@ function ReservationDetail({ reservationId }: Props) {
       <Section>
         <SectionTitle>예약</SectionTitle>
         <InfoRow>
-          <Label>예약한 시간: {reservation.createdAt}</Label>
+          <Label>예약한 시간: {formatDateTime(reservation.createdAt)}</Label>
         </InfoRow>
         <InfoRow>
-          <Label>변경한 시간: {reservation.updatedAt}</Label>
+          <Label>변경한 시간: {formatDateTime(reservation.updatedAt)}</Label>
         </InfoRow>
       </Section>
 
@@ -355,10 +375,38 @@ const PaymentStatus = styled.span`
 
 const MapWrapper = styled.div`
   width: 100%;
-  height: 220px;
+  height: 40vh;
   border-radius: 10px;
   overflow: hidden;
   margin-top: 8px;
+  position: relative;
+`;
+
+const MapControl = styled.div`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+`;
+
+const FloatingButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+
+  &:hover {
+    background: #f0f0f0;
+  }
 `;
 
 const MenuRow = styled.div`
