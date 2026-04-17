@@ -93,6 +93,14 @@ export const orderApi = {
     return res.data.data;
   },
 
+  payOrder: async (orderId: number): Promise<void> => {
+    const res = await privateApi.put<ApiResponse<void>>(
+      ORDER_PATH.PAY(orderId)
+    );
+
+    return res.data.data;
+  },
+
   // 환불
   refundOrder: async (orderId: number): Promise<void> => {
     const res = await privateApi.put<ApiResponse<void>>(

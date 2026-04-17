@@ -196,7 +196,10 @@ function AdminUserPage() {
           <SearchInput 
             value={keyword}
             onChange={setKeyword}
-            onSearch={() => fetchUsers()}
+            onSearch={() => {
+              setPage(0);
+              fetchUsers();
+            }}
             onEnter={true}
             placeholder="이름 또는 이메일로 검색해주세요."
           />

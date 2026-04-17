@@ -2,7 +2,7 @@ import { scheduleApi } from '@/apis/schedule/schdule.api';
 import type { TruckScheduleItemResponse, TruckScheduleListResponse } from '@/types/schedule/schedule.dto';
 import { getErrorMsg } from '@/utils/error';
 import styled from '@emotion/styled';
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import ScheduleModal from './ScheduleModal';
 import { formatDateTime } from '@/utils/date';
 import toast from 'react-hot-toast';
@@ -31,19 +31,6 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
     setSelected(schedule)
     setOpen(true);
   }
-
-  const handleDelete = async (scheduleId: number) => {
-    if(!confirm("해당 스케줄을 삭제하시겠습니까?")) return;
-
-    try {
-      await scheduleApi.deleteSchedule(scheduleId);
-
-      toast.success("스케줄이 삭제되었습니다.", {icon: "🗑️"});
-      onUpdate();
-    } catch (e) {
-      alert(getErrorMsg(e));
-    } 
-  };
 
   const handleSuccess = () => {
     setOpen(false);
@@ -170,14 +157,6 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
                   }}
                 >
                   수정
-                </ActionButton>
-                <ActionButton 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(schedule.scheduleId);
-                  }}
-                >
-                  삭제
                 </ActionButton>
               </Actions>
             </Item>

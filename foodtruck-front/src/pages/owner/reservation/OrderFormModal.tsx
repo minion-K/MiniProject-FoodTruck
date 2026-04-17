@@ -115,6 +115,7 @@ function OrderFormModal({open, scheduleId, menus, initialOrder, onClose, onSucce
       }
     } catch (e) {
       alert(getErrorMsg(e));
+      onClose();
     } finally {
       setLoading(false);
     }

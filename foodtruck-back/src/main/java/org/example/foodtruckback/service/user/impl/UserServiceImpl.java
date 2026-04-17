@@ -222,6 +222,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseDto<UserCountResponseDto> getUserCount(UserPrincipal principal) {
         long total = userRepository.count();
         long user = userRepository.countUserRole();

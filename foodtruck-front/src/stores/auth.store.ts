@@ -7,6 +7,7 @@ type AuthState = {
   accessToken: string | null;
   user: UserDetailResponse | null;
   isInitialized: boolean;
+  showAlert: boolean;
 }
 
 type AuthActions = {
@@ -14,6 +15,7 @@ type AuthActions = {
   setUser: (user: UserDetailResponse | null) => void;
   clearAuth: () => void;
 
+  setShowAlert: (value: boolean) => void;
   hydrateFromStorage: () => void;
 }
 
@@ -25,11 +27,13 @@ export const useAuthStore = create(
       accessToken: null,
       user: null,
       isInitialized: false,
+      showAlert: false,
 
       setAccessToken: (token) => set({accessToken: token}),
       setUser: (user) => set({user}),
       clearAuth: () => set({accessToken: null, user: null}),
 
+      setShowAlert: (value) => set({showAlert: value}),
       hydrateFromStorage: () => {
         set({isInitialized: true});
       },

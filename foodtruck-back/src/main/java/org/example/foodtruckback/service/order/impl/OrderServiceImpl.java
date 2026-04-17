@@ -1,10 +1,7 @@
 package org.example.foodtruckback.service.order.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.foodtruckback.common.enums.ErrorCode;
-import org.example.foodtruckback.common.enums.OrderSource;
-import org.example.foodtruckback.common.enums.OrderStatus;
-import org.example.foodtruckback.common.enums.PaymentStatus;
+import org.example.foodtruckback.common.enums.*;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
@@ -24,22 +21,20 @@ import org.example.foodtruckback.repository.order.OrderRepository;
 import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
-import org.example.foodtruckback.security.user.UserPrincipal;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.order.OrderService;
 import org.example.foodtruckback.service.payment.PaymentService;
+import org.example.foodtruckback.service.policy.TruckPolicy;
+import org.example.foodtruckback.service.policy.UserPolicy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,18 +47,27 @@ public class OrderServiceImpl implements OrderService {
     private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
+    private final AuthorizationChecker authorizationChecker;
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("@authz.isScheduleOwner(#request.scheduleId())")
     public ResponseDto<OrderDetailResponseDto> createOrder(
-            OrderCreateRequestDto request, UserPrincipal principal
+            OrderCreateRequestDto request
     ) {
+        User owner = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(owner);
+
         User user = null;
         Reservation reservation = null;
 
         Schedule schedule = scheduleRepository.findById(request.scheduleId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+        TruckPolicy.validateActive(schedule.getTruck());
+
+        if(schedule.getStatus() != ScheduleStatus.OPEN) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_STATUS);
+        }
 
         if(request.source() == OrderSource.RESERVATION) {
             if(request.reservationId() == null) {
@@ -72,6 +76,13 @@ public class OrderServiceImpl implements OrderService {
 
             reservation = reservationRepository.findById(request.reservationId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+            if(reservation != null) {
+                boolean exists = orderRepository.existsByReservation(reservation);
+                if(exists) {
+                    throw new BusinessException(ErrorCode.DUPLICATE_ORDER);
+                }
+            }
 
             if(!reservation.getSchedule().getId().equals(schedule.getId())) {
                 throw new BusinessException(ErrorCode.INVALID_INPUT);
@@ -127,8 +138,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public ResponseDto<List<UserOrderListResponseDto>> getMyOrders(UserPrincipal principal) {
-        List<Order> orders = orderRepository.findByUserLoginIdFetch(principal.getLoginId());
+    public ResponseDto<List<UserOrderListResponseDto>> getMyOrders() {
+        User user = authorizationChecker.getCurrentUser();
+
+        List<Order> orders = orderRepository.findByUserIdFetch(user.getId());
 
         Map<String, PaymentStatus> paymentStatusMap = getPaymentStatus(orders);
 
@@ -148,9 +161,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @PreAuthorize("@authz.isScheduleOwner(#scheduleId, #ownerId)")
+    @PreAuthorize("@authz.isScheduleOwner(#scheduleId)")
     public ResponseDto<OwnerOrderPageResponseDto> getTruckOrders(
-            Long scheduleId, Long ownerId, Pageable pageable
+            Long scheduleId, Pageable pageable
     ) {
         Page<Order> orderPage = orderRepository.findOwnerOrders(scheduleId, pageable);
 
@@ -181,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseDto<AdminOrderPageResponseDto> getAllOrders(
-            Long adminId, Pageable pageable, String dateRange,
+            Pageable pageable, String dateRange,
             OrderStatus status, String keyword, OrderSource source
     ) {
         LocalDateTime startDate = getStartDate(dateRange);
@@ -217,13 +230,17 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication) "
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId) "
     )
     public ResponseDto<OrderDetailResponseDto> updateOrder(
             Long orderId, OrderUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        TruckPolicy.validateActive(order.getSchedule().getTruck());
 
         if(order.getStatus() != OrderStatus.PENDING) {
             throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
@@ -269,7 +286,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication) "
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId) "
     )
     public ResponseDto<OrderDetailResponseDto> getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
@@ -298,9 +315,12 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication)"
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId)"
     )
-    public ResponseDto<Void> cancelOrder(Long orderId, UserPrincipal principal) {
+    public ResponseDto<Void> cancelOrder(Long orderId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -313,9 +333,55 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @PreAuthorize(
             "hasRole('ADMIN') " +
-                    "or @ownerOrderAuthz.canChangeOrder(#orderId, authentication)"
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId)"
     )
-    public ResponseDto<Void> refundOrder(Long orderId, UserPrincipal principal) {
+    public ResponseDto<Void> payOrder(Long orderId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if(order.getStatus() != OrderStatus.PENDING) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        boolean exists = paymentRepository.existsByOrderIdAndStatus(orderId, PaymentStatus.SUCCESS);
+        if(exists) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PROCESSED);
+        }
+
+        order.paid();
+
+        Payment payment = Payment.builder()
+                .user(order.getUser())
+                .orderId(order.getId())
+                .paymentOrderId("ORD-" + order.getId())
+                .paymentKey("MOCK-" + UUID.randomUUID())
+                .amount((long) order.getAmount())
+                .method(PaymentMethod.MOCK)
+                .status(PaymentStatus.READY)
+                .productCode("ORD-" + order.getId())
+                .productName(order.getSchedule().getTruck().getName())
+                .build();
+
+        payment.markSuccess();
+        paymentRepository.save(payment);
+
+        return ResponseDto.success("현장 결제 완료");
+    }
+
+
+    @Override
+    @Transactional
+    @PreAuthorize(
+            "hasRole('ADMIN') " +
+                    "or @ownerOrderAuthz.canChangeOrder(#orderId)"
+    )
+    public ResponseDto<Void> refundOrder(Long orderId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
@@ -353,18 +419,6 @@ public class OrderServiceImpl implements OrderService {
                         Payment::getStatus,
                         (existing, replacement) -> replacement
                 ));
-    }
-
-    private String getProductCode(Order order) {
-        String productCode;
-
-        if(order.getSource() == OrderSource.RESERVATION && order.getReservation() != null) {
-            productCode = "RES-" + order.getReservation().getId();
-        } else {
-            productCode = "ORD-" + order.getId();
-        }
-
-        return productCode;
     }
 
     private LocalDateTime getStartDate(String dateRange) {

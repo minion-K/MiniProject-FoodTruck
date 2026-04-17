@@ -27,27 +27,24 @@ public class PaymentController {
 
     @PostMapping
     public ResponseEntity<ResponseDto<?>> createPayment(
-            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody PaymentCreateRequestDto request
     ) {
-        var response = paymentService.createPayment(principal, request);
+        var response = paymentService.createPayment(request);
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(PaymentApi.APPROVE)
     public ResponseEntity<ResponseDto<?>> approvePayment(
-            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody PaymentApproveRequestDto request
     ) {
-        var response = paymentService.approvePayment(principal, request);
+        var response = paymentService.approvePayment(request);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(PaymentApi.ME)
     public ResponseEntity<ResponseDto<PaymentPageResponseDto>> getMyPayments(
-            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
@@ -55,18 +52,17 @@ public class PaymentController {
             ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        ResponseDto<PaymentPageResponseDto> response = paymentService.getMyPayments(principal, pageable, keyword, status);
+        ResponseDto<PaymentPageResponseDto> response = paymentService.getMyPayments(pageable, keyword, status);
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping(PaymentApi.REFUND)
     public ResponseEntity<ResponseDto<Void>> refundPayment(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long paymentId,
             @Valid @RequestBody PaymentRefundRequestDto request
     ) {
-        ResponseDto<Void> response = paymentService.refundPayment(principal, paymentId, request);
+        ResponseDto<Void> response = paymentService.refundPayment(paymentId, request);
 
         return ResponseEntity.ok(response);
     }

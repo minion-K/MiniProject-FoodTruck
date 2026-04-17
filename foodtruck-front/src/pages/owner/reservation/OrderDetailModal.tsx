@@ -63,6 +63,7 @@ function OrderDetailModal({
         onUpdated?.();
       } catch (e) {
         alert(getErrorMsg(e));
+        onClose();
       }
     };
   
@@ -76,6 +77,7 @@ function OrderDetailModal({
         onUpdated?.();
       } catch (e) {
         alert(getErrorMsg(e));
+        onClose();
       }
     };
 
@@ -196,13 +198,12 @@ function OrderDetailModal({
             onSelect={onsiteType => {
               navigate("/pay/onsite", {
               state: {
-                targetId: payOrder.id,
-                targetType: "ONSITE",
-                productCode: `ORD-${payOrder.id}`,
+                order: payOrder,
                 productName: truckName,
                 amount: payOrder.amount,
-                method: "MOCK",
-                onsiteType,
+                targetType: "ONSITE",
+                onsiteType: onsiteType,
+
                 selectedTruckId: truckId,
                 selectedScheduleId: scheduleId,
                 activeTab: "order",

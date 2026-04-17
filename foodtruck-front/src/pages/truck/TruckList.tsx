@@ -258,7 +258,7 @@ function TruckList() {
             ) : (trucks.length === 0) ? (
               <Empty>등록된 트럭이 없습니다.</Empty>
             ) : (
-              <Trucks trucks={visibleTrucks} />
+              <Trucks trucks={trucks} />
             )}
           </ListScrollArea>
         </ListWrapper>

@@ -1,7 +1,6 @@
 package org.example.foodtruckback.common.constants.payment;
 
 import org.example.foodtruckback.common.constants.ApiBase;
-import org.example.foodtruckback.common.constants.order.OrderApi;
 
 public class PaymentApi {
     private PaymentApi() {}

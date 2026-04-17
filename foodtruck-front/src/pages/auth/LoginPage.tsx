@@ -13,6 +13,7 @@ function LoginPage() {
 
   const setAccessToken = useAuthStore(s => s.setAccessToken);
   const setUser = useAuthStore(s => s.setUser);
+  const setShowAlert = useAuthStore(s => s.setShowAlert);
 
   const [form, setForm] = useState<LoginRequest>({
     loginId: "",
@@ -41,6 +42,10 @@ function LoginPage() {
       }
 
       setUser(me);
+
+      if(me.status !== "ACTIVE") {
+        setShowAlert(true);
+      }
     },
     onSuccess: () => {
       navigate("/")

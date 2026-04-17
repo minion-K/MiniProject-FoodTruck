@@ -5,9 +5,12 @@ import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.reservation.Reservation;
+import org.example.foodtruckback.entity.truck.MenuItem;
+import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
+import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
 import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
@@ -26,6 +29,7 @@ public class AuthorizationChecker {
     private final ReservationRepository reservationRepository;
     private final TruckRepository truckRepository;
     private final ScheduleRepository scheduleRepository;
+    private final MenuItemRepository menuItemRepository;
 
     public User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -73,7 +77,21 @@ public class AuthorizationChecker {
     }
 
 //    본인 트럭 스케줄 확인
-    public boolean isScheduleOwner(Long ScheduleId, Long ownerId) {
-        return scheduleRepository.existsByIdAndTruckOwnerId(ScheduleId, ownerId);
+    public boolean isScheduleOwner(Long scheduleId) {
+        User user = getCurrentUser();
+
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+
+        return schedule.getTruck().getOwner().getId().equals(user.getId());
+    }
+
+    public boolean isMenuOwner(Long menuId) {
+        User user = getCurrentUser();
+
+        MenuItem menu = menuItemRepository.findById(menuId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+
+        return menu.getTruck().getOwner().getId().equals(user.getId());
     }
 }

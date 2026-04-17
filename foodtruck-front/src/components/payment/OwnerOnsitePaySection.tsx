@@ -1,51 +1,52 @@
-import { usePaymentContext } from "@/context/payment/PaymentContext";
-import useCreatePayment from "@/hooks/useCreatePayment";
+import { orderApi } from "@/apis/order/order.api";
+import type { OwnerOrderListItemResponse } from "@/types/order/order.dto";
+import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
-import React from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
-  selectedTruckId: number | null;
-  selectedScheduleId: number | null;
+  order: OwnerOrderListItemResponse;
+  selectedTruckId: number;
+  selectedScheduleId: number;
   activeTab: "reservation" | "order";
+  paymentType?: "CARD" | "CASH";
 }
 
-function OwnerOnsitePaySection({selectedTruckId, selectedScheduleId, activeTab}: Props) {
-  const { targetId, amount, productName, productCode } = usePaymentContext();
-  const { mutate, isPending } = useCreatePayment();
+function OwnerOnsitePaySection({order, selectedTruckId, selectedScheduleId, activeTab, paymentType}: Props) {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
-  const handleMockPay = () => {
-    mutate(
-      {
-        orderId: targetId,
-        productCode,
-        productName,
-        amount,
-        method: "MOCK",
-      },
-      {
-        onSuccess: () => {
-          toast.success("결제가 완료되었습니다.");
+  const handleMockPay = async () => {
+    try {
+      setLoading(true);
+      await orderApi.payOrder(order.id);
 
-          navigate("/owner/reservations", {
-            state: {
-              selectedTruckId,
-              selectedScheduleId,
-              activeTab
-            }
-          });
-        },
-      },
-    );
+      toast.success(paymentType === "CARD" 
+        ? "카드 결제를 완료했습니다."
+        : "현금 결제를 완료했습니다."
+      );
+
+      navigate("/owner/reservations" , {
+        state: {
+          selectedTruckId,
+          selectedScheduleId,
+          activeTab
+        }
+      });
+    } catch (e) {
+      alert(getErrorMsg(e));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Section>
       <SectionTitle>현장 결제</SectionTitle>
-      <Button onClick={handleMockPay} disabled={isPending}>
-        {isPending ? "결제 처리 중..." : "결제하기"}
+      <Button onClick={handleMockPay} disabled={loading || order.paymentStatus == "SUCCESS"}>
+        {loading ? "결제 처리 중..." : "결제하기"}
       </Button>
     </Section>
   );

@@ -1,4 +1,5 @@
 import { paymentApi } from "@/apis/payment/payment.api";
+import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React, { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
@@ -31,7 +32,7 @@ function TossSuccessPage() {
 
     (async () => {
       try {
-        const res = await paymentApi.approvePayment({
+        await paymentApi.approvePayment({
           paymentKey,
           tossOrderId,
           orderId: null,
@@ -41,16 +42,17 @@ function TossSuccessPage() {
           productName,
         });
 
-        toast("결제가 완료되었습니다.");
-        console.log(res);
+        toast.success("결제가 완료되었습니다.");
         navigate("/mypage", {
           replace: true,
           state: { activeTab: "reservations" },
         });
       } catch (e) {
-        alert("Toss 결제 중 오류가 발생했습니다.");
-
-        navigate("/pay/toss");
+        alert(getErrorMsg(e));
+        navigate("/mypage", {
+          replace: true,
+          state: { activeTab: "reservations" },
+        });
       }
     })();
   }, [params, navigate]);

@@ -78,10 +78,6 @@ public class Schedule extends BaseTimeEntity {
         if(!start.isBefore(end)) {
             throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
         }
-
-//        if(start.isBefore(now)) {
-//            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_REQUEST);
-//        }
     }
 
     public boolean isNowActive() {
@@ -158,7 +154,8 @@ public class Schedule extends BaseTimeEntity {
             case OPEN -> newStatus == ScheduleStatus.CLOSED ||
                     newStatus == ScheduleStatus.CANCELED;
 
-            case CLOSED, CANCELED -> false;
+            case CLOSED -> newStatus == ScheduleStatus.OPEN;
+            case CANCELED -> false;
         };
 
         if (!isValid) {

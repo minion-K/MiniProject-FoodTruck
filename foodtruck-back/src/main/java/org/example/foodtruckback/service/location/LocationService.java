@@ -13,13 +13,13 @@ import java.util.List;
 
 public interface LocationService {
 
-    ResponseDto<LocationDetailResponseDto> createLocation(UserPrincipal principal, @Valid LocationCreateRequestDto request);
+    ResponseDto<LocationDetailResponseDto> createLocation(@Valid LocationCreateRequestDto request);
 
     ResponseDto<List<LocationListItemResponseDto>> getAllLocation(String keyword);
 
     ResponseDto<LocationDetailResponseDto> getLocationById(Long locationId);
 
-    ResponseDto<LocationDetailResponseDto> updateLocation(UserPrincipal principal, Long locationId, @RequestBody LocationUpdateRequestDto request);
+    ResponseDto<LocationDetailResponseDto> updateLocation(Long locationId, @RequestBody LocationUpdateRequestDto request);
 
-    ResponseDto<Void> deleteLocation(UserPrincipal principal, Long locationId);
+    ResponseDto<Void> deleteLocation(Long locationId);
 }

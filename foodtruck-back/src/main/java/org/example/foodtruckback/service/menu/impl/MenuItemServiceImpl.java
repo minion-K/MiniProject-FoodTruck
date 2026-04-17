@@ -9,10 +9,15 @@ import org.example.foodtruckback.dto.menuItem.request.MenuItemUpdateRequestDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.entity.truck.MenuItem;
 import org.example.foodtruckback.entity.truck.Truck;
+import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.menu.MenuItemService;
+import org.example.foodtruckback.service.policy.TruckPolicy;
+import org.example.foodtruckback.service.policy.UserPolicy;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,15 +31,20 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
     private final TruckRepository truckRepository;
+    private final AuthorizationChecker authorizationChecker;
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#request.truckId())")
     public ResponseDto<MenuItemDetailResponseDto> createMenu(MenuItemCreateRequestDto request) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
 
         Truck truck = truckRepository.findById(request.truckId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
+        TruckPolicy.validateActive(truck);
 
-        boolean existsMenu = menuItemRepository.existsByName(request.name());
+        boolean existsMenu = menuItemRepository.existsByTruckAndName(truck, request.name());
         if(existsMenu) {
             throw new BusinessException(ErrorCode.DUPLICATE_MENU);
         }
@@ -54,7 +64,6 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public ResponseDto<MenuItemDetailResponseDto> getMenu(Long menuId) {
-
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
 
@@ -65,7 +74,6 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public ResponseDto<List<MenuItemDetailResponseDto>> getTruckMenus(Long truckId) {
-
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
 
@@ -79,16 +87,21 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isMenuOwner(#menuId)")
     public ResponseDto<MenuItemDetailResponseDto> updateMenu(
             Long menuId, MenuItemUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+        TruckPolicy.validateActive(menuItem.getTruck());
 
         String newName = request.name().trim();
 
         if(!menuItem.getName().equals(newName)) {
-            boolean existsMenu = menuItemRepository.existsByName(newName);
+            boolean existsMenu = menuItemRepository.existsByTruckAndName(menuItem.getTruck(), newName);
 
             if(existsMenu) {
                 throw new BusinessException(ErrorCode.DUPLICATE_MENU);
@@ -116,10 +129,14 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isMenuOwner(#menuId)")
     public ResponseDto<?> deleteMenu(Long menuId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
 
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+        TruckPolicy.validateActive(menuItem.getTruck());
 
         menuItemRepository.delete(menuItem);
 
@@ -128,11 +145,16 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isMenuOwner(#menuId)")
     public ResponseDto<MenuItemDetailResponseDto> setSoldOut(
             Long menuId, MenuItemIsSoldOutRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         MenuItem menuItem = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MENU_NOT_FOUND));
+        TruckPolicy.validateActive(menuItem.getTruck());
 
         menuItem.setSoldOut(request.isSoldOut());
 

@@ -21,6 +21,7 @@ export interface UserDetailResponse {
   phone: string | null;
   roles: RoleType[];
   provider: AuthProvider;
+  status: UserStatus;
 }
 
 export interface UserListItemResponse {

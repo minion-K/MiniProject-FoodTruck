@@ -17,6 +17,8 @@ public class OrderApi {
 
     // cancel
     public static final String CANCEL = BY_ID + "/cancel";
+
+    public static final String PAY = BY_ID + "/pay";
     // refund
     public static final String REFUND = BY_ID + "/refund";
 }

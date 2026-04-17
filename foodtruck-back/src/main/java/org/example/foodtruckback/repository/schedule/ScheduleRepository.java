@@ -7,14 +7,10 @@ import org.example.foodtruckback.entity.truck.Truck;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 
 public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
-    List<Schedule> findByTruckIdOrderByStartTimeDesc(Long truckId);
-
     List<Schedule> findAllByTruck(Truck truck);
 
     @Query("""
@@ -61,8 +57,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
     );
 
     boolean existsByLocationId(Long locationId);
-
-    boolean existsByIdAndTruckOwnerId(Long scheduleId, Long ownerId);
 
     boolean existsByTruckIdAndStatusAndEndTimeAfter(Long truckId, ScheduleStatus scheduleStatus, LocalDateTime now);
 

@@ -55,6 +55,8 @@ function AdminReservationTab({keyword, dateRange, status}: Props) {
 
     try {
       await reservationApi.cancelReservation(reservationId);
+
+      fetchReservations();
       toast.success("예약이 강제 취소 되었습니다.");
     } catch (e) {
       alert(getErrorMsg(e));

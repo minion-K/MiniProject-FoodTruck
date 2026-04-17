@@ -32,7 +32,7 @@ public class MenuItemController {
 
     @GetMapping(MenuApi.BY_ID)
     public ResponseEntity<ResponseDto<MenuItemDetailResponseDto>> getMenu(
-        @PathVariable Long menuId
+            @PathVariable Long menuId
     ) {
         ResponseDto<MenuItemDetailResponseDto> data = menuItemService.getMenu(menuId);
 

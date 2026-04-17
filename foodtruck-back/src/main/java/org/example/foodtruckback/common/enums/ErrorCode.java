@@ -36,6 +36,7 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U003", "존재하지 않는 권한입니다." ,"Role not found" ),
     INVALID_ROLE(HttpStatus.BAD_REQUEST,"U004", "권한은 필수입니다." ,"Roles are mandatory" ),
     USER_NOT_MATCH(HttpStatus.BAD_REQUEST,"U005", "일치하는 회원정보가 없습니다." ,"User not match" ),
+    USER_SUSPENDED(HttpStatus.BAD_REQUEST,"U006", "정지로 인해 서비스 이용이 제한된 회원입니다." ,"Suspended user is restricted from service"),
 
     // ===========================
     // location (Lxxx)
@@ -92,6 +93,7 @@ public enum ErrorCode {
     TRUCK_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "해당 트럭을 찾을 수 없습니다.", "Truck not found"),
     TRUCK_ACTIVATION_INVALID(HttpStatus.BAD_REQUEST, "T002", "메뉴와 스케줄을 모두 등록해야 트럭을 활성화할 수 있습니다.", "Truck must have at least one menu and schedule to activate"),
     TRUCK_NOT_OPEN(HttpStatus.BAD_REQUEST, "T003", "현재 운영 중인 트럭이 아닙니다.", "Truck not open"),
+    TRUCK_SUSPENDED(HttpStatus.BAD_REQUEST,"T004", "이용이 정지된 트럭입니다." ,"Suspended truck is restricted from service"),
 
     // ===========================
     // payment (Pxxx)
@@ -109,7 +111,8 @@ public enum ErrorCode {
     ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "O003", "현재 주문 상태로는 수행할 수 없습니다.", "Invalid order status"),
     ORDER_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "O004", "이미 취소된 주문입니다.", "Order already canceled"),
     ORDER_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O005", "해당 주문은 취소할 수 없습니다.", "Order cancel not allowed"),
-    ORDER_REFUND_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O006", "해당 주문은 환불할 수 없습니다.", "Order refund not allowed");
+    ORDER_REFUND_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "O006", "해당 주문은 환불할 수 없습니다.", "Order refund not allowed"),
+    DUPLICATE_ORDER(HttpStatus.CONFLICT, "0007", "이미 생성된 예약 주문입니다.", "Duplicate reservation order");
 
 
     private final HttpStatus status;

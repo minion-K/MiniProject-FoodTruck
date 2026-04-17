@@ -16,20 +16,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 public interface ReservationService {
-    ResponseDto<ReservationResponseDto> createReservation(Long ownerId, @Valid ReservationCreateRequestDto request);
+    ResponseDto<ReservationResponseDto> createReservation(@Valid ReservationCreateRequestDto request);
 
-    ResponseDto<ReservationResponseDto> getReservationById(Long userId, Long reservationId);
+    ResponseDto<ReservationResponseDto> getReservationById(Long reservationId);
 
     ResponseDto<OwnerReservationPageResponseDto> getOwnerReservations(Long ownerId, Long scheduleId, Pageable pageable);
 
-    ResponseDto<AdminReservationPageResponseDto> getAdminReservations(Long adminId, Pageable pageable, String dateRange, ReservationStatus status, String keyword);
+    ResponseDto<AdminReservationPageResponseDto> getAdminReservations(Pageable pageable, String dateRange, ReservationStatus status, String keyword);
 
     ResponseDto<ReservationPageResponseDto> getMyReservations(Long userId, Pageable pageable, String keyword, ReservationStatus status);
 
-    ResponseDto<ReservationResponseDto> updateStatus(Long userId, Long reservationId, ReservationStatusUpdateRequestDto request);
+    ResponseDto<ReservationResponseDto> updateStatus(Long reservationId, ReservationStatusUpdateRequestDto request);
 
-    ResponseDto<Void> cancelReservation(Long userId, Long reservationId);
+    ResponseDto<Void> cancelReservation(Long reservationId);
 
-    ResponseDto<ReservationResponseDto> updateReservation(Long ownerId, Long reservationId, ReservationUpdateRequestDto request);
+    ResponseDto<ReservationResponseDto> updateReservation(Long reservationId, ReservationUpdateRequestDto request);
 
 }

@@ -9,6 +9,16 @@ interface Props {
     amount: number;
     productCode: string;
     productName: string;
+
+    onsiteType?: "CARD" | "CASH";
+
+    displayInfo?: {
+      menus?: {name: string, quantity: number}[];
+      pickupTime?: string;
+    };
+
+    selectedTruckId?: number | null;
+    selectedScheduleId?: number | null;
   };
 
   children: React.ReactNode;

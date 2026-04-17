@@ -32,10 +32,9 @@ public class TruckController {
 
     @PostMapping
     public ResponseEntity<ResponseDto<TruckDetailResponseDto>> createTruck(
-            @Valid @RequestBody TruckCreateRequestDto request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @Valid @RequestBody TruckCreateRequestDto request
     ) {
-        ResponseDto<TruckDetailResponseDto> response = truckService.createTruck(request, principal.getId());
+        ResponseDto<TruckDetailResponseDto> response = truckService.createTruck(request);
 
         return ResponseEntity.ok(response);
     }
@@ -64,12 +63,11 @@ public class TruckController {
 
     @GetMapping(TruckApi.OWNER)
     public ResponseEntity<ResponseDto<TruckPageResponseDto>> getOwnerTrucks(
-            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        ResponseDto<TruckPageResponseDto> response = truckService.getOwnerTrucks(principal.getId(), pageable);
+        ResponseDto<TruckPageResponseDto> response = truckService.getOwnerTrucks(pageable);
 
         return ResponseEntity.ok(response);
     }
@@ -77,10 +75,9 @@ public class TruckController {
     @PutMapping(TruckApi.BY_ID)
     public ResponseEntity<ResponseDto<TruckDetailResponseDto>> updateTruck(
             @PathVariable Long truckId,
-            @Valid @RequestBody TruckUpdateRequestDto request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @Valid @RequestBody TruckUpdateRequestDto request
     ) {
-        ResponseDto<TruckDetailResponseDto> response = truckService.updateTruck(truckId, request, principal.getId());
+        ResponseDto<TruckDetailResponseDto> response = truckService.updateTruck(truckId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -88,29 +85,25 @@ public class TruckController {
     @PutMapping(TruckApi.STATUS)
     public ResponseEntity<ResponseDto<Void>> updateTruckStatus(
             @PathVariable Long truckId,
-            @RequestBody TruckStatusUpdateRequestDto request,
-            @AuthenticationPrincipal UserPrincipal principal
-            ) {
-        ResponseDto<Void> response = truckService.updateTruckStatus(truckId, request, principal);
+            @RequestBody TruckStatusUpdateRequestDto request
+    ) {
+        ResponseDto<Void> response = truckService.updateTruckStatus(truckId, request);
 
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping(TruckApi.BY_ID)
     public ResponseEntity<ResponseDto<Void>> deleteTruck(
-            @PathVariable Long truckId,
-            @AuthenticationPrincipal UserPrincipal principal
+            @PathVariable Long truckId
     ) {
-        ResponseDto<Void> response = truckService.deleteTruck(truckId, principal.getId());
+        ResponseDto<Void> response = truckService.deleteTruck(truckId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(TruckApi.COUNT)
-    public ResponseEntity<ResponseDto<TruckCountResponseDto>> getTruckCount(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        ResponseDto<TruckCountResponseDto> response = truckService.getTruckCount(principal);
+    public ResponseEntity<ResponseDto<TruckCountResponseDto>> getTruckCount() {
+        ResponseDto<TruckCountResponseDto> response = truckService.getTruckCount();
 
         return ResponseEntity.ok(response);
     }

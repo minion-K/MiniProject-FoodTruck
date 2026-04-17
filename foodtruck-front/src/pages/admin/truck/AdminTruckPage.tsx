@@ -78,7 +78,7 @@ function AdminTruckPage() {
     try {
       await truckApi.updateTruckStatus(truck.id, {status: newStatus});
 
-      toast.success(`${truck.name}의 상태가 변경되었습니다.`)
+      toast.success(`"${truck.name}" 트럭의 상태가 변경되었습니다.`)
       fetchTrucks();
     } catch (e) {
       alert(getErrorMsg(e));
@@ -140,7 +140,10 @@ function AdminTruckPage() {
           <SearchInput 
             value={keyword}
             onChange={setKeyword}
-            onSearch={() => {fetchTrucks()}}
+            onSearch={() => {
+              setPage(0);
+              fetchTrucks();
+            }}
             onEnter={true}
             placeholder="트럭명으로 검색하세요."
           />

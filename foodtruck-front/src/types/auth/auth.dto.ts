@@ -1,5 +1,7 @@
 // Request //
 
+import type { UserStatus } from "../user/user.type";
+
 // 회원가입
 export interface SignupRequest {
   name: string;
@@ -64,7 +66,7 @@ export interface SignupResponse {
 // 로그인
 export interface LoginResponse {
   accessToken: string,
-  refreshToke: string,
+  refreshToken: string,
   accessTokenExpiresInMillis: number
 }
 

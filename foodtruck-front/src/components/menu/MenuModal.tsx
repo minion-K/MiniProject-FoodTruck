@@ -52,14 +52,15 @@ function MenuModal({ truckId, menu, onClose, onSuccess }: Props) {
       onSuccess();
     } catch (e) {
       alert(getErrorMsg(e));
+      onClose();
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Overlay>
-      <Modal>
+    <Overlay onClick={onClose}>
+      <Modal onClick={(e) => e.stopPropagation()}>
         <Title>{menu ? "메뉴 수정" : "메뉴 추가"}</Title>
 
         <Field>

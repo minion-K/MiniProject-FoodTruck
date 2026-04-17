@@ -19,6 +19,7 @@ public interface TruckRepository extends JpaRepository<Truck,Long> {
         FROM Truck t
         WHERE (:status IS NULL OR t.status = :status)
             AND (:keyword IS NULL OR t.name LIKE %:keyword% OR t.cuisine LIKE %:keyword%)
+        ORDER BY t.createdAt DESC
     """)
     Page<Truck> findAllWithFilter(Pageable pageable, String keyword, TruckStatus status);
 

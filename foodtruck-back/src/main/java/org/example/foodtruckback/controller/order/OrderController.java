@@ -9,13 +9,10 @@ import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
 import org.example.foodtruckback.dto.order.response.*;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.order.OrderService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,20 +26,17 @@ public class OrderController {
     // create order
     @PostMapping()
     public ResponseEntity<ResponseDto<OrderDetailResponseDto>> createOrder(
-            @Valid @RequestBody OrderCreateRequestDto request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @Valid @RequestBody OrderCreateRequestDto request
     ) {
-        ResponseDto<OrderDetailResponseDto> response = orderService.createOrder(request, principal);
+        ResponseDto<OrderDetailResponseDto> response = orderService.createOrder(request);
 
         return ResponseEntity.ok().body(response);
     }
 
     // get order (all) - user
     @GetMapping(OrderApi.ME)
-    public ResponseEntity<ResponseDto<List<UserOrderListResponseDto>>> getMyOrders(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        ResponseDto<List<UserOrderListResponseDto>> response = orderService.getMyOrders(principal);
+    public ResponseEntity<ResponseDto<List<UserOrderListResponseDto>>> getMyOrders() {
+        ResponseDto<List<UserOrderListResponseDto>> response = orderService.getMyOrders();
 
         return ResponseEntity.ok().body(response);
     }
@@ -50,14 +44,13 @@ public class OrderController {
     //get order (all) - owner
     @GetMapping(OrderApi.OWNER)
     public ResponseEntity<ResponseDto<OwnerOrderPageResponseDto>> getTruckOrders(
-            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam Long scheduleId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        ResponseDto<OwnerOrderPageResponseDto> response = orderService.getTruckOrders(scheduleId, principal.getId(), pageable);
+        ResponseDto<OwnerOrderPageResponseDto> response = orderService.getTruckOrders(scheduleId, pageable);
 
         return ResponseEntity.ok().body(response);
     }
@@ -65,7 +58,6 @@ public class OrderController {
     // get order (all) - admin
     @GetMapping
     public ResponseEntity<ResponseDto<AdminOrderPageResponseDto>> getAllOrders(
-            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String dateRange,
@@ -76,7 +68,7 @@ public class OrderController {
         Pageable pageable = PageRequest.of(page, size);
 
         ResponseDto<AdminOrderPageResponseDto> response = orderService.getAllOrders(
-                principal.getId(), pageable, dateRange, status, keyword, source
+                pageable, dateRange, status, keyword, source
         );
 
         return ResponseEntity.ok().body(response);
@@ -105,10 +97,9 @@ public class OrderController {
     // cancel order (상태 변경)
     @PutMapping(OrderApi.CANCEL)
     public ResponseEntity<ResponseDto<Void>> cancelOrder(
-            @PathVariable Long orderId,
-            @AuthenticationPrincipal UserPrincipal principal
+            @PathVariable Long orderId
     ) {
-        ResponseDto<Void> response = orderService.cancelOrder(orderId, principal);
+        ResponseDto<Void> response = orderService.cancelOrder(orderId);
 
         return ResponseEntity.ok().body(response);
     }
@@ -116,11 +107,20 @@ public class OrderController {
     // refund order
     @PutMapping(OrderApi.REFUND)
     public ResponseEntity<ResponseDto<Void>> refundOrder(
-            @PathVariable Long orderId,
-            @AuthenticationPrincipal UserPrincipal principal
+            @PathVariable Long orderId
     ) {
-        ResponseDto<Void> response = orderService.refundOrder(orderId, principal);
+        ResponseDto<Void> response = orderService.refundOrder(orderId);
 
         return ResponseEntity.ok().body(response);
     }
+
+    @PutMapping(OrderApi.PAY)
+    public ResponseEntity<ResponseDto<Void>> payOrder(
+            @PathVariable Long orderId
+    ) {
+        ResponseDto<Void> response = orderService.payOrder(orderId);
+
+        return ResponseEntity.ok().body(response);
+    }
+
 }

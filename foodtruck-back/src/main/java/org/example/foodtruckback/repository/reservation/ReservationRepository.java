@@ -103,4 +103,6 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
         WHERE r.id = :reservationId
     """)
     Optional<Reservation> findDetail(@Param("reservationId") Long reservationId);
+
+
 }

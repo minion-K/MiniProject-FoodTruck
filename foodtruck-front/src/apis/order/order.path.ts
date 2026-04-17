@@ -10,5 +10,6 @@ export const ORDER_PATH = {
   ADMIN: ORDER_PREFIX,
   BY_ID: (orderId: number) => `${ORDER_PREFIX}/${orderId}`,
   CANCEL: (orderId: number) => `${ORDER_PREFIX}/${orderId}/cancel`,
+  PAY: (orderId: number) => `${ORDER_PREFIX}/${orderId}/pay`,
   REFUND: (orderId: number) => `${ORDER_PREFIX}/${orderId}/refund`
 }

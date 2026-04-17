@@ -29,20 +29,18 @@ public class ReservationController {
 
     @PostMapping
     public ResponseEntity<ResponseDto<ReservationResponseDto>> createReservation(
-            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody ReservationCreateRequestDto request
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.createReservation(principal.getId(), request);
+        ResponseDto<ReservationResponseDto> response = reservationService.createReservation(request);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(ReservationApi.BY_ID)
     public ResponseEntity<ResponseDto<ReservationResponseDto>> getReservationById(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.getReservationById(principal.getId(), reservationId);
+        ResponseDto<ReservationResponseDto> response = reservationService.getReservationById(reservationId);
         return ResponseEntity.ok(response);
     }
 
@@ -78,7 +76,6 @@ public class ReservationController {
 
     @GetMapping(ReservationApi.ADMIN)
     public ResponseEntity<ResponseDto<AdminReservationPageResponseDto>> getAdminReservations(
-            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "ALL") String dateRange,
@@ -88,40 +85,37 @@ public class ReservationController {
         Pageable pageable = PageRequest.of(page, size);
 
         ResponseDto<AdminReservationPageResponseDto> response =
-                reservationService.getAdminReservations(principal.getId(), pageable, dateRange, status, keyword);
+                reservationService.getAdminReservations(pageable, dateRange, status, keyword);
 
         return ResponseEntity.ok(response);
     }
 
     @PutMapping(ReservationApi.STATUS)
     public ResponseEntity<ResponseDto<ReservationResponseDto>> updateReservationStatus(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId,
             @RequestBody ReservationStatusUpdateRequestDto request
     ) {
         ResponseDto<ReservationResponseDto> response =
-                reservationService.updateStatus(principal.getId(), reservationId, request);
+                reservationService.updateStatus(reservationId, request);
 
         return ResponseEntity.ok(response);
     }
 
     @PutMapping(ReservationApi.CANCEL)
     public ResponseEntity<ResponseDto<Void>> cancelReservation(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId
     ) {
-        ResponseDto<Void> response = reservationService.cancelReservation(principal.getId(), reservationId);
+        ResponseDto<Void> response = reservationService.cancelReservation(reservationId);
 
         return ResponseEntity.ok(response);
     }
 
     @PutMapping(ReservationApi.BY_ID)
     public ResponseEntity<ResponseDto<ReservationResponseDto>> updateReservation(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long reservationId,
             @RequestBody ReservationUpdateRequestDto request
     ) {
-        ResponseDto<ReservationResponseDto> response = reservationService.updateReservation(principal.getId(), reservationId, request);
+        ResponseDto<ReservationResponseDto> response = reservationService.updateReservation(reservationId, request);
 
         return ResponseEntity.ok(response);
     }

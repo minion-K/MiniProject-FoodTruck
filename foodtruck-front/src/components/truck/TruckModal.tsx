@@ -38,7 +38,8 @@ function TruckModal({ open, onClose, initialValue, onSubmit }: Props) {
 
       onClose();
     } catch (e) {
-      alert(getErrorMsg(e) || "처리에 실패했습니다.");
+      alert(getErrorMsg(e));
+      onClose();
     } finally {
       setLoading(false);
     }

@@ -12,11 +12,16 @@ import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
+import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.location.LocationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
+import org.example.foodtruckback.service.policy.TruckPolicy;
+import org.example.foodtruckback.service.policy.UserPolicy;
 import org.example.foodtruckback.service.schedule.ScheduleService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,14 +35,20 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final TruckRepository truckRepository;
     private final LocationRepository locationRepository;
+    private final AuthorizationChecker authorizationChecker;
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isTruckOwner(#truckId)")
     public ResponseDto<ScheduleDetailResponseDto> createSchedule(
             Long truckId, ScheduleCreateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRUCK_NOT_FOUND));
+        TruckPolicy.validateActive(truck);
 
         Location location = locationRepository.findById(request.locationId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
@@ -90,12 +101,16 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isScheduleOwner(#scheduleId)")
     public ResponseDto<ScheduleDetailResponseDto> updateSchedule(
             Long scheduleId, ScheduleUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
-
+        TruckPolicy.validateActive(schedule.getTruck());
         Location location = schedule.getLocation();
         if(request.locationId() != null) {
             location = locationRepository.findById(request.locationId())
@@ -136,12 +151,17 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isScheduleOwner(#scheduleId)")
     public ResponseDto<Void> updateStatus(
             Long scheduleId,
             ScheduleStatusUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+        TruckPolicy.validateActive(schedule.getTruck());
 
         if(request.status() == ScheduleStatus.OPEN) {
             boolean existOpen = scheduleRepository.existsByTruckIdAndStatus(
@@ -166,9 +186,14 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
+    @PreAuthorize("@authz.isScheduleOwner(#scheduleId)")
     public ResponseDto<Void> deleteSchedule(Long scheduleId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+        TruckPolicy.validateActive(schedule.getTruck());
 
         scheduleRepository.delete(schedule);
 

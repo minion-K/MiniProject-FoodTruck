@@ -35,8 +35,8 @@ function UserTossPaySection() {
         successUrl: successUrl.toString(),
         failUrl,
       });
-    } catch (error: any) {
-      alert("Toss 결제 오류: " + (getErrorMsg(error) ?? ""));
+    } catch (e) {
+      alert(getErrorMsg(e));
     }
   };
 

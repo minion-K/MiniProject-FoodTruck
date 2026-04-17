@@ -78,8 +78,6 @@ function ReservationTab({scheduleId, onSelect}: Props) {
               const reservationStatus = getReservationStatus(reservation.status);
               const paymentStatus = getPaymentStatus(reservation.paymentStatus);
               const menuItems = reservation.menus ?? [];
-              console.log(reservation.status);
-
 
               const totalAmount = menuItems.reduce(
                 (sum, item) => sum + item.price * item.quantity,

@@ -148,6 +148,7 @@ function ScheduleModal({truckId, schedule, onClose, onSuccess}: Props) {
       onSuccess();
     } catch (e) {
       alert(getErrorMsg(e));
+      onClose();
     } finally {
       setLoading(false);
     }

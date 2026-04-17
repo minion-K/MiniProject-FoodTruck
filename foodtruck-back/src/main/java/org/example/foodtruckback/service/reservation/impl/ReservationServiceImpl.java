@@ -23,18 +23,16 @@ import org.example.foodtruckback.repository.payment.PaymentRepository;
 import org.example.foodtruckback.repository.reservation.ReservationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
-import org.example.foodtruckback.security.user.UserPrincipal;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.payment.PaymentService;
+import org.example.foodtruckback.service.policy.TruckPolicy;
+import org.example.foodtruckback.service.policy.UserPolicy;
 import org.example.foodtruckback.service.reservation.ReservationService;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,23 +57,23 @@ public class ReservationServiceImpl implements ReservationService {
     private final ScheduleRepository scheduleRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
+    private final AuthorizationChecker authorizationChecker;
 
     @Override
     @Transactional
     public ResponseDto<ReservationResponseDto> createReservation(
-            Long ownerId,
             ReservationCreateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
 
         Schedule schedule = scheduleRepository.findById(request.scheduleId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
 
+        TruckPolicy.validateActive(schedule.getTruck());
+
         if(schedule.getStatus() != ScheduleStatus.OPEN) {
             throw new BusinessException(ErrorCode.SCHEDULE_NOT_OPEN);
-        }
-
-        if(schedule.getTruck().getStatus() != TruckStatus.ACTIVE) {
-            throw new BusinessException(ErrorCode.TRUCK_NOT_OPEN);
         }
 
         if(!schedule.isReservation()) {
@@ -93,14 +91,12 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         boolean exist = reservationRepository.existsByUser_IdAndSchedule_IdAndPickupTimeAndStatusIn(
-                ownerId, schedule.getId(),pickupTime, List.of(PENDING, CONFIRMED)
+                user.getId(), schedule.getId(), pickupTime, List.of(PENDING, CONFIRMED)
         );
 
         if(exist) {
             throw new BusinessException(ErrorCode.DUPLICATE_RESERVATION);
         }
-
-        User user = userRepository.getReferenceById(ownerId);
 
         int totalAmount = 0;
 
@@ -151,7 +147,6 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> getReservationById(
-            Long userId,
             Long reservationId
     ) {
         Reservation reservation = reservationRepository.findDetail(reservationId)
@@ -236,8 +231,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseDto<AdminReservationPageResponseDto> getAdminReservations(
-            Long adminId, Pageable pageable,
-            String dateRange, ReservationStatus status, String keyword
+            Pageable pageable, String dateRange, ReservationStatus status, String keyword
     ) {
         LocalDateTime startDate = getStartDate(dateRange);
         LocalDateTime endDate = getEndDate();
@@ -268,12 +262,16 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> updateStatus(
-            Long userId,
             Long reservationId,
             ReservationStatusUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        TruckPolicy.validateActive(reservation.getSchedule().getTruck());
 
         if(request.status() != ReservationStatus.CONFIRMED) {
             throw new BusinessException(ErrorCode.INVALID_RESERVATION_STATUS);
@@ -294,13 +292,14 @@ public class ReservationServiceImpl implements ReservationService {
             "@authz.isTruckOwnerByReservation(#reservationId) or " +
             "hasRole('ADMIN')"
     )
-    public ResponseDto<Void> cancelReservation(
-            Long userId, Long reservationId
-    ) {
+    public ResponseDto<Void> cancelReservation(Long reservationId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        boolean isReservationOwner = reservation.getUser().getId().equals(userId);
+        boolean isReservationOwner = reservation.getUser().getId().equals(user.getId());
 
         if(isReservationOwner) {
             reservation.cancelByUser();
@@ -331,10 +330,12 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> updateReservation(
-            Long userId,
             Long reservationId,
             ReservationUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
@@ -343,6 +344,8 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         Schedule schedule = reservation.getSchedule();
+
+        TruckPolicy.validateActive(schedule.getTruck());
 
         LocalDateTime pickupTime = request.pickupTime()
                 .withMinute(0)

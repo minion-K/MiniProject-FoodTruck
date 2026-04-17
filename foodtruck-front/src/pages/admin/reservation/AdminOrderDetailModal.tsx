@@ -104,7 +104,7 @@ function AdminOrderDetailModal({open, order, onClose, onSuccess}: Props) {
         <ButtonRow>
           {canCancel && (
             <Button danger disabled={loading} onClick={handleCancel}>
-              결제취소
+              주문취소
             </Button>
           )}
           {canRefund && (

@@ -156,12 +156,14 @@ public class AuthServiceImpl implements AuthService {
                     true
             );
 
-            return ResponseDto.success("로그인 성공", LoginResponseDto.of(accessToken, accessExpiresIn));
+            LoginResponseDto result = LoginResponseDto.of(accessToken, accessExpiresIn);
+
+            return ResponseDto.success("로그인 성공", result);
 
         } catch (BadCredentialsException ex) {
             throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED);
-        } catch (Exception ex) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, ex.getMessage());
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }
 
@@ -174,7 +176,7 @@ public class AuthServiceImpl implements AuthService {
 
             if (jwtProvider.isValidToken(refreshToken)) {
                 String loginId = jwtProvider.getUsernameFromJwt((refreshToken));
-                userRepository.findByLoginId(loginId).ifPresent(user -> refreshTokenRepository.deleteByUser(user));
+                userRepository.findByLoginId(loginId).ifPresent(refreshTokenRepository::deleteByUser);
             }
         });
 
@@ -242,11 +244,10 @@ public class AuthServiceImpl implements AuthService {
 
     // 인증 상태 확인
     public boolean isVerified(String email) {
-        boolean isVerified = userRepository.findByEmail(email)
+
+        return userRepository.findByEmail(email)
                 .map(User::isVerified)
                 .orElse(false);
-
-        return isVerified;
     }
 
     // 이메일 인증
@@ -365,7 +366,9 @@ public class AuthServiceImpl implements AuthService {
                 false
         );
 
-        return ResponseDto.success("토큰 재발급 완료", LoginResponseDto.of(newAccess, accessExpiresIn));
+        LoginResponseDto result = LoginResponseDto.of(newAccess, accessExpiresIn);
+
+        return ResponseDto.success("토큰 재발급 완료", result);
     }
 
     // 비밀번호 토큰

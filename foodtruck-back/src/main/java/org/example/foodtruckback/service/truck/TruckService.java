@@ -17,19 +17,19 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface TruckService {
-    ResponseDto<TruckDetailResponseDto> createTruck(@Valid TruckCreateRequestDto request, Long userId);
+    ResponseDto<TruckDetailResponseDto> createTruck(@Valid TruckCreateRequestDto request);
 
     ResponseDto<TruckDetailResponseDto> getTruckById(Long truckId);
 
     ResponseDto<TruckPageResponseDto> getAllTrucks(Pageable pageable, String keyword, TruckStatus status);
 
-    ResponseDto<TruckPageResponseDto>getOwnerTrucks(Long userId, Pageable pageable);
+    ResponseDto<TruckPageResponseDto>getOwnerTrucks(Pageable pageable);
 
-    ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, @Valid TruckUpdateRequestDto request, Long userId);
+    ResponseDto<TruckDetailResponseDto> updateTruck(Long truckId, @Valid TruckUpdateRequestDto request);
 
-    ResponseDto<Void> deleteTruck(Long truckId, Long userId);
+    ResponseDto<Void> deleteTruck(Long truckId);
 
-    ResponseDto<Void> updateTruckStatus(Long truckId, TruckStatusUpdateRequestDto request, UserPrincipal principal);
+    ResponseDto<Void> updateTruckStatus(Long truckId, TruckStatusUpdateRequestDto request);
 
-    ResponseDto<TruckCountResponseDto> getTruckCount(UserPrincipal principal);
+    ResponseDto<TruckCountResponseDto> getTruckCount();
 }

@@ -51,10 +51,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         LEFT JOIN FETCH o.orderItems
         LEFT JOIN FETCH o.user
         LEFT JOIN FETCH o.schedule s
-        WHERE o.user.loginId = :loginId
+        WHERE o.user.id = :userId
         ORDER BY o.createdAt DESC
     """)
-    List<Order> findByUserLoginIdFetch(@Param("loginId") String loginId);
+    List<Order> findByUserIdFetch(@Param("userId") Long userId);
 
 
 //    TODO: orderItems N + 1 최적화 필요(IN 쿼리)

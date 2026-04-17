@@ -1,7 +1,6 @@
 package org.example.foodtruckback.service.payment;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.buf.ByteChunk;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.PaymentMethod;
 import org.example.foodtruckback.common.enums.PaymentStatus;
@@ -15,16 +14,19 @@ import org.example.foodtruckback.dto.payment.response.PaymentResponseDto;
 import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.entity.payment.Payment;
 import org.example.foodtruckback.entity.payment.PaymentRefund;
+import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.order.OrderRepository;
 import org.example.foodtruckback.repository.payment.PaymentRefundRepository;
 import org.example.foodtruckback.repository.payment.PaymentRepository;
-import org.example.foodtruckback.repository.user.UserRepository;
-import org.example.foodtruckback.security.user.UserPrincipal;
+import org.example.foodtruckback.repository.reservation.ReservationRepository;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.payment.gateway.PaymentGateway;
 import org.example.foodtruckback.service.payment.gateway.PaymentGatewayResolver;
 import org.example.foodtruckback.service.payment.gateway.PaymentResult;
+import org.example.foodtruckback.service.policy.TruckPolicy;
+import org.example.foodtruckback.service.policy.UserPolicy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,26 +38,25 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentRefundRepository paymentRefundRepository;
     private final PaymentGatewayResolver gatewayResolver;
-    private final UserRepository userRepository;
+    private final ReservationRepository reservationRepository;
     private final OrderRepository orderRepository;
-
-    private User getUser(UserPrincipal principal) {
-        Long userId = principal.getId();
-
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
+    private final AuthorizationChecker authorizationChecker;
 
     @Transactional
     public ResponseDto<?> createPayment(
-            UserPrincipal principal,
             PaymentCreateRequestDto request
     ) {
-        User user = getUser(principal);
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
+        Order order = orderRepository.findById(request.orderId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        TruckPolicy.validateActive(order.getSchedule().getTruck());
 
         return switch(request.method()) {
             case MOCK -> ResponseDto.success(processMockPayment(user, request));
@@ -81,6 +82,7 @@ public class PaymentService {
         Order order = orderRepository.findById(request.orderId())
                         .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
+        TruckPolicy.validateActive(order.getSchedule().getTruck());
         order.paid();
         paymentRepository.save(payment);
 
@@ -89,10 +91,10 @@ public class PaymentService {
 
     @Transactional
     public ResponseDto<PaymentResponseDto> approvePayment(
-            UserPrincipal principal,
             PaymentApproveRequestDto request
     ) {
-        User user = getUser(principal);
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
 
         Order order = null;
         Long orderId = request.orderId();
@@ -100,9 +102,10 @@ public class PaymentService {
         if(orderId != null) {
             order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+            TruckPolicy.validateActive(order.getSchedule().getTruck());
 
             Long totalAmount = order.getOrderItems().stream()
-                    .mapToLong(item -> item.getPrice() * item.getQty())
+                    .mapToLong(item -> (long) item.getPrice() * item.getQty())
                     .sum();
 
             if(!totalAmount.equals(request.amount())) {
@@ -117,6 +120,12 @@ public class PaymentService {
         }
 
         if(orderId == null) {
+            Long reservationId = Long.valueOf(request.productCode().replace("RES-", ""));
+
+            Reservation reservation = reservationRepository.findById(reservationId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+            TruckPolicy.validateActive(reservation.getSchedule().getTruck());
+
             if(paymentRepository.existsByProductCodeAndStatus(
                     request.productCode(), PaymentStatus.SUCCESS
             )) {
@@ -125,7 +134,7 @@ public class PaymentService {
         }
 
         PaymentGateway gateway = gatewayResolver.resolve(request.method());
-        PaymentResult result = gateway.approve(request, principal.getId().toString());
+        PaymentResult result = gateway.approve(request, user.getId().toString());
 
         Payment payment = Payment.builder()
                 .user(user)
@@ -154,12 +163,11 @@ public class PaymentService {
         return ResponseDto.success(toDto(payment));
     }
 
-    @Transactional(readOnly = true)
     public ResponseDto<PaymentPageResponseDto> getMyPayments(
-            UserPrincipal principal, Pageable pageable,
+            Pageable pageable,
             String keyword, PaymentStatus status
     ) {
-        User user = getUser(principal);
+        User user = authorizationChecker.getCurrentUser();
 
         Page<Payment> paymentPage = paymentRepository.findByUserWithUser(user, pageable, keyword, status);
 
@@ -178,11 +186,11 @@ public class PaymentService {
 
     @Transactional
     public ResponseDto<Void> refundPayment(
-            UserPrincipal principal,
             Long paymentId,
             PaymentRefundRequestDto request
     ) {
-        User user = getUser(principal);
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
 
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));

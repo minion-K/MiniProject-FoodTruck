@@ -121,6 +121,54 @@ public class WebSecurityConfig {
                                     "/error").permitAll()
 
                             .requestMatchers(HttpMethod.GET, "/api/v1/trucks/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/trucks").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/trucks/**").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/trucks/**").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers("/api/v1/trucks/count").hasRole("ADMIN")
+
+                            .requestMatchers("/api/v1/locations/**").hasAnyRole("OWNER", "ADMIN")
+
+                            .requestMatchers(HttpMethod.GET, "/api/v1/menu/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/menu").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/menu/**").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/menu/**").hasRole("OWNER")
+
+                            .requestMatchers(HttpMethod.GET, "/api/v1/schedules/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/v1/schedules/**").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/schedules/**").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/schedules/**").hasRole("OWNER")
+
+                            .requestMatchers(HttpMethod.POST, "/api/v1/reservations").hasRole("USER")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/reservations/me").hasRole("USER")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/reservations/owner").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/reservations/admin").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/reservations/*/cancel").hasAnyRole("USER", "OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/reservations/*/status").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/reservations/**").hasAnyRole("USER", "OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/reservations/**").hasAnyRole("USER", "OWNER", "ADMIN")
+
+                            .requestMatchers(HttpMethod.GET, "/api/v1/orders/me").hasRole("USER")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/orders/owner").hasRole("OWNER")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/orders").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*/refund").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/orders/*/cancel").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/orders/**").hasAnyRole("OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/orders/*").hasAnyRole("OWNER", "ADMIN")
+
+                            .requestMatchers("/api/v1/payments/**").hasRole("USER")
+
+                            .requestMatchers("/api/v1/users/me").hasAnyRole("USER", "OWNER", "ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/count").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/v1/users/*/roles/*").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/*/status").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/v1/users/*").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/v1/users/*").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/v1/users/*").hasRole("ADMIN")
+
+                            .requestMatchers("/api/v1/admin/statistics/**").hasRole("ADMIN")
+                            .requestMatchers("/api/v1/owner/statistics/**").hasRole("OWNER")
 
                             .anyRequest().authenticated(); // 그 외에는 인증 필요
                 })

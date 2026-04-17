@@ -133,7 +133,7 @@ function ReservationModal({
   }, [initialPickupTime]);
 
   useEffect(() => {
-    if(!selectedTime) return;
+    if(!selectedTime) return; 
     if(!enablePaging) return;
 
     const idx = timeSlots.findIndex(slot => 
@@ -144,6 +144,17 @@ function ReservationModal({
       setPage(Math.floor(idx / PAGE_SIZE));
     }
   }, [selectedTime, timeSlots, enablePaging]);
+
+  useEffect(() => {
+    if(mode != "CREATE") return;
+    if(!timeSlots.length) return;
+
+    const firstEnabled = timeSlots.findIndex(s => !s.disabled);
+
+    if(firstEnabled !== -1) {
+      setPage(Math.floor(firstEnabled / PAGE_SIZE));
+    }
+  }, [timeSlots, mode]);
 
   const totalAmount =
     menus?.reduce((sum, menu) => {
@@ -227,6 +238,7 @@ function ReservationModal({
       );
 
       alert(msg);
+      onClose();
     } finally {
       setLoading(false);
     }

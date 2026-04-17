@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import styled from "@emotion/styled";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,21 @@ interface LayoutProps {
 
 function Layout({ children, showSidebar = false, role}: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const {user, showAlert, setShowAlert} = useAuthStore();
+  const alertRef = useRef(false);
+
+  useEffect(() => {
+    if(!user || user.status === "ACTIVE" || !showAlert || alertRef.current) return;
+
+    alertRef.current = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        alert("정지로 인해 서비스 이용이 제한된 회원입니다.");
+        setShowAlert(false);
+      });
+    });
+  }, [user, showAlert]);
 
   const handleToggleSidebar = () => {
     if(!showSidebar) return;

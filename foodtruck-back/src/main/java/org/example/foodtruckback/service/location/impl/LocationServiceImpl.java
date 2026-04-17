@@ -12,9 +12,9 @@ import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.location.LocationRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
-import org.example.foodtruckback.repository.user.UserRepository;
-import org.example.foodtruckback.security.user.UserPrincipal;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.location.LocationService;
+import org.example.foodtruckback.service.policy.UserPolicy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,16 +25,19 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
-    private final UserRepository userRepository;
     private final ScheduleRepository scheduleRepository;
+    private final AuthorizationChecker authorizationChecker;
 
     // create location
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
     public ResponseDto<LocationDetailResponseDto> createLocation(
-            UserPrincipal principal, LocationCreateRequestDto request
+            LocationCreateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         boolean exists = locationRepository.existsByAddress(request.address());
 
         if(exists) {
@@ -83,12 +86,15 @@ public class LocationServiceImpl implements LocationService {
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
     public ResponseDto<LocationDetailResponseDto> updateLocation(
-            UserPrincipal principal, Long locationId, LocationUpdateRequestDto request
+            Long locationId, LocationUpdateRequestDto request
     ) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
 
-        boolean usedByOtherTruck = scheduleRepository.existsByLocationAndOtherOwner(location, principal.getId());
+        boolean usedByOtherTruck = scheduleRepository.existsByLocationAndOtherOwner(location, user.getId());
 
         if(usedByOtherTruck) {
             throw new BusinessException(ErrorCode.LOCATION_IN_USE_BY_OTHER_TRUCK);
@@ -117,7 +123,10 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
-    public ResponseDto<Void> deleteLocation(UserPrincipal principal, Long locationId) {
+    public ResponseDto<Void> deleteLocation(Long locationId) {
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
+
         Location location = locationRepository.findById(locationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
 

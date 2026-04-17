@@ -101,21 +101,6 @@ function OwnerTruckDetailPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if(!truck) return;
-
-    if(!confirm("해당 트럭을 삭제하시겠습니까?")) return;
-
-    try {
-      await truckApi.deleteTruck(truck.id);
-
-      toast.success("트럭이 삭제되었습니다.", {icon: "🗑️"});
-      navigate("/owner/trucks");
-    } catch (e) {
-      alert(getErrorMsg(e));
-    }
-  }
-
   const handleMoveTruck = () => {
     if(!activeSchedule) return;
 
@@ -154,10 +139,6 @@ function OwnerTruckDetailPage() {
             <EditButton onClick={() => setIsOpen(true)}>
               수정
             </EditButton>
-
-            <DeleteButton onClick={handleDelete}>
-              삭제
-            </DeleteButton>
           </Actions>
         </HeaderRow>
 
@@ -288,27 +269,6 @@ const EditButton = styled.button`
   &:hover {
     background: #f5f5f5;
     color: #111;
-  }
-
-  &:active {
-    transform: translateY(1px);
-  }
-`;
-
-const DeleteButton = styled.button`
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 999px;
-  border: 1px solid #ff4d4f;
-  cursor: pointer;
-  background: white;
-  color: #ff4d4f;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #ff4d4f;
-    color: white;
   }
 
   &:active {

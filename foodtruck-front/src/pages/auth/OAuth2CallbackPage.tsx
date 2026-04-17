@@ -11,6 +11,7 @@ function OAuth2CallbackPage() {
 
   const setAccessToken = useAuthStore(state => state.setAccessToken);
   const setUser = useAuthStore(state => state.setUser);
+  const setShowAlert = useAuthStore(state => state.setShowAlert);
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -25,13 +26,17 @@ function OAuth2CallbackPage() {
       try {
         setAccessToken(accessToken);
 
-        const data = await userApi.me();
-        if(!data) {
+        const res = await userApi.me();
+        if(!res) {
           navigate("/login?error=oauth2_me");
 
           return;
         }
-        setUser(data);
+        setUser(res);
+
+        if(res.status !== "ACTIVE") {
+          setShowAlert(true);
+        }
         
         navigate("/", {replace: true});
       } catch (e) {
