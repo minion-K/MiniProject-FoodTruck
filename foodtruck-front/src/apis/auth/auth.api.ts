@@ -4,7 +4,6 @@ import type {
   FindIdResponse,
   LoginRequest,
   LoginResponse,
-  LogoutRequest,
   PasswordResetRequest,
   RefreshRequest,
   ResetPWEmailRequest,
@@ -38,8 +37,10 @@ export const authApi = {
   },
 
   // 로그아웃
-  logout: async (req: LogoutRequest): Promise<void> => {
-    const res = await privateApi.post<ApiResponse<void>>(AUTH_PATH.LOGOUT, req);
+  logout: async (): Promise<void> => {
+    const res = await privateApi.post<ApiResponse<void>>(
+      AUTH_PATH.LOGOUT
+  );
 
     return res.data.data;
   },

@@ -61,10 +61,22 @@ function TruckList() {
       if(nextPage === 0) {
         setTrucks(fetchedTrucks);
       } else {
-        setTrucks(prev => [...prev, ...fetchedTrucks]);
+        setTrucks(prev => {
+          const merged = nextPage === 0
+          ? fetchedTrucks :[...prev, ...fetchedTrucks];
+
+          return merged;
+        })
       }
       setTotalPage(res.totalPage);
       setHasMore(nextPage + 1 < res.totalPage);
+
+      const mergedLength = 
+        nextPage === 0 ? fetchedTrucks.length : trucks.length + fetchedTrucks.length;
+
+      if(mergedLength < 5 && nextPage + 1 < res.totalPage) {
+        fetchTrucks(nextPage + 1);
+      }
 
     } catch (e) {
       setError(getErrorMsg(e));
@@ -116,17 +128,17 @@ function TruckList() {
 
   const isReady = myLocation !== null && !loading;
 
-  useEffect(() => {
-    if(loading || loadingMore) return;
-    if(!hasMore) return;;
+  // useEffect(() => {
+  //   if(loading || loadingMore) return;
+  //   if(!hasMore) return;;
 
-    if(visibleTrucks.length < 5) {
-      const nextPage = page + 1;
-      setLoadingMore(true);
-      setPage(nextPage);
-      fetchTrucks(nextPage);
-    }
-  }, [visibleTrucks]);
+  //   if(visibleTrucks.length < 5) {
+  //     const nextPage = page + 1;
+  //     setLoadingMore(true);
+  //     setPage(nextPage);
+  //     fetchTrucks(nextPage);
+  //   }
+  // }, [visibleTrucks]);
 
   useEffect(() => {
     if(listRef.current) {

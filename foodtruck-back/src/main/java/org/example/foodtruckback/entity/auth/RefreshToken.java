@@ -49,8 +49,8 @@ public class RefreshToken extends BaseTimeEntity {
     }
 
     public void renew(String newToken, Instant newExpiry) {
-        this.token =token;
-        this.expiry =expiry;
+        this.token = newToken;
+        this.expiry = newExpiry;
     }
 
     // 만료 여부

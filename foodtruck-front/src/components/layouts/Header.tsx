@@ -1,4 +1,6 @@
+import { authApi } from "@/apis/auth/auth.api";
 import { useAuthStore } from "@/stores/auth.store";
+import { getErrorMsg } from "@/utils/error";
 import styled from "@emotion/styled";
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -24,11 +26,16 @@ function Header({ onToggleSidebar }: HeaderProps) {
 
   const showHamburger = isOwnerPage || isAdminPage;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if(!window.confirm("로그아웃 하시겠습니까?")) return ;
 
-    clearAuth();
-    navigate("/");
+    try {
+      await authApi.logout();
+      clearAuth();
+      navigate("/");
+    } catch (e) {
+      alert(getErrorMsg(e));
+    }
   }
 
   return (

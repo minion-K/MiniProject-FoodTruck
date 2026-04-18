@@ -19,11 +19,6 @@ export interface LoginRequest {
   password: string;
 }
 
-// 로그아웃
-export interface LogoutRequest {
-  refreshToken: string
-}
-
 // 아이디 찾기
 export interface FindIdRequest {
   name: string;

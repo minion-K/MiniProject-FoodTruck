@@ -85,7 +85,8 @@ privateApi.interceptors.response.use(
         processQueue(refreshErr, null);
         clearAuth();
 
-        return Promise.reject(ReferenceError);
+        window.location.href = '/login';
+        return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
       }

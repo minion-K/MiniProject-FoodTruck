@@ -175,7 +175,7 @@ public class AuthServiceImpl implements AuthService {
             String refreshToken = cookie.getValue();
 
             if (jwtProvider.isValidToken(refreshToken)) {
-                String loginId = jwtProvider.getUsernameFromJwt((refreshToken));
+                String loginId = jwtProvider.getUsernameFromJwt(refreshToken);
                 userRepository.findByLoginId(loginId).ifPresent(refreshTokenRepository::deleteByUser);
             }
         });
@@ -320,6 +320,7 @@ public class AuthServiceImpl implements AuthService {
 
     // 리프레시 토큰
     @Override
+    @Transactional
     public ResponseDto<LoginResponseDto> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = CookieUtils.getCookie(request, REFRESH_TOKEN)
                 .map(Cookie::getValue)
@@ -357,6 +358,7 @@ public class AuthServiceImpl implements AuthService {
 
         stored.renew(newRefresh, Instant.now().plusMillis(refreshRemaining));
         refreshTokenRepository.save(stored);
+        refreshTokenRepository.flush();
 
         CookieUtils.addHttpOnlyCookie(
                 response,
