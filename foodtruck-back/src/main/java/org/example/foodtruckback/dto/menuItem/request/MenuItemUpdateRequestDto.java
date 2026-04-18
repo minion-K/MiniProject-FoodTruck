@@ -1,7 +1,6 @@
 package org.example.foodtruckback.dto.menuItem.request;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record MenuItemUpdateRequestDto(

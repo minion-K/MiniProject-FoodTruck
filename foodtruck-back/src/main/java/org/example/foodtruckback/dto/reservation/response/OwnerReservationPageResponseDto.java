@@ -7,5 +7,4 @@ public record OwnerReservationPageResponseDto(
         int totalPage,
         long totalElement,
         int number
-) {
-}
+) {}

@@ -1,9 +1,6 @@
 package org.example.foodtruckback.dto.schedule.request;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
-import org.example.foodtruckback.common.enums.ScheduleStatus;
-
 import java.time.LocalDateTime;
 
 public record ScheduleUpdateRequestDto(

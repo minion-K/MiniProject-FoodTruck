@@ -9,7 +9,6 @@ import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.entity.location.Location;
 import org.example.foodtruckback.exception.BusinessException;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -69,8 +68,6 @@ public class Schedule extends BaseTimeEntity {
             LocalDateTime start,
             LocalDateTime end
     ) {
-        LocalDateTime now = LocalDateTime.now();
-
         if(start == null || end == null) {
             throw new BusinessException(ErrorCode.MISSING_TIME);
         }

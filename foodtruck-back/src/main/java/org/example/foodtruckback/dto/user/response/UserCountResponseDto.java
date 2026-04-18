@@ -5,5 +5,4 @@ public record UserCountResponseDto(
         long user,
         long owner,
         long admin
-) {
-}
+) {}

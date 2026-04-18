@@ -1,7 +1,6 @@
 package org.example.foodtruckback.dto.menuItem.response;
 
 import org.example.foodtruckback.entity.truck.MenuItem;
-
 import java.time.LocalDateTime;
 
 public record MenuItemDetailResponseDto(

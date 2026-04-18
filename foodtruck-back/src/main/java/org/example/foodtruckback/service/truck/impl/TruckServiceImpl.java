@@ -15,18 +15,14 @@ import org.example.foodtruckback.dto.truck.response.TruckCountResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
-import org.example.foodtruckback.entity.location.Location;
-import org.example.foodtruckback.entity.truck.MenuItem;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
-import org.example.foodtruckback.repository.location.LocationRepository;
 import org.example.foodtruckback.repository.menuItem.MenuItemRepository;
 import org.example.foodtruckback.repository.schedule.ScheduleRepository;
 import org.example.foodtruckback.repository.truck.TruckRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.service.policy.TruckPolicy;
 import org.example.foodtruckback.service.policy.UserPolicy;
@@ -36,7 +32,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,7 +40,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class TruckServiceImpl implements TruckService {
     public final TruckRepository truckRepository;
-    public final UserRepository userRepository;
     public final ScheduleRepository scheduleRepository;
     private final MenuItemRepository menuItemRepository;
     private final AuthorizationChecker authorizationChecker;

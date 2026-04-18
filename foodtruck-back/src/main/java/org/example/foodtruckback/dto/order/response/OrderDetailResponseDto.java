@@ -5,8 +5,6 @@ import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.dto.orderItem.response.OrderItemResponseDto;
 import org.example.foodtruckback.entity.order.Order;
-import org.example.foodtruckback.entity.order.OrderItem;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +24,6 @@ public record OrderDetailResponseDto(
         LocalDateTime paidAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-
         List<OrderItemResponseDto> menus
 ) {
     public static OrderDetailResponseDto from(Order order) {

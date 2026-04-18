@@ -1,7 +1,6 @@
 package org.example.foodtruckback.dto.location.response;
 
 import org.example.foodtruckback.entity.location.Location;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

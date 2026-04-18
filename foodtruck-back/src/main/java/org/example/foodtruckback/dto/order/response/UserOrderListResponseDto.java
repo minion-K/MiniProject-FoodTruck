@@ -1,10 +1,8 @@
 package org.example.foodtruckback.dto.order.response;
 
-import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
 import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.entity.order.Order;
-
 import java.time.LocalDateTime;
 
 public record UserOrderListResponseDto(

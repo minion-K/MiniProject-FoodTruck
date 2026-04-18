@@ -6,6 +6,7 @@ import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
 
 public interface EmailService {
     void sendHtmlEmail(String email, String subject, String html);
+
     void sendPasswordReset(String email, String url);
 
     ResponseDto<Void> sendEmail(@Valid SendEmailRequestDto request);

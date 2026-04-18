@@ -6,12 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.ReservationStatus;
-import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.exception.BusinessException;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,6 +97,7 @@ public class Reservation extends BaseTimeEntity {
                 if(this.status == ReservationStatus.CANCELED) {
                         throw new BusinessException(ErrorCode.RESERVATION_ALREADY_CANCELLED);
                 }
+
                 this.status = ReservationStatus.CANCELED;
                 this.note = "운영자/관리자 강제 취소";
         }
@@ -121,7 +120,6 @@ public class Reservation extends BaseTimeEntity {
                 this.pickupTime = pickupTime;
                 this.note = note;
                 this.totalAmount = totalAmount;
-
                 this.menuItems.clear();
                 this.menuItems.addAll(menuItems);
         }

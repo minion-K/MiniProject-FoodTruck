@@ -11,7 +11,6 @@ import org.example.foodtruckback.dto.reservation.request.ReservationUpdateReques
 import org.example.foodtruckback.dto.reservation.response.*;
 import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.reservation.ReservationService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -81,7 +80,7 @@ public class ReservationController {
             @RequestParam(defaultValue = "ALL") String dateRange,
             @RequestParam(required = false) ReservationStatus status,
             @RequestParam(required = false) String keyword
-            ) {
+    ) {
         Pageable pageable = PageRequest.of(page, size);
 
         ResponseDto<AdminReservationPageResponseDto> response =
@@ -93,7 +92,7 @@ public class ReservationController {
     @PutMapping(ReservationApi.STATUS)
     public ResponseEntity<ResponseDto<ReservationResponseDto>> updateReservationStatus(
             @PathVariable Long reservationId,
-            @RequestBody ReservationStatusUpdateRequestDto request
+            @Valid @RequestBody ReservationStatusUpdateRequestDto request
     ) {
         ResponseDto<ReservationResponseDto> response =
                 reservationService.updateStatus(reservationId, request);

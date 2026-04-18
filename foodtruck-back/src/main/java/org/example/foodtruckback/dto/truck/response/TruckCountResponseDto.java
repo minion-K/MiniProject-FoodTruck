@@ -4,5 +4,4 @@ public record TruckCountResponseDto(
         long total,
         long active,
         long suspended
-) {
-}
+) {}

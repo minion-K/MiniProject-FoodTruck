@@ -20,7 +20,6 @@ import org.example.foodtruckback.service.policy.UserPolicy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -28,7 +27,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MenuItemServiceImpl implements MenuItemService {
-
     private final MenuItemRepository menuItemRepository;
     private final TruckRepository truckRepository;
     private final AuthorizationChecker authorizationChecker;
@@ -99,7 +97,6 @@ public class MenuItemServiceImpl implements MenuItemService {
         TruckPolicy.validateActive(menuItem.getTruck());
 
         String newName = request.name().trim();
-
         if(!menuItem.getName().equals(newName)) {
             boolean existsMenu = menuItemRepository.existsByTruckAndName(menuItem.getTruck(), newName);
 

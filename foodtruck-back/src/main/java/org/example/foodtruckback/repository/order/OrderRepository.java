@@ -2,19 +2,15 @@ package org.example.foodtruckback.repository.order;
 
 import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.OrderStatus;
-import org.example.foodtruckback.dto.order.response.OwnerOrderListResponseDto;
-import org.example.foodtruckback.dto.order.response.UserOrderListResponseDto;
 import org.example.foodtruckback.entity.order.Order;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;

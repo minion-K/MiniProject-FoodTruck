@@ -1,14 +1,10 @@
 package org.example.foodtruckback.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.nimbusds.jwt.util.DateUtils;
 import lombok.Builder;
 import lombok.Getter;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.utils.DateTimeUtil;
-
-import java.awt.*;
 import java.time.Instant;
 
 @Getter
@@ -18,7 +14,6 @@ public class ResponseDto<T> {
     private final String message;
     private final T data;
     private final String timestamp;
-
     private Integer status;
     private final String code;
 

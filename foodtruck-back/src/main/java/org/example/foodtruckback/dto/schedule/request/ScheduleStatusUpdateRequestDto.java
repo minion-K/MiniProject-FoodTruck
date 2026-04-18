@@ -4,5 +4,4 @@ import org.example.foodtruckback.common.enums.ScheduleStatus;
 
 public record ScheduleStatusUpdateRequestDto(
         ScheduleStatus status
-) {
-}
+) {}

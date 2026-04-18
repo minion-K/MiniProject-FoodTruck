@@ -70,7 +70,7 @@ public class OwnerStatisticsServiceImpl implements OwnerStatisticsService {
     }
 
     @Override
-    @PreAuthorize("@authz.isScheduleOwner(#scheduleId, #ownerId)")
+    @PreAuthorize("@authz.isScheduleOwner(#scheduleId)")
     public ResponseDto<ScheduleDetailResponseDto> getScheduleById(Long ownerId, Long scheduleId) {
         List<OrderTypeResponseDto> orderTypes = ownerStatisticsRepository.getOrderTypeBySchedule(scheduleId);
         List<TopMenuResponseDto> topMenus =

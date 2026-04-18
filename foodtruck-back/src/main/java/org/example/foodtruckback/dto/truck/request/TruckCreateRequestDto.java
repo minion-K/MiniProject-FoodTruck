@@ -2,12 +2,6 @@ package org.example.foodtruckback.dto.truck.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import org.example.foodtruckback.common.enums.TruckStatus;
-import org.example.foodtruckback.dto.menuItem.request.MenuItemCreateRequestDto;
-import org.example.foodtruckback.dto.schedule.request.ScheduleCreateRequestDto;
-import org.example.foodtruckback.entity.truck.MenuItem;
-
-import java.util.List;
 
 public record TruckCreateRequestDto(
         @NotBlank(message = "트럭명을 입력해주세요.")

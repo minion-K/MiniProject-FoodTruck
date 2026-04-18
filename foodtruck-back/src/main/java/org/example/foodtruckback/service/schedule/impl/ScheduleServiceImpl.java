@@ -24,7 +24,6 @@ import org.example.foodtruckback.service.schedule.ScheduleService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -111,6 +110,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
         TruckPolicy.validateActive(schedule.getTruck());
+
         Location location = schedule.getLocation();
         if(request.locationId() != null) {
             location = locationRepository.findById(request.locationId())

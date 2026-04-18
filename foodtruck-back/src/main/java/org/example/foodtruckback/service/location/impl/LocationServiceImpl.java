@@ -28,7 +28,6 @@ public class LocationServiceImpl implements LocationService {
     private final ScheduleRepository scheduleRepository;
     private final AuthorizationChecker authorizationChecker;
 
-    // create location
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
@@ -57,7 +56,6 @@ public class LocationServiceImpl implements LocationService {
         return ResponseDto.success("스팟 생성 완료", response);
     }
 
-    // get location (All)
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseDto<List<LocationListItemResponseDto>> getAllLocation(
@@ -70,7 +68,6 @@ public class LocationServiceImpl implements LocationService {
         return ResponseDto.success("조회 성공", response);
     }
 
-    // get location (byId)
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public ResponseDto<LocationDetailResponseDto> getLocationById(Long locationId) {
@@ -81,7 +78,6 @@ public class LocationServiceImpl implements LocationService {
         return ResponseDto.success("조회 성공", response);
     }
 
-    // update location
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional
@@ -119,7 +115,6 @@ public class LocationServiceImpl implements LocationService {
         return ResponseDto.success("수정 완료", response);
     }
 
-    // delete location
     @Override
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Transactional

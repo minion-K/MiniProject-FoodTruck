@@ -110,7 +110,6 @@ public class WebSecurityConfig {
                     }
 
                     auth
-                            // .permitAll(): 인증/인가 없이 모두 가능
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                             .requestMatchers(
@@ -170,7 +169,7 @@ public class WebSecurityConfig {
                             .requestMatchers("/api/v1/admin/statistics/**").hasRole("ADMIN")
                             .requestMatchers("/api/v1/owner/statistics/**").hasRole("OWNER")
 
-                            .anyRequest().authenticated(); // 그 외에는 인증 필요
+                            .anyRequest().authenticated();
                 })
 
         // OAuth2

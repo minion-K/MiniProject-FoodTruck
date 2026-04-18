@@ -2,7 +2,6 @@ package org.example.foodtruckback.service.statistics;
 
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.statistics.response.admin.*;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

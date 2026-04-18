@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.example.foodtruckback.entity.truck.MenuItem;
 
 @Entity
 @Table(
@@ -55,13 +54,11 @@ public class OrderItem {
             int price,
             int qty
     ) {
-        OrderItem orderItem = OrderItem.builder()
+        return OrderItem.builder()
                 .menuItemId(menuItemId)
                 .menuName(menuName)
                 .qty(qty)
                 .price(price)
                 .build();
-
-        return orderItem;
     };
 }

@@ -10,18 +10,12 @@ import org.example.foodtruckback.dto.truck.request.TruckStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.request.TruckUpdateRequestDto;
 import org.example.foodtruckback.dto.truck.response.TruckCountResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckDetailResponseDto;
-import org.example.foodtruckback.dto.truck.response.TruckListItemResponseDto;
 import org.example.foodtruckback.dto.truck.response.TruckPageResponseDto;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.truck.TruckService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(TruckApi.ROOT)

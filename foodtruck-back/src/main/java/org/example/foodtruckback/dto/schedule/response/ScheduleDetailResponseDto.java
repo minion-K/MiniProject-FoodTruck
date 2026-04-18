@@ -2,7 +2,6 @@ package org.example.foodtruckback.dto.schedule.response;
 
 import org.example.foodtruckback.common.enums.ScheduleStatus;
 import org.example.foodtruckback.entity.truck.Schedule;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

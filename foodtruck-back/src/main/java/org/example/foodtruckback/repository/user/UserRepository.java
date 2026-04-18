@@ -7,7 +7,6 @@ import org.example.foodtruckback.common.enums.AuthProvider;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.entity.user.User;
-import org.example.foodtruckback.security.user.UserPrincipalMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -3,7 +3,6 @@ package org.example.foodtruckback.dto.reservation.response;
 import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.entity.reservation.Reservation;
-
 import java.time.LocalDateTime;
 import java.util.List;
 

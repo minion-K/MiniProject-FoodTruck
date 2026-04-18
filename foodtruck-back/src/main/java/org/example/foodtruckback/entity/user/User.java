@@ -6,8 +6,6 @@ import org.example.foodtruckback.common.enums.AuthProvider;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
-
-import java.security.Provider;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -66,7 +64,6 @@ public class User extends BaseTimeEntity {
 
         user.email = email;
         user.status = UserStatus.TEMP;
-
         user.name = "TEMP" + suffix;
         user.loginId = "TEMP" + suffix;
         user.password = "TEMP" + suffix;
@@ -152,5 +149,4 @@ public class User extends BaseTimeEntity {
     public void verifyEmail() {
         this.verified = true;
     }
-
 }

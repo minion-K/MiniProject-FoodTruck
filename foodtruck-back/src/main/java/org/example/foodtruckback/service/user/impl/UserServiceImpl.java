@@ -22,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -33,10 +32,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
-    // 마이 페이지
     @Override
     public ResponseDto<UserDetailResponseDto> getMyInfo(UserPrincipal principal) {
-
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -45,16 +42,18 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("조회 성공", response);
     }
 
-    // 내 정보 수정
     @Override
     @Transactional
     @PreAuthorize("isAuthenticated()")
-    public ResponseDto<UserDetailResponseDto> updateMyInfo(UserPrincipal principal, UserUpdateRequestDto request) {
+    public ResponseDto<UserDetailResponseDto> updateMyInfo(
+            UserPrincipal principal, UserUpdateRequestDto request
+    ) {
         User user = userRepository.findByLoginId(principal.getLoginId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         String newName = (request.name() != null && !request.name().isBlank()) ? request.name() : null;
         String newPhone;
+
         if(request.phone() == null || request.phone().isBlank()) {
             newPhone = null;
         } else {
@@ -72,14 +71,12 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("개인정보가 수정되었습니다.", response);
     }
 
-    // 유저 리스트
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseDto<UserPageResponseDto> getAllUsers(
             RoleType role, Pageable pageable, String keyword,
             UserStatus status, String sortKey
     ) {
-
         if(role == null) {
             throw new BusinessException(ErrorCode.INVALID_ROLE);
         }
@@ -100,7 +97,6 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("회원 목록", response);
     }
 
-    //단건
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseDto<UserDetailResponseDto> getById(Long userId) {
@@ -110,8 +106,6 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("SUCCESS", UserDetailResponseDto.from(user));
     }
 
-
-    // 회원 수정
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
@@ -151,7 +145,6 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("개인정보가 수정되었습니다.", response);
     }
 
-    //권한 추가
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
@@ -171,7 +164,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_NOT_FOUND));
 
         if (user.getRoleTypes().contains(roleType)) {
-            throw new IllegalArgumentException("해당 권한을 이미 보유 중입니다.");
+            throw new BusinessException(ErrorCode.DUPLICATE_ROLE);
         }
 
         user.addRole(role);
@@ -182,7 +175,6 @@ public class UserServiceImpl implements UserService {
         return ResponseDto.success("권한이 추가되었습니다.", response);
     }
 
-    // 권한 제거
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")

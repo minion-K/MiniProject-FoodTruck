@@ -4,7 +4,6 @@ import org.example.foodtruckback.common.enums.AuthProvider;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.entity.user.User;
-import org.example.foodtruckback.entity.user.UserRole;
 import java.util.Set;
 import java.util.stream.Collectors;
 

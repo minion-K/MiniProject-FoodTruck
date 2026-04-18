@@ -27,7 +27,6 @@ public class AuthController {
     private final AuthService authService;
     private final EmailService emailService;
 
-    //회원 가입
     @PostMapping(AuthApi.SIGNUP)
     public ResponseEntity<ResponseDto<SignupResponseDto>> signup(
             @Valid @RequestBody SignupRequestDto request
@@ -37,7 +36,6 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    // 로그인
     @PostMapping(AuthApi.LOGIN)
     public ResponseEntity<ResponseDto<LoginResponseDto>> login(
             @Valid @RequestBody LoginRequestDto request,
@@ -48,7 +46,6 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(result);
     }
 
-    // 로그아웃
     @PostMapping(AuthApi.LOGOUT)
     public ResponseEntity<ResponseDto<Void>> logout(
             HttpServletRequest request,
@@ -59,7 +56,6 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(result);
     }
 
-    // 아이디 찾기
     @PostMapping(AuthApi.FIND_ID)
     public ResponseEntity<ResponseDto<FindIdResponseDto>> findId(
             @Valid @RequestBody FindIdRequestDto request
@@ -69,7 +65,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // 비밀번호 재설정 메일 발송
     @PostMapping(AuthApi.PASSWORD_RESET_MAIL)
     public ResponseEntity<ResponseDto<Void>> sendPasswordResetEmail(
         @Valid @RequestBody ResetPasswordEmailRequestDto request
@@ -79,7 +74,6 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    // 비밀번호 재설정
     @PostMapping(AuthApi.PASSWORD_RESET)
     public ResponseEntity<ResponseDto<Void>> resetPassword(
             @Valid @RequestBody PasswordResetRequest request
@@ -88,7 +82,6 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    // 토큰 재발급
     @PostMapping(AuthApi.REFRESH)
     public ResponseEntity<ResponseDto<LoginResponseDto>> refresh(
             HttpServletRequest request,
@@ -99,7 +92,6 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(result);
     }
 
-    // 비밀번호 재설정 토큰
     @GetMapping(AuthApi.PASSWORD_VERIFY)
     public ResponseEntity<ResponseDto<PasswordVerifyResponseDto>> verifyPasswordToken(
             @RequestParam("token") String token
@@ -109,8 +101,7 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    // 이메일 전송
-    @PostMapping("/send-email")
+    @PostMapping(AuthApi.SEND_EMAIL)
     public ResponseEntity<ResponseDto<Void>> sendEmail(
             @Valid @RequestBody SendEmailRequestDto request
     ) {
@@ -119,16 +110,16 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    // 이메일 인증
-    @GetMapping("/email/verify")
-    public ResponseEntity<ResponseDto<Void>> verifyEmail(@RequestParam String token) {
+    @GetMapping(AuthApi.VERIFY)
+    public ResponseEntity<ResponseDto<Void>> verifyEmail(
+            @RequestParam String token
+    ) {
         ResponseDto<Void> response = authService.verifyEmail(token);
 
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    // 이메일 변경
-    @PostMapping("email/change")
+    @PostMapping(AuthApi.CHANGE_EMAIL)
     public ResponseEntity<ResponseDto<Void>> sendEmailChangeVerify(
             @RequestBody @Valid SendEmailRequestDto request,
             @AuthenticationPrincipal UserPrincipal principal
@@ -138,7 +129,7 @@ public class AuthController {
         return ResponseEntity.status(response.getStatus()).body(response);
     }
 
-    @GetMapping("/email/change/confirm")
+    @GetMapping(AuthApi.EMAIL_CHANGE_CONFIRM)
     public ResponseEntity<ResponseDto<Void>> confirmEmailChange(
             @RequestParam String token
     ) {

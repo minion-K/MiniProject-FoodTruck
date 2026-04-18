@@ -7,13 +7,7 @@ import org.example.foodtruckback.dto.reservation.request.ReservationCreateReques
 import org.example.foodtruckback.dto.reservation.request.ReservationStatusUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.request.ReservationUpdateRequestDto;
 import org.example.foodtruckback.dto.reservation.response.*;
-import org.example.foodtruckback.entity.user.User;
-import org.example.foodtruckback.security.user.UserPrincipal;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 public interface ReservationService {
     ResponseDto<ReservationResponseDto> createReservation(@Valid ReservationCreateRequestDto request);

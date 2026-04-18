@@ -3,8 +3,6 @@ package org.example.foodtruckback.service.auth.impl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.foodtruckback.common.enums.ErrorCode;
@@ -12,7 +10,6 @@ import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
 import org.example.foodtruckback.dto.ResponseDto;
 import org.example.foodtruckback.dto.auth.mail.request.ResetPasswordEmailRequestDto;
-import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
 import org.example.foodtruckback.dto.auth.request.FindIdRequestDto;
 import org.example.foodtruckback.dto.auth.request.LoginRequestDto;
 import org.example.foodtruckback.dto.auth.request.PasswordResetRequest;
@@ -42,7 +39,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,7 +46,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -60,7 +55,6 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final EmailService emailService;
-
     private static final String REFRESH_TOKEN = "refreshToken";
 
     // 회원 가입
@@ -73,12 +67,15 @@ public class AuthServiceImpl implements AuthService {
         if(user.getStatus() == UserStatus.ACTIVE) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
+
         if(!user.isVerified()) {
             throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
         }
+
         if (userRepository.findByLoginId(request.loginId()).isPresent()) {
             throw new BusinessException(ErrorCode.DUPLICATE_USER);
         }
+
         if (!request.password().equals(request.confirmPassword())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
         }
@@ -91,8 +88,8 @@ public class AuthServiceImpl implements AuthService {
         );
 
         Role defaultRole = roleRepository.getReferenceById(RoleType.USER);
-        user.addRole(defaultRole);
 
+        user.addRole(defaultRole);
         userRepository.save(user);
 
         return ResponseDto.success("회원가입이 완료되었습니다.", SignupResponseDto.from(user));
@@ -101,7 +98,9 @@ public class AuthServiceImpl implements AuthService {
     // 로그인
     @Override
     @Transactional
-    public ResponseDto<LoginResponseDto> login(LoginRequestDto request, HttpServletResponse response) {
+    public ResponseDto<LoginResponseDto> login(
+            LoginRequestDto request, HttpServletResponse response
+    ) {
         try {
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     request.loginId(), request.password()
@@ -119,7 +118,6 @@ public class AuthServiceImpl implements AuthService {
             User user = userRepository.findByLoginId(loginId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-            // Access/Refresh Token 생성
             String accessToken = jwtProvider.generateAccessToken(user.getId(), loginId, roles);
             String refreshToken = jwtProvider.generateRefreshToken(user.getId(), loginId, roles);
 
@@ -159,7 +157,6 @@ public class AuthServiceImpl implements AuthService {
             LoginResponseDto result = LoginResponseDto.of(accessToken, accessExpiresIn);
 
             return ResponseDto.success("로그인 성공", result);
-
         } catch (BadCredentialsException ex) {
             throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED);
         } catch (Exception e) {
@@ -167,10 +164,11 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    // 로그아웃
     @Override
     @Transactional
-    public ResponseDto<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseDto<Void> logout(
+            HttpServletRequest request, HttpServletResponse response
+    ) {
         CookieUtils.getCookie(request, REFRESH_TOKEN).ifPresent(cookie -> {
             String refreshToken = cookie.getValue();
 
@@ -185,7 +183,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("로그아웃");
     }
 
-    // 아이디 찾기
     @Override
     public ResponseDto<FindIdResponseDto> findId(FindIdRequestDto request) {
         User user = userRepository.findByNameAndEmail(request.name(), request.email())
@@ -196,7 +193,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("ID를 찾았습니다.", response);
     }
 
-    // 비밀번호 재설정
     @Override
     @Transactional
     public ResponseDto<Void> resetPassword(PasswordResetRequest request) {
@@ -228,7 +224,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("비밀번호 재설정 완료");
     }
 
-    // 바밀번호 재설정 메일 발송
     @Override
     public ResponseDto<Void> sendPasswordResetEmail(ResetPasswordEmailRequestDto request) {
         User user = userRepository.findByNameAndLoginIdAndEmail(request.name(), request.loginId(), request.email())
@@ -242,15 +237,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("비밀번호 재설정 이메일 전송 완료");
     }
 
-    // 인증 상태 확인
-    public boolean isVerified(String email) {
-
-        return userRepository.findByEmail(email)
-                .map(User::isVerified)
-                .orElse(false);
-    }
-
-    // 이메일 인증
     @Transactional
     @Override
     public ResponseDto<Void> verifyEmail(String token) {
@@ -271,7 +257,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("이메일 인증이 완료되었습니다.", null);
     }
 
-    // 이메일 변경 메일 발송
     @Override
     @Transactional
     public ResponseDto<Void> sendEmailChangeVerify(String email, UserPrincipal principal) {
@@ -293,7 +278,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("이메일 인증 메일을 전송했습니다.");
     }
 
-    // 이메일 변경 확인
     @Override
     @Transactional
     public ResponseDto<Void> confirmEmailChange(String token) {
@@ -318,7 +302,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("이메일이 변경되었습니다.");
     }
 
-    // 리프레시 토큰
     @Override
     @Transactional
     public ResponseDto<LoginResponseDto> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
@@ -373,7 +356,6 @@ public class AuthServiceImpl implements AuthService {
         return ResponseDto.success("토큰 재발급 완료", result);
     }
 
-    // 비밀번호 토큰
     @Override
     public ResponseDto<PasswordVerifyResponseDto> verifyPasswordToken(String token) {
         if (!jwtProvider.isValidToken(token)) {

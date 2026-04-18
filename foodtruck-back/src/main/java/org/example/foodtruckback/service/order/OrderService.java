@@ -8,11 +8,9 @@ import org.example.foodtruckback.dto.order.request.OrderCreateRequestDto;
 import org.example.foodtruckback.dto.order.request.OrderUpdateRequestDto;
 import org.example.foodtruckback.dto.order.response.*;
 import org.springframework.data.domain.Pageable;
-
 import java.util.List;
 
 public interface OrderService {
-
     ResponseDto<OrderDetailResponseDto> createOrder(@Valid OrderCreateRequestDto request);
 
     ResponseDto<List<UserOrderListResponseDto>> getMyOrders();

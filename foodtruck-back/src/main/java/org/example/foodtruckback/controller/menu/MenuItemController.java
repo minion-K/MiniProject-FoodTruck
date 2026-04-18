@@ -18,7 +18,6 @@ import java.util.List;
 @RequestMapping(MenuApi.ROOT)
 @RequiredArgsConstructor
 public class MenuItemController {
-
     private final MenuItemService menuItemService;
 
     @PostMapping

@@ -13,7 +13,6 @@ import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.entity.reservation.Reservation;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.exception.BusinessException;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

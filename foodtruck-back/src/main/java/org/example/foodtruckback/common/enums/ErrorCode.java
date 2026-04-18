@@ -28,15 +28,16 @@ public enum ErrorCode {
     PASSWORD_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "A007", "기존 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.", "New password must be different from the old password"),
 
     // ===========================
-    // UserApi (Uxxx)
+    // User (Uxxx)
     // ===========================
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "사용자를 찾을 수 없습니다.", "User not found"),
     ACCESS_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "권한을 찾을 수 없습니다.", "UserApi not found"),
     DUPLICATE_USER(HttpStatus.CONFLICT, "U002", "이미 존재하는 사용자입니다.", "Duplicate user"),
     ROLE_NOT_FOUND(HttpStatus.NOT_FOUND,"U003", "존재하지 않는 권한입니다." ,"Role not found" ),
-    INVALID_ROLE(HttpStatus.BAD_REQUEST,"U004", "권한은 필수입니다." ,"Roles are mandatory" ),
-    USER_NOT_MATCH(HttpStatus.BAD_REQUEST,"U005", "일치하는 회원정보가 없습니다." ,"User not match" ),
-    USER_SUSPENDED(HttpStatus.BAD_REQUEST,"U006", "정지로 인해 서비스 이용이 제한된 회원입니다." ,"Suspended user is restricted from service"),
+    DUPLICATE_ROLE(HttpStatus.CONFLICT,"U004", "이미 보유 중인 권한입니다." ,"Duplicate role" ),
+    INVALID_ROLE(HttpStatus.BAD_REQUEST,"U005", "권한은 필수입니다." ,"Roles are mandatory" ),
+    USER_NOT_MATCH(HttpStatus.BAD_REQUEST,"U006", "일치하는 회원정보가 없습니다." ,"User not match" ),
+    USER_SUSPENDED(HttpStatus.BAD_REQUEST,"U007", "정지로 인해 서비스 이용이 제한된 회원입니다." ,"Suspended user is restricted from service"),
 
     // ===========================
     // location (Lxxx)
@@ -106,6 +107,10 @@ public enum ErrorCode {
     PAYMENT_REFUNDED_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "P006", "환불 금액이 올바르지 않습니다.", "Invalid refund amount"),
     PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "P007", "결제 대행사와 통신 중 오류가 발생했습니다.", "Payment gateway error"),
 
+
+    // ===========================
+    // order (Oxxx)
+    // ===========================
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "주문을 찾을 수 없습니다.", "Order not found"),
     ORDER_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "O002", "이미 처리된 주문입니다.", "Order already processed"),
     ORDER_STATUS_INVALID(HttpStatus.BAD_REQUEST, "O003", "현재 주문 상태로는 수행할 수 없습니다.", "Invalid order status"),

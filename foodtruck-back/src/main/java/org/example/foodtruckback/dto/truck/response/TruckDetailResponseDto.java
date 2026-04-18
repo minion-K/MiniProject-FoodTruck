@@ -5,7 +5,6 @@ import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.entity.truck.Truck;
-
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;

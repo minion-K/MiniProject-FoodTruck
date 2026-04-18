@@ -7,7 +7,6 @@ import org.example.foodtruckback.common.enums.OrderSource;
 import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.dto.statistics.response.admin.*;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,10 +17,6 @@ public class AdminStatisticsRepositoryImpl implements AdminStatisticsRepository{
 
     @Override
     public DashboardResponseDto getAdminDashboard(String region, LocalDateTime fromDate, LocalDateTime toDate) {
-        System.out.println("region = [" + region + "]");
-        System.out.println("fromDate = [" + fromDate + "]");
-        System.out.println("toDate = [" + toDate + "]");
-
         String sql= """
            SELECT 
                (

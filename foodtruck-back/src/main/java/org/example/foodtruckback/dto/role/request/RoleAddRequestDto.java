@@ -4,5 +4,4 @@ import org.example.foodtruckback.common.enums.RoleType;
 
 public record RoleAddRequestDto(
         RoleType roleName
-) {
-}
+) {}

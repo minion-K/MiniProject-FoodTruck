@@ -7,5 +7,4 @@ public record OwnerOrderPageResponseDto(
         int totalPage,
         long totalElement,
         int number
-) {
-}
+) {}

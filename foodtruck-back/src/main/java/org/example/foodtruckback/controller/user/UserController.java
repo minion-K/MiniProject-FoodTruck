@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-    // 내 프로필 조회
     @GetMapping(UserApi.ME)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> getMyInfo(
             @AuthenticationPrincipal UserPrincipal principal
@@ -38,7 +37,6 @@ public class UserController {
         return ResponseEntity.ok().body(result);
     }
 
-    // 내 프로필 수정
     @PutMapping(UserApi.ME)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> updateMyInfo(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -49,7 +47,6 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
 
-    // 사용자 목록
     @GetMapping
     public ResponseEntity<ResponseDto<UserPageResponseDto>> getAllUsers(
             @RequestParam(required = false) RoleType role,
@@ -66,7 +63,6 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
 
-    // 사용자 상세
     @GetMapping(UserApi.BY_ID)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> getById(
             @PathVariable Long userId
@@ -76,7 +72,6 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
 
-    // 사용자 수정
     @PutMapping(UserApi.BY_ID)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> updateByUserId(
             @PathVariable Long userId,
@@ -87,7 +82,6 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
 
-    // 권한 부여
     @PostMapping(UserApi.BY_ID)
     public ResponseEntity<ResponseDto<RoleAddResponseDto>> addRoles(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -99,7 +93,6 @@ public class UserController {
         return ResponseEntity.ok().body(response);
     }
 
-    // 권한 제거
     @DeleteMapping(UserApi.DELETE)
     public ResponseEntity<ResponseDto<Void>> deleteRoles(
             @AuthenticationPrincipal UserPrincipal principal,

@@ -7,5 +7,4 @@ public record AdminOrderPageResponseDto(
         int totalPage,
         long totalElement,
         int number
-) {
-}
+) {}

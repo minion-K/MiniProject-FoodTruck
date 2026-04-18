@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 public record FindIdRequestDto(
         @NotBlank
         String name,
+
         @NotBlank @Email
         String email
 ) {}

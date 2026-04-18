@@ -2,8 +2,6 @@ package org.example.foodtruckback.dto.menuItem.request;
 
 import jakarta.validation.constraints.*;
 
-import java.math.BigDecimal;
-
 public record MenuItemCreateRequestDto(
         Long truckId,
 

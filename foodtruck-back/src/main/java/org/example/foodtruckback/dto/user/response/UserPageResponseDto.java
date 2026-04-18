@@ -7,5 +7,4 @@ public record UserPageResponseDto(
         int totalPage,
         long totalElement,
         int number
-) {
-}
+) {}

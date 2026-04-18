@@ -12,8 +12,6 @@ import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.service.schedule.ScheduleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -50,7 +48,6 @@ public class ScheduleController {
         return ResponseEntity.ok(response);
     }
 
-    // 수정
     @PutMapping(ScheduleApi.BY_ID)
     public ResponseEntity<ResponseDto<ScheduleDetailResponseDto>> updateSchedule(
             @PathVariable Long scheduleId,
@@ -71,7 +68,6 @@ public class ScheduleController {
         return ResponseEntity.ok(response);
     }
 
-    // 삭제
     @DeleteMapping(ScheduleApi.BY_ID)
     public ResponseEntity<ResponseDto<Void>> deleteSchedule(
             @PathVariable Long scheduleId

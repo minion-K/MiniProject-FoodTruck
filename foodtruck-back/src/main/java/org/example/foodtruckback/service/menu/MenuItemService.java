@@ -6,7 +6,6 @@ import org.example.foodtruckback.dto.menuItem.request.MenuItemCreateRequestDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemIsSoldOutRequestDto;
 import org.example.foodtruckback.dto.menuItem.request.MenuItemUpdateRequestDto;
 import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
-
 import java.util.List;
 
 public interface MenuItemService {

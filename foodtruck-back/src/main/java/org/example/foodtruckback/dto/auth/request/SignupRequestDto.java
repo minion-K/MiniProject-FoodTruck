@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.example.foodtruckback.entity.user.User;
 
 public record SignupRequestDto(
     @NotBlank(message = "이름은 필수입니다.")
@@ -42,5 +41,4 @@ public record SignupRequestDto(
             message = "휴대폰 번호는 11자리 숫자만 가능합니다."
     )
     String phone
-
 ) {}

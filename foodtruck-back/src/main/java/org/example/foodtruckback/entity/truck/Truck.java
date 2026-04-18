@@ -9,7 +9,6 @@ import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.entity.base.BaseTimeEntity;
 import org.example.foodtruckback.exception.BusinessException;
-
 import java.util.ArrayList;
 import java.util.List;
 

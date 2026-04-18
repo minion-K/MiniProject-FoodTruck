@@ -41,7 +41,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import static org.example.foodtruckback.common.enums.ReservationStatus.CONFIRMED;
 import static org.example.foodtruckback.common.enums.ReservationStatus.PENDING;
 
@@ -49,7 +48,6 @@ import static org.example.foodtruckback.common.enums.ReservationStatus.PENDING;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReservationServiceImpl implements ReservationService {
-
     private final ReservationRepository reservationRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -328,7 +326,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) or @authz.isTruckOwnerByReservation(#reservationId)")
+    @PreAuthorize("hasRole('ADMIN') or @authz.isReservationOwner(#reservationId) " +
+            "or @authz.isTruckOwnerByReservation(#reservationId)")
     public ResponseDto<ReservationResponseDto> updateReservation(
             Long reservationId,
             ReservationUpdateRequestDto request

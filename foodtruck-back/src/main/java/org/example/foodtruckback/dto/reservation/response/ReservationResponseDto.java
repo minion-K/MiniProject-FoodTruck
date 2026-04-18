@@ -3,12 +3,8 @@ package org.example.foodtruckback.dto.reservation.response;
 import org.example.foodtruckback.common.enums.PaymentStatus;
 import org.example.foodtruckback.common.enums.ReservationStatus;
 import org.example.foodtruckback.common.utils.DateTimeUtil;
-import org.example.foodtruckback.dto.menuItem.response.MenuItemDetailResponseDto;
-import org.example.foodtruckback.dto.reservation.request.ReservationMenuItemRequestDto;
 import org.example.foodtruckback.dto.schedule.response.ScheduleItemResponseDto;
 import org.example.foodtruckback.entity.reservation.Reservation;
-import org.example.foodtruckback.entity.truck.Schedule;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;

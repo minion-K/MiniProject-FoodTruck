@@ -3,10 +3,8 @@ package org.example.foodtruckback.dto.truck.response;
 import org.example.foodtruckback.common.enums.TruckStatus;
 import org.example.foodtruckback.entity.truck.Schedule;
 import org.example.foodtruckback.entity.truck.Truck;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 
 public record TruckListItemResponseDto(
         Long id,

@@ -9,15 +9,11 @@ import org.example.foodtruckback.dto.payment.request.PaymentApproveRequestDto;
 import org.example.foodtruckback.dto.payment.request.PaymentCreateRequestDto;
 import org.example.foodtruckback.dto.payment.request.PaymentRefundRequestDto;
 import org.example.foodtruckback.dto.payment.response.PaymentPageResponseDto;
-import org.example.foodtruckback.dto.payment.response.PaymentResponseDto;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.payment.PaymentService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,9 +45,8 @@ public class PaymentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) PaymentStatus status
-            ) {
+    ) {
         Pageable pageable = PageRequest.of(page, size);
-
         ResponseDto<PaymentPageResponseDto> response = paymentService.getMyPayments(pageable, keyword, status);
 
         return ResponseEntity.ok(response);
