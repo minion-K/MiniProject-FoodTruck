@@ -59,10 +59,10 @@ function Header({ onToggleSidebar }: HeaderProps) {
               <OutlineBtn><Link to="/mypage">마이페이지</Link></OutlineBtn>
             )}
             {isOwner && (
-              <OutlineBtn><Link to="/owner/trucks">운영자 페이지</Link></OutlineBtn>
+              <OutlineBtn><Link to="/owner/profile">운영자 페이지</Link></OutlineBtn>
             )}
             {isAdmin && (
-              <OutlineBtn><Link to="/admin/users">관리자 페이지</Link></OutlineBtn>
+              <OutlineBtn><Link to="/admin/profile">관리자 페이지</Link></OutlineBtn>
             )}
             <OutlineBtn onClick={handleLogout}>로그아웃</OutlineBtn>
           </>

@@ -12,13 +12,12 @@ import org.example.foodtruckback.dto.user.response.UserCountResponseDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {
-    ResponseDto<UserDetailResponseDto> getMyInfo(UserPrincipal principal);
+    ResponseDto<UserDetailResponseDto> getMyInfo();
 
-    ResponseDto<UserDetailResponseDto> updateMyInfo(UserPrincipal principal, @Valid UserUpdateRequestDto request);
+    ResponseDto<UserDetailResponseDto> updateMyInfo(@Valid UserUpdateRequestDto request);
 
     ResponseDto<UserPageResponseDto> getAllUsers(RoleType role, Pageable pageable, String keyword, UserStatus status, String sortKey);
 
@@ -26,11 +25,11 @@ public interface UserService {
 
     ResponseDto<UserDetailResponseDto> updateByUserId(Long userId, @Valid AdminUserUpdateRequestDto request);
 
-    ResponseDto<RoleAddResponseDto> addRoles(UserPrincipal principal, @Valid RoleAddRequestDto request, Long userId);
+    ResponseDto<RoleAddResponseDto> addRoles(@Valid RoleAddRequestDto request, Long userId);
 
-    ResponseDto<Void> deleteRoles(UserPrincipal principal, RoleType roleName, Long userId);
+    ResponseDto<Void> deleteRoles(RoleType roleName, Long userId);
 
-    ResponseDto<UserStatusUpdateResponseDto> toggleUserStatus(Long id, Long userId);
+    ResponseDto<UserStatusUpdateResponseDto> toggleUserStatus(Long userId);
 
-    ResponseDto<UserCountResponseDto> getUserCount(UserPrincipal principal);
+    ResponseDto<UserCountResponseDto> getUserCount();
 }

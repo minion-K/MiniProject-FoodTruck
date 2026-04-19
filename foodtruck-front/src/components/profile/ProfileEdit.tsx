@@ -230,7 +230,7 @@ function ProfileEdit({ user, onCancel, onComplete }: Props) {
 
             {!isPhoneValid && (
               <HelpText>
-                전화번호는 숫자만 입력하며 10~11자리여야 합니다.
+                전화번호는 11자리 숫자여야 합니다.
               </HelpText>
             )}
           </ColWrapper>

@@ -13,11 +13,9 @@ import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
 import org.example.foodtruckback.dto.auth.response.PasswordVerifyResponseDto;
 import org.example.foodtruckback.dto.auth.response.SignupResponseDto;
 import org.example.foodtruckback.dto.auth.mail.request.SendEmailRequestDto;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.auth.AuthService;
 import org.example.foodtruckback.service.auth.EmailService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -121,10 +119,9 @@ public class AuthController {
 
     @PostMapping(AuthApi.CHANGE_EMAIL)
     public ResponseEntity<ResponseDto<Void>> sendEmailChangeVerify(
-            @RequestBody @Valid SendEmailRequestDto request,
-            @AuthenticationPrincipal UserPrincipal principal
+            @RequestBody @Valid SendEmailRequestDto request
     ) {
-        ResponseDto<Void> response = authService.sendEmailChangeVerify(request.email(), principal);
+        ResponseDto<Void> response = authService.sendEmailChangeVerify(request.email());
 
         return ResponseEntity.status(response.getStatus()).body(response);
     }

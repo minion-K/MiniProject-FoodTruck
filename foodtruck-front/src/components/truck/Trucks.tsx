@@ -11,6 +11,9 @@ interface Props {
 
 function Trucks({ trucks, urlPrefix = "" }: Props) {
   const navigate = useNavigate();
+
+  if(trucks.length === 0) return <EmptyText>등록된 트럭이 없습니다.</EmptyText>
+
   return (
     <List>
       {trucks?.map((truck) => (
@@ -40,4 +43,11 @@ const List = styled.div`
 
 const Item = styled.div`
   cursor: pointer;
+`;
+
+const EmptyText = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 14px;
 `;

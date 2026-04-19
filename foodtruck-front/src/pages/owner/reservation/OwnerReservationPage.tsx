@@ -109,9 +109,9 @@ function OwnerReservationPage() {
   );
 
   const status = getScheduleStatus(selectedSchedule?.status);
-  if(loading || !truckDetail) {
-    return <Container>로딩 중...</Container>
-  }
+
+  if(loading) return <Loading>로딩 중...</Loading>
+  if(!truckDetail) return <EmptyText>등록된 트럭 정보가 없습니다.</EmptyText>
 
   return (
     <Container>
@@ -338,6 +338,13 @@ const Tab = styled.button<{active?: boolean}>`
 `;
 
 const EmptyText = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 14px;
+`;
+
+const Loading = styled.div`
   text-align: center;
   padding: 40px;
   color: #6b7280;

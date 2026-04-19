@@ -26,6 +26,7 @@ public enum ErrorCode {
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "A005", "유효하지 않은 토큰입니다.", "Invalid token"),
     PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "A006", "비밀번호와 비밀번호 확인이 일치하지 않습니다.", "Password mismatch"),
     PASSWORD_SAME_AS_OLD(HttpStatus.BAD_REQUEST, "A007", "기존 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.", "New password must be different from the old password"),
+    UNAUTHORIZED(HttpStatus.BAD_REQUEST, "A008", "로그인이 필요합니다.", "Authentication is required"),
 
     // ===========================
     // User (Uxxx)

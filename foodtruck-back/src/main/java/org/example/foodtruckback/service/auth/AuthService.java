@@ -15,7 +15,6 @@ import org.example.foodtruckback.dto.auth.response.FindIdResponseDto;
 import org.example.foodtruckback.dto.auth.response.LoginResponseDto;
 import org.example.foodtruckback.dto.auth.response.PasswordVerifyResponseDto;
 import org.example.foodtruckback.dto.auth.response.SignupResponseDto;
-import org.example.foodtruckback.security.user.UserPrincipal;
 
 public interface AuthService {
     ResponseDto<SignupResponseDto> sign(@Valid SignupRequestDto request);
@@ -36,7 +35,7 @@ public interface AuthService {
 
     ResponseDto<Void> verifyEmail(String token);
 
-    ResponseDto<Void> sendEmailChangeVerify(@NotBlank(message = "이메일을 입력해주세요") @Email String email, UserPrincipal principal);
+    ResponseDto<Void> sendEmailChangeVerify(@NotBlank(message = "이메일을 입력해주세요") @Email String email);
 
     ResponseDto<Void> confirmEmailChange(String token);
 }

@@ -14,12 +14,10 @@ import org.example.foodtruckback.dto.user.response.UserCountResponseDto;
 import org.example.foodtruckback.dto.user.response.UserDetailResponseDto;
 import org.example.foodtruckback.dto.user.response.UserPageResponseDto;
 import org.example.foodtruckback.dto.user.response.UserStatusUpdateResponseDto;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.service.user.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,20 +27,17 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping(UserApi.ME)
-    public ResponseEntity<ResponseDto<UserDetailResponseDto>> getMyInfo(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        ResponseDto<UserDetailResponseDto> result = userService.getMyInfo(principal);
+    public ResponseEntity<ResponseDto<UserDetailResponseDto>> getMyInfo() {
+        ResponseDto<UserDetailResponseDto> response = userService.getMyInfo();
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok().body(response);
     }
 
     @PutMapping(UserApi.ME)
     public ResponseEntity<ResponseDto<UserDetailResponseDto>> updateMyInfo(
-            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody UserUpdateRequestDto request
     ) {
-        ResponseDto<UserDetailResponseDto> response = userService.updateMyInfo(principal, request);
+        ResponseDto<UserDetailResponseDto> response = userService.updateMyInfo(request);
 
         return ResponseEntity.ok().body(response);
     }
@@ -84,41 +79,36 @@ public class UserController {
 
     @PostMapping(UserApi.BY_ID)
     public ResponseEntity<ResponseDto<RoleAddResponseDto>> addRoles(
-            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody RoleAddRequestDto request,
             @PathVariable Long userId
     ) {
-        ResponseDto<RoleAddResponseDto> response = userService.addRoles(principal, request, userId);
+        ResponseDto<RoleAddResponseDto> response = userService.addRoles(request, userId);
 
         return ResponseEntity.ok().body(response);
     }
 
     @DeleteMapping(UserApi.DELETE)
     public ResponseEntity<ResponseDto<Void>> deleteRoles(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable RoleType roleName,
             @PathVariable Long userId
             ) {
-        ResponseDto<Void> response = userService.deleteRoles(principal, roleName, userId);
+        ResponseDto<Void> response = userService.deleteRoles(roleName, userId);
 
         return ResponseEntity.ok().body(response);
     }
 
     @PutMapping(UserApi.STATUS)
     public ResponseEntity<ResponseDto<UserStatusUpdateResponseDto>> toggleUserStatus(
-            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long userId
     ) {
-        ResponseDto<UserStatusUpdateResponseDto> response  = userService.toggleUserStatus(principal.getId(), userId);
+        ResponseDto<UserStatusUpdateResponseDto> response  = userService.toggleUserStatus(userId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(UserApi.COUNT)
-    public ResponseEntity<ResponseDto<UserCountResponseDto>> getUserCount(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        ResponseDto<UserCountResponseDto> response = userService.getUserCount(principal);
+    public ResponseEntity<ResponseDto<UserCountResponseDto>> getUserCount() {
+        ResponseDto<UserCountResponseDto> response = userService.getUserCount();
 
         return ResponseEntity.ok(response);
     }

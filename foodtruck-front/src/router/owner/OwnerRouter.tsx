@@ -6,6 +6,8 @@ import OwnerTruckDetail from "@/pages/owner/truck/OwnerTruckDetailPage";
 import { useAuthStore } from "@/stores/auth.store";
 import React, { useEffect } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import OwnerProfilePage from "@/pages/owner/profile/OwnerProfilePage";
+import OwnerProfileEditPage from "@/pages/owner/profile/OwnerProfileEditPage";
 
 function OwnerRouter() {
   const { user } = useAuthStore();
@@ -29,7 +31,25 @@ function OwnerRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/owner/trucks" replace />} />
+      <Route path="/" element={<Navigate to="/owner/profile" replace />} />
+
+      <Route
+        path="/profile"
+        element={
+          <Layout showSidebar={true} role="OWNER">
+            <OwnerProfilePage />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/profile/edit"
+        element={
+          <Layout showSidebar={true} role="OWNER">
+            <OwnerProfileEditPage />
+          </Layout>
+        }
+      />
 
       <Route
         path="/trucks"

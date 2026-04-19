@@ -235,6 +235,7 @@ public class TruckServiceImpl implements TruckService {
 
                     return b.startTime().compareTo(a.startTime());
                 })
+                .limit(5)
                 .toList();
 
         List<MenuItemDetailResponseDto> menuItems = menuItemRepository.findByTruckId(truck.getId()).stream()

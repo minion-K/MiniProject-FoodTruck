@@ -1,4 +1,6 @@
 import Layout from '@/components/layouts/Layout';
+import AdminProfileEditPage from '@/pages/admin/profile/AdminProfileEditPage';
+import AdminProfilePage from '@/pages/admin/profile/AdminProfilePage';
 import AdminReservationPage from '@/pages/admin/reservation/AdminReservationPage';
 import AdminStatisticsPage from '@/pages/admin/statistics/AdminStatisticsPage';
 import AdminTruckPage from '@/pages/admin/truck/AdminTruckPage';
@@ -30,7 +32,25 @@ function AdminRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/admin/users" replace />} />
+      <Route path="/" element={<Navigate to="/admin/profile" replace />} />
+
+      <Route 
+        path="/profile"
+        element={
+          <Layout showSidebar={true} role="ADMIN">
+            <AdminProfilePage />
+          </Layout>
+        }
+      />
+
+      <Route 
+        path="/profile/edit"
+        element={
+          <Layout showSidebar={true} role="ADMIN">
+            <AdminProfileEditPage />
+          </Layout>
+        }
+      />
 
       <Route 
         path="/users"

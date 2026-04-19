@@ -35,7 +35,7 @@ public class AuthorizationChecker {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
-            throw new AccessDeniedException("로그인이 필요합니다.");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         return userRepository.findByLoginId(auth.getName())

@@ -15,7 +15,8 @@ import org.example.foodtruckback.entity.user.User;
 import org.example.foodtruckback.exception.BusinessException;
 import org.example.foodtruckback.repository.user.RoleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
-import org.example.foodtruckback.security.user.UserPrincipal;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
+import org.example.foodtruckback.service.policy.UserPolicy;
 import org.example.foodtruckback.service.user.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,11 +32,11 @@ import java.util.Objects;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final AuthorizationChecker authorizationChecker;
 
     @Override
-    public ResponseDto<UserDetailResponseDto> getMyInfo(UserPrincipal principal) {
-        User user = userRepository.findByLoginId(principal.getLoginId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    public ResponseDto<UserDetailResponseDto> getMyInfo() {
+        User user = authorizationChecker.getCurrentUser();
 
         UserDetailResponseDto response = UserDetailResponseDto.from(user);
 
@@ -44,12 +45,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @PreAuthorize("isAuthenticated()")
     public ResponseDto<UserDetailResponseDto> updateMyInfo(
-            UserPrincipal principal, UserUpdateRequestDto request
+            UserUpdateRequestDto request
     ) {
-        User user = userRepository.findByLoginId(principal.getLoginId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = authorizationChecker.getCurrentUser();
+        UserPolicy.validateActive(user);
 
         String newName = (request.name() != null && !request.name().isBlank()) ? request.name() : null;
         String newPhone;
@@ -148,7 +148,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<RoleAddResponseDto> addRoles(UserPrincipal principal, RoleAddRequestDto request, Long userId) {
+    public ResponseDto<RoleAddResponseDto> addRoles(RoleAddRequestDto request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -178,7 +178,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<Void> deleteRoles(UserPrincipal principal, RoleType roleName, Long userId) {
+    public ResponseDto<Void> deleteRoles(RoleType roleName, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -201,9 +201,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<UserStatusUpdateResponseDto> toggleUserStatus(Long id, Long userId) {
+    public ResponseDto<UserStatusUpdateResponseDto> toggleUserStatus(Long userId) {
+        User admin = authorizationChecker.getCurrentUser();
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        if(admin.getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
 
         UserStatus status = user.getStatus() == UserStatus.ACTIVE ? UserStatus.TEMP : UserStatus.ACTIVE;
         user.setStatus(status);
@@ -215,7 +221,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseDto<UserCountResponseDto> getUserCount(UserPrincipal principal) {
+    public ResponseDto<UserCountResponseDto> getUserCount() {
         long total = userRepository.count();
         long user = userRepository.countUserRole();
         long owner = userRepository.countOwnerRole();

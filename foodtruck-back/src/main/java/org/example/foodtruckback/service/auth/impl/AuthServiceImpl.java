@@ -4,7 +4,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.foodtruckback.common.enums.ErrorCode;
 import org.example.foodtruckback.common.enums.RoleType;
 import org.example.foodtruckback.common.enums.UserStatus;
@@ -26,8 +25,8 @@ import org.example.foodtruckback.repository.auth.RefreshTokenRepository;
 import org.example.foodtruckback.repository.user.RoleRepository;
 import org.example.foodtruckback.repository.user.UserRepository;
 import org.example.foodtruckback.security.provider.JwtProvider;
-import org.example.foodtruckback.security.user.UserPrincipal;
 import org.example.foodtruckback.security.user.UserPrincipalMapper;
+import org.example.foodtruckback.security.util.AuthorizationChecker;
 import org.example.foodtruckback.security.util.CookieUtils;
 import org.example.foodtruckback.service.auth.AuthService;
 import org.example.foodtruckback.service.auth.EmailService;
@@ -55,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final EmailService emailService;
+    private final AuthorizationChecker authorizationChecker;
     private static final String REFRESH_TOKEN = "refreshToken";
 
     // 회원 가입
@@ -259,14 +259,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public ResponseDto<Void> sendEmailChangeVerify(String email, UserPrincipal principal) {
+    public ResponseDto<Void> sendEmailChangeVerify(String email) {
+        User user = authorizationChecker.getCurrentUser();
+
         boolean isValid = userRepository.findByEmail(email).isPresent();
         if(isValid) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         String token = jwtProvider.generateEmailJwtToken(
-                principal.getId(),
+                user.getId(),
                 email,
                 "CHANGE_EMAIL"
         );

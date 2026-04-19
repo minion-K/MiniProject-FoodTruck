@@ -9,12 +9,14 @@ interface SidebarProps {
 }
 
 const ownerMenus = [
+  {label: "내 정보", path: "/owner/profile"},
   {label: "내 트럭", path: "/owner/trucks"},
   {label: "예약 · 주문 관리", path: "/owner/reservations"},
   {label: "통계 · 매출", path: "/owner/statistics"},
 ];
 
 const adminMenus = [
+  {label: "내 정보", path: "/admin/profile"},
   {label: "유저 관리", path: "/admin/users"},
   {label: "트럭 관리", path: "/admin/trucks"},
   {label: "예약 · 주문 관리", path: "/admin/reservations"},

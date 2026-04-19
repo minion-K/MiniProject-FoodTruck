@@ -49,7 +49,10 @@ function ScheduleManager({truckId, schedules, onUpdate}: Props) {
     setStatusPopup(prev => prev === scheduleId ? null : scheduleId);
   };
 
-  const handleStatusChange = async (schedule: TruckScheduleItemResponse, newStatus: ScheduleStatus) => {
+  const handleStatusChange = async (
+    schedule: TruckScheduleItemResponse, 
+    newStatus: ScheduleStatus
+  ) => {
     setStatusPopup(null);
     
     try {

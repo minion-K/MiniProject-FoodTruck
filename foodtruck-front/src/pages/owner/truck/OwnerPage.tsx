@@ -48,7 +48,7 @@ function OwnerPage() {
     fetchTruck();
   };
 
-  if (loading) return <LoadingMsg>내 트럭 내역 불러오는 중...</LoadingMsg>;
+  if (loading) return <Loading>내 트럭 내역 불러오는 중...</Loading>;
 
   return (
     <Container>
@@ -131,11 +131,10 @@ const ListWrapper = styled.div`
   height: 100%;
 `;
 
-const LoadingMsg = styled.div`
+const Loading = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
   font-size: 14px;
 `;
 
-const ErrorMsg = styled.div`
-  font-size: 14px;
-  color: red;
-`;
