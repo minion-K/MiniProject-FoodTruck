@@ -2,6 +2,7 @@ USE `mini-foodtruck-db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- users 제외 전체 초기화
 TRUNCATE TABLE order_items;
 TRUNCATE TABLE reservation_items;
 TRUNCATE TABLE payment_refunds;
@@ -13,144 +14,184 @@ TRUNCATE TABLE truck_schedules;
 TRUNCATE TABLE locations;
 TRUNCATE TABLE trucks;
 TRUNCATE TABLE refresh_tokens;
+TRUNCATE TABLE user_roles;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ========================================
--- 1. 유저 추가 (1,2,3 유지 → 4부터 생성)
--- ========================================
-INSERT INTO users (id, name, login_id, password, email, phone, verified, status, provider)
+-- -----------------------------
+-- 1. 유저 역할 세팅 (기존 users 활용)
+-- -----------------------------
+INSERT INTO user_roles (user_id, role_name)
+SELECT id,
+       CASE
+           WHEN id = 1 THEN 'USER'
+           WHEN id = 2 THEN 'OWNER'
+           WHEN id = 3 THEN 'ADMIN'
+           ELSE 'USER'
+       END
+FROM users
+ON DUPLICATE KEY UPDATE role_name = VALUES(role_name);
+
+-- -----------------------------
+-- 2. 트럭 생성 (owner = 2)
+-- -----------------------------
+INSERT INTO trucks (owner_id, name, cuisine, status)
 VALUES
-(4,'유저4','user4','1234','user4@test.com','010-0000-0004',TRUE,'ACTIVE','LOCAL'),
-(5,'유저5','user5','1234','user5@test.com','010-0000-0005',TRUE,'ACTIVE','LOCAL'),
-(6,'유저6','user6','1234','user6@test.com','010-0000-0006',TRUE,'ACTIVE','LOCAL'),
-(7,'유저7','user7','1234','user7@test.com','010-0000-0007',TRUE,'ACTIVE','LOCAL'),
-(8,'유저8','user8','1234','user8@test.com','010-0000-0008',TRUE,'ACTIVE','LOCAL'),
-(9,'유저9','user9','1234','user9@test.com','010-0000-0009',TRUE,'ACTIVE','LOCAL'),
-(10,'유저10','user10','1234','user10@test.com','010-0000-0010',TRUE,'ACTIVE','LOCAL');
+(2, '부산타코', 'MEXICAN', 'ACTIVE'),
+(2, '서면버거', 'BURGER', 'ACTIVE'),
+(2, '떡볶이킹', 'KOREAN', 'ACTIVE'),
+(2, '스시트럭', 'JAPANESE', 'ACTIVE');
 
--- 역할
-INSERT INTO user_roles (user_id, role_name) VALUES
-(4,'USER'),(5,'USER'),(6,'USER'),(7,'USER'),
-(8,'USER'),(9,'USER'),(10,'USER');
-
--- ========================================
--- 2. 위치
--- ========================================
+-- -----------------------------
+-- 3. 위치 (삼어로 61 정확 좌표 기반)
+-- -----------------------------
 INSERT INTO locations (name, address, latitude, longitude) VALUES
-('해운대','부산',35.1587,129.1600),
-('광안리','부산',35.1530,129.1180),
-('서면','부산',35.1580,129.0600),
-('홍대','서울',37.5570,126.9250);
+('우방신세계타운 정문', '부산 금정구', 35.2028494, 129.1161518),
+('아파트 후문 골목', '부산 금정구', 35.2025000, 129.1166000),
+('삼어로 메인도로', '부산 금정구', 35.2032000, 129.1157000),
+('주택가 상권 라인', '부산 금정구', 35.2023000, 129.1159000),
+('근린공원 입구', '부산 금정구', 35.2030000, 129.1169000);
 
--- ========================================
--- 3. 트럭 (owner = 2,3)
--- ========================================
-INSERT INTO trucks (owner_id, name, cuisine)
-VALUES
-(2,'김밥트럭','Korean'),
-(2,'타코트럭','Mexican'),
-(3,'파스타트럭','Italian'),
-(3,'버거트럭','American');
+-- -----------------------------
+-- 4. 스케줄 (4월 전체)
+-- -----------------------------
+INSERT INTO truck_schedules (truck_id, location_id, start_time, end_time, status, max_reservations)
+SELECT
+    t.id,
+    (1 + FLOOR(RAND()*4)),
+    DATE_ADD('2026-04-01 11:00:00', INTERVAL seq DAY),
+    DATE_ADD('2026-04-01 20:00:00', INTERVAL seq DAY),
+    CASE
+        WHEN seq < 20 THEN 'CLOSED'
+        WHEN seq < 26 THEN 'OPEN'
+        ELSE 'PLANNED'
+    END,
+    100
+FROM trucks t
+JOIN (
+    SELECT 0 seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+    UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
+    UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14
+    UNION ALL SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19
+    UNION ALL SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23 UNION ALL SELECT 24
+    UNION ALL SELECT 25 UNION ALL SELECT 26 UNION ALL SELECT 27
+) d;
 
--- ========================================
--- 4. 스케줄 (id 1~8 보장)
--- ========================================
-INSERT INTO truck_schedules (truck_id, location_id, start_time, end_time, status)
-VALUES
-(1,1,'2026-04-03 11:00','2026-04-03 20:00','OPEN'),
-(2,2,'2026-04-03 12:00','2026-04-03 21:00','OPEN'),
-(3,3,'2026-04-03 11:00','2026-04-03 20:00','OPEN'),
-(4,4,'2026-04-03 12:00','2026-04-03 21:00','OPEN'),
-
-(1,1,'2026-04-02 11:00','2026-04-02 20:00','CLOSED'),
-(2,2,'2026-04-02 12:00','2026-04-02 21:00','CLOSED'),
-(3,3,'2026-04-02 11:00','2026-04-02 20:00','CLOSED'),
-(4,4,'2026-04-02 12:00','2026-04-02 21:00','CLOSED');
-
--- ========================================
+-- -----------------------------
 -- 5. 메뉴
--- ========================================
-INSERT INTO menu_items (truck_id,name,price) VALUES
-(1,'김밥',4000),(1,'라면',6000),
-(2,'타코',7000),(2,'부리토',8000),
-(3,'파스타',12000),(3,'피자',15000),
-(4,'버거',9000),(4,'감튀',4000);
+-- -----------------------------
+INSERT INTO menu_items (truck_id, name, price)
+SELECT t.id, CONCAT('메뉴', n), (3000 + FLOOR(RAND()*7000))
+FROM trucks t
+JOIN (
+    SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+) nums;
 
--- ========================================
--- 6. 예약 (schedule_id 1~8만 사용)
--- ========================================
-INSERT INTO reservations (schedule_id,user_id,pickup_time,total_amount,status)
-VALUES
-(1,4,'2026-04-03 12:00',12000,'CONFIRMED'),
-(2,5,'2026-04-03 13:00',15000,'CONFIRMED'),
-(3,6,'2026-04-03 14:00',20000,'CONFIRMED'),
-(4,7,'2026-04-03 15:00',18000,'CONFIRMED'),
+-- -----------------------------
+-- 6. 예약 (PENDING + CONFIRMED 섞기)
+-- -----------------------------
+INSERT INTO reservations (schedule_id, user_id, pickup_time, total_amount, status)
+SELECT
+    s.id,
+    1,
+    DATE_ADD(s.start_time, INTERVAL FLOOR(RAND()*8) HOUR),
+    10000 + FLOOR(RAND()*20000),
+    CASE
+        WHEN RAND() < 0.6 THEN 'CONFIRMED'
+        ELSE 'PENDING'
+    END
+FROM truck_schedules s
+WHERE s.status IN ('CLOSED','OPEN');
 
-(5,8,'2026-04-02 12:00',10000,'CONFIRMED'),
-(6,9,'2026-04-02 13:00',13000,'CONFIRMED'),
-(7,10,'2026-04-02 14:00',17000,'CONFIRMED'),
-(8,4,'2026-04-02 15:00',16000,'CONFIRMED');
-
--- ========================================
+-- -----------------------------
 -- 7. 예약 아이템
--- ========================================
-INSERT INTO reservation_items (reservation_id,menu_item_id,menu_name,price,qty)
-VALUES
-(1,1,'김밥',4000,2),
-(2,3,'타코',7000,2),
-(3,5,'파스타',12000,1),
-(4,7,'버거',9000,2),
-(5,1,'김밥',4000,2),
-(6,3,'타코',7000,1),
-(7,5,'파스타',12000,1),
-(8,7,'버거',9000,1);
+-- -----------------------------
+INSERT INTO reservation_items (reservation_id, menu_item_id, menu_name, price, qty)
+SELECT
+    r.id,
+    m.id,
+    m.name,
+    m.price,
+    1 + FLOOR(RAND()*3)
+FROM reservations r
+JOIN menu_items m ON m.truck_id = (
+    SELECT truck_id FROM truck_schedules WHERE id = r.schedule_id
+)
+WHERE RAND() < 0.7;
 
--- ========================================
--- 8. 주문
--- ========================================
-INSERT INTO orders (schedule_id,user_id,source,reservation_id,amount,status,paid_at)
-VALUES
-(1,4,'RESERVATION',1,12000,'PAID','2026-04-03 12:10'),
-(2,5,'RESERVATION',2,15000,'PAID','2026-04-03 13:10'),
-(3,NULL,'ONSITE',NULL,9000,'PAID','2026-04-03 14:10'),
-(4,7,'RESERVATION',4,18000,'PAID','2026-04-03 15:10'),
+-- -----------------------------
+-- 8. 주문 (CONFIRMED 예약만)
+-- -----------------------------
+INSERT INTO orders (schedule_id, user_id, source, reservation_id, amount, status, paid_at)
+SELECT
+    r.schedule_id,
+    r.user_id,
+    'RESERVATION',
+    r.id,
+    r.total_amount,
+    'PAID',
+    r.pickup_time
+FROM reservations r
+WHERE r.status = 'CONFIRMED';
 
-(5,8,'RESERVATION',5,10000,'PAID','2026-04-02 12:10'),
-(6,NULL,'ONSITE',NULL,8000,'PAID','2026-04-02 13:10');
+-- -----------------------------
+-- 9. 현장 주문 (ONSITE)
+-- -----------------------------
+INSERT INTO orders (schedule_id, user_id, source, amount, status, paid_at)
+SELECT
+    s.id,
+    NULL,
+    'ONSITE',
+    8000 + FLOOR(RAND()*15000),
+    'PAID',
+    DATE_ADD(s.start_time, INTERVAL FLOOR(RAND()*8) HOUR)
+FROM truck_schedules s
+WHERE RAND() < 0.5;
 
--- ========================================
--- 9. 주문 아이템
--- ========================================
-INSERT INTO order_items (order_id,menu_item_id,menu_name,qty,unit_price)
-VALUES
-(1,1,'김밥',2,4000),
-(2,3,'타코',2,7000),
-(3,7,'버거',1,9000),
-(4,7,'버거',2,9000),
-(5,1,'김밥',2,4000),
-(6,7,'버거',1,8000);
+-- -----------------------------
+-- 10. 주문 아이템
+-- -----------------------------
+INSERT INTO order_items (order_id, menu_item_id, menu_name, qty, unit_price)
+SELECT
+    o.id,
+    m.id,
+    m.name,
+    1 + FLOOR(RAND()*3),
+    m.price
+FROM orders o
+JOIN truck_schedules s ON o.schedule_id = s.id
+JOIN menu_items m ON m.truck_id = s.truck_id
+WHERE RAND() < 0.6;
 
--- ========================================
--- 10. 결제
--- ========================================
-INSERT INTO payments (user_id,payment_order_id,order_id,payment_key,amount,method,status,product_code,product_name)
-VALUES
-(4,'PO-1',NULL,'PAY-1',12000,'TOSS_PAY','SUCCESS','RES-1','예약'),
-(5,'PO-2',NULL,'PAY-2',15000,'TOSS_PAY','SUCCESS','RES-2','예약'),
-(NULL,'PO-3',3,'PAY-3',9000,'TOSS_PAY','SUCCESS','ORD-3','현장');
+-- -----------------------------
+-- 11. 결제 (핵심: productCode 정책)
+-- -----------------------------
+INSERT INTO payments (user_id, payment_order_id, order_id, payment_key, amount, method, status, product_code, product_name, approved_at)
+SELECT
+    o.user_id,
+    CONCAT('ORD-', o.id),
+    o.id,
+    UUID(),
+    o.amount,
+    'MOCK',
+    'SUCCESS',
+    CASE
+        WHEN o.source = 'RESERVATION' THEN CONCAT('RES-', o.reservation_id)
+        ELSE CONCAT('ORD-', o.id)
+    END,
+    '푸드트럭 주문',
+    o.paid_at
+FROM orders o;
 
--- ========================================
--- 11. 환불
--- ========================================
-INSERT INTO payment_refunds (payment_id,amount,reason,status)
-VALUES
-(1,12000,'고객 요청','COMPLETED');
-
--- ========================================
--- 검증
--- ========================================
-SELECT COUNT(*) FROM users;
-SELECT COUNT(*) FROM reservations;
-SELECT COUNT(*) FROM orders;
-SELECT COUNT(*) FROM payments;
+-- -----------------------------
+-- 12. 일부 환불 데이터
+-- -----------------------------
+INSERT INTO payment_refunds (payment_id, amount, reason, status, completed_at)
+SELECT
+    p.id,
+    p.amount,
+    '단순 변심',
+    'COMPLETED',
+    DATE_ADD(p.approved_at, INTERVAL 1 HOUR)
+FROM payments p
+WHERE RAND() < 0.1;

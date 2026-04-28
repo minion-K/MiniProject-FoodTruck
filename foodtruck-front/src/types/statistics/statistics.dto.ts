@@ -109,7 +109,7 @@ export interface AdminPaymentStatusResponse {
 export type AdminPaymentStatusListResponse = AdminPaymentStatusResponse[];
 
 export interface AdminOrderTypesResponse {
-  status: OrderSource;
+  source: OrderSource;
   count: number;
 }
 

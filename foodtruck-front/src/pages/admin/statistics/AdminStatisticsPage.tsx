@@ -335,7 +335,7 @@ function AdminStatisticsPage() {
   const orderTypesWithColor = orderTypes.map(item => ({
     ...item,
     count: Number (item.count),
-    fill: item.status === "RESERVATION" ? "#3b82f6" : "#f97316"
+    fill: item.source === "RESERVATION" ? "#3b82f6" : "#f97316"
   }))
 
   const total = orderTypes.reduce((sum, e) => sum + e.count, 0);
@@ -722,11 +722,11 @@ function AdminStatisticsPage() {
                   item => {
                     const percent = total > 0 ? ((item.count / total) * 100).toFixed(0) : 0
 
-                    const color = item.status === "RESERVATION" ? "#3b82f6" : "#f97316";
-                    const type = item.status === "RESERVATION" ? "예약 주문" : "현장 주문";
+                    const color = item.source === "RESERVATION" ? "#3b82f6" : "#f97316";
+                    const type = item.source === "RESERVATION" ? "예약 주문" : "현장 주문";
 
                     return (
-                      <LegendItem key={item.status}>
+                      <LegendItem key={item.source}>
                         <ColorDot color={color}/>
                           {type} {percent}%
                       </LegendItem>
@@ -824,14 +824,6 @@ const HeaderRight = styled.div`
 const Title = styled.h2`
   font-size: 22px;
   font-weight: 700;
-`;
-
-const RegionSelect = styled.select`
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #e5e7db;
-  background: white;
-  min-width: 140px;
 `;
 
 const PeriodTabs = styled.div`
