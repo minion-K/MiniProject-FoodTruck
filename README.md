@@ -109,7 +109,8 @@ UI와 API 접근을 분리했습니다.
 
 ### 🛠 Admin
 - 관리자 관리 페이지
-<img width="600" alt="KakaoTalk_20260428_160636647_03" src="https://github.com/user-attachments/assets/927446e6-434d-4b4e-af30-eac33bdfc2f6" />
+<img width="600" height="274" alt="adminStatistics-ezgif com-resize" src="https://github.com/user-attachments/assets/c5f275ca-b939-4baf-a097-0b548c6da144" />
+
 
 
 ### 📊 Statistics
