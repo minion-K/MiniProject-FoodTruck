@@ -114,3 +114,4 @@ UI와 API 접근을 분리했습니다.
 ### 📊 Statistics
 - 운영자 통계
 <img width="600" alt="KakaoTalk_20260428_160636647_02" src="https://github.com/user-attachments/assets/17e44a9d-3648-494f-bfa2-3c210b837f8c" />
+
