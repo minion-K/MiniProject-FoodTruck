@@ -52,6 +52,8 @@ MiniProject-FoodTruck
 ├── foodtruck-back # Spring Boot
 └── README.md
 
+---
+
 ## 🧠 설계 포인트
 
 ### 1) 위치 + 스케줄 기반 구조
