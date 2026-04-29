@@ -52,7 +52,8 @@ MiniProject-FoodTruck
 ├── foodtruck-back # Spring Boot
 └── README.md
 
----
+
+
 
 ## 🧠 설계 포인트
 
