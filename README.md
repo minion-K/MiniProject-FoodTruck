@@ -109,9 +109,7 @@ UI와 API 접근을 분리했습니다.
 
 ### 🛠 Admin
 - 관리자 관리 페이지
-<img width="600" height="274" alt="adminStatistics-ezgif com-resize" src="https://github.com/user-attachments/assets/c5f275ca-b939-4baf-a097-0b548c6da144" />
-
-
+<img width="600" height="274" alt="adminStatistics-ezgif com-optimize" src="https://github.com/user-attachments/assets/450b439a-7a0e-496e-ac2b-533ba2da4b35" />
 
 ### 📊 Statistics
 - 운영자 통계
