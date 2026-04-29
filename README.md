@@ -89,7 +89,7 @@ UI와 API 접근을 분리했습니다.
 ### 👤 User Flow
 - 메인 (지도 + 목록)
 - 예약 화면
-  <img width="1916" height="875" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
+  <img width="600" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
 
 - 결제 화면
 
