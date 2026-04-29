@@ -89,17 +89,26 @@ UI와 API 접근을 분리했습니다.
 ### 👤 User Flow
 - 메인 (지도 + 목록)
 - 예약 화면
-  <img width="600" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
-
+<img width="600" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
 - 결제 화면
+<img width="1916" height="876" alt="KakaoTalk_20260428_160636647_05" src="https://github.com/user-attachments/assets/5ccd92df-d2ba-4dcd-aaf2-b3a3e6bac788" />
+
 
 ### 🚚 Owner
 - 메뉴 관리
+<img width="600" alt="KakaoTalk_20260428_160636647_06" src="https://github.com/user-attachments/assets/81d50294-51f0-4619-8639-44a4207c1001" />
 - 스케줄 관리
+<img width="600" alt="KakaoTalk_20260428_160636647" src="https://github.com/user-attachments/assets/31073a33-c445-4037-8044-742c6c7577c6" />
+
 - 예약 관리
+<img width="600" alt="KakaoTalk_20260428_160636647_01" src="https://github.com/user-attachments/assets/9d44c9ee-d1a2-4331-b71b-1bfc81f377c2" />
+
 
 ### 🛠 Admin
 - 관리자 관리 페이지
+<img width="600" alt="KakaoTalk_20260428_160636647_03" src="https://github.com/user-attachments/assets/927446e6-434d-4b4e-af30-eac33bdfc2f6" />
+
 
 ### 📊 Statistics
 - 운영자 통계
+<img width="1916" height="875" alt="KakaoTalk_20260428_160636647_02" src="https://github.com/user-attachments/assets/17e44a9d-3648-494f-bfa2-3c210b837f8c" />
