@@ -98,7 +98,7 @@ UI와 API 접근을 분리했습니다.
 
 ### 🚚 Owner
 - 메뉴 관리
-<img width="600" alt="KakaoTalk_20260428_160636647_06" src="https://github.com/user-attachments/assets/81d50294-51f0-4619-8639-44a4207c1001" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/5ef6e320-c81c-49b2-b440-cabd87b77fb2" />
 
 - 스케줄 관리
 <img width="600" alt="KakaoTalk_20260428_160636647" src="https://github.com/user-attachments/assets/31073a33-c445-4037-8044-742c6c7577c6" />
