@@ -90,10 +90,10 @@ UI와 API 접근을 분리했습니다.
 - 메인 (지도 + 목록)
 
 - 예약 화면
-<img width="600" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
+<img width="600" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9.gif" />
 
 - 결제 화면
-<img width="600" alt="KakaoTalk_20260428_160636647_05" src="https://github.com/user-attachments/assets/5ccd92df-d2ba-4dcd-aaf2-b3a3e6bac788" />
+<img width="600" alt="KakaoTalk_20260428_160636647_05" src="https://github.com/user-attachments/assets/5ccd92df-d2ba-4dcd-aaf2-b3a3e6bac788.gif" />
 
 
 ### 🚚 Owner
