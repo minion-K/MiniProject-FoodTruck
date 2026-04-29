@@ -51,9 +51,7 @@ MiniProject-FoodTruck
 ├── foodtruck-front # React + TypeScript
 ├── foodtruck-back # Spring Boot
 └── README.md
-
-
-
+```
 
 ## 🧠 설계 포인트
 
