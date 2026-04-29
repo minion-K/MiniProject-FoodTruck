@@ -84,11 +84,13 @@ UI와 API 접근을 분리했습니다.
 👉 예약 → 주문 → 결제 → 환불 흐름을 분리하여  
 확장성과 데이터 정합성을 고려
 
-## 📷 7. 실행 화면
+## 📷 실행 화면
 
 ### 👤 User Flow
 - 메인 (지도 + 목록)
 - 예약 화면
+  <img width="1916" height="875" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
+
 - 결제 화면
 
 ### 🚚 Owner
