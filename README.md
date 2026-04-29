@@ -46,6 +46,7 @@
 - MySQL / H2
 
 ## 🧩 프로젝트 구조
+```bash
 MiniProject-FoodTruck
 ├── foodtruck-front # React + TypeScript
 ├── foodtruck-back # Spring Boot
