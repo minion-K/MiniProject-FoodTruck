@@ -1,4 +1,5 @@
-# ⭐ MiniProject FoodTruck-Manager ⭐
+# ⭐ MiniProject FoodTruck-Manager ⭐<img width="1914" height="870" alt="로그인" src="https://github.com/user-attachments/assets/1b29f646-375f-452a-88d0-a63c6ae1ac54" />
+
 ## 푸드 트럭 운영 & 예약 관리
 > 푸드 트럭 운영 & 예약 관리 웹 페이지
 
@@ -88,6 +89,7 @@ UI와 API 접근을 분리했습니다.
 
 ### 👤 User Flow
 - 메인 (지도 + 목록)
+<img width="1914" height="870" alt="로그인" src="https://github.com/user-attachments/assets/71a13349-0150-4caa-b4cb-71d439b9b3ce" />
 
 - 예약 화면
 <img width="600" alt="KakaoTalk_20260428_160636647_04" src="https://github.com/user-attachments/assets/79e80969-9454-443a-a070-162b08aa3ed9" />
